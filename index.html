@@ -17,8 +17,8 @@
       --tile-bg-8: #d8c100; /* Warna baru untuk tile 'Enkripsi Kata' */
       --tile-hover-opacity: 0.85;
       --text-color: #ffffff;
-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      --disabled-opacity: 0.6;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font khas Windows */
+      --disabled-opacity: 0.4; /* Opasitas lebih rendah untuk disabled */
     }
 
     /* Reset dasar */
@@ -56,10 +56,11 @@
     /* Container responsive */
     .metro-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 16px;
+      /* Menggunakan ukuran tile yang lebih khas Windows 8 (misal 150px) */
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px; /* Jarak antar tile sedikit lebih kecil */
       width: 100%;
-      max-width: 800px;
+      max-width: 900px; /* Lebar maksimum disesuaikan */
     }
 
     /* Gaya dasar tiap tile */
@@ -67,17 +68,17 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
+      /* Penempatan ikon dan label di kiri bawah */
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 15px; /* Padding disesuaikan */
       font-size: 1rem;
       text-transform: uppercase;
-      text-align: center;
       color: var(--text-color);
       cursor: pointer;
       overflow: hidden;
-      border-radius: 8px;
-      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      border-radius: 0; /* Menghilangkan sudut membulat untuk gaya Windows 8 */
+      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out; /* Transisi lebih halus */
       /* Animasi masuk */
       transform: translateY(20px);
       opacity: 0;
@@ -85,13 +86,13 @@
     }
     /* Delay animasi untuk setiap tile */
     .metro-tile:nth-child(1) { animation-delay: 0.1s; }
-    .metro-tile:nth-child(2) { animation-delay: 0.2s; }
-    .metro-tile:nth-child(3) { animation-delay: 0.3s; }
-    .metro-tile:nth-child(4) { animation-delay: 0.4s; }
-    .metro-tile:nth-child(5) { animation-delay: 0.5s; }
-    .metro-tile:nth-child(6) { animation-delay: 0.6s; }
-    .metro-tile:nth-child(7) { animation-delay: 0.7s; }
-    .metro-tile:nth-child(8) { animation-delay: 0.8s; }
+    .metro-tile:nth-child(2) { animation-delay: 0.15s; }
+    .metro-tile:nth-child(3) { animation-delay: 0.2s; }
+    .metro-tile:nth-child(4) { animation-delay: 0.25s; }
+    .metro-tile:nth-child(5) { animation-delay: 0.3s; }
+    .metro-tile:nth-child(6) { animation-delay: 0.35s; }
+    .metro-tile:nth-child(7) { animation-delay: 0.4s; }
+    .metro-tile:nth-child(8) { animation-delay: 0.45s; }
 
     /* Keyframes untuk animasi masuk */
     @keyframes tileEntrance {
@@ -101,11 +102,12 @@
       }
     }
 
-    /* Efek hover yang lebih dinamis */
+    /* Efek hover yang lebih dinamis (gaya Windows 8) */
     .metro-tile:hover {
-      opacity: var(--tile-hover-opacity);
-      transform: translateY(-8px) scale(1.02); /* Sedikit lebih naik dan membesar */
-      box-shadow: 0 8px 20px rgba(0,0,0,0.6); /* Bayangan lebih kuat */
+      opacity: 1; /* Opasitas penuh */
+      transform: scale(1.01); /* Sedikit membesar */
+      box-shadow: none; /* Menghilangkan bayangan */
+      filter: brightness(1.1); /* Sedikit mencerahkan warna tile */
     }
 
     /* Warna masing-masing tile */
@@ -137,37 +139,45 @@
       40%, 80% { transform: translateX(5px); }
     }
 
-    /* Ikon sederhana */
+    /* Ikon sederhana (gaya Windows 8) */
     .metro-tile .icon {
-      font-size: 2.5rem; /* Ukuran ikon sedikit lebih besar */
-      margin-bottom: 8px;
-      opacity: 0.8; /* Opasitas ikon sedikit lebih tinggi */
+      font-size: 3rem; /* Ukuran ikon lebih besar */
+      margin-bottom: 10px; /* Jarak bawah ikon */
+      opacity: 0.9; /* Opasitas ikon lebih tinggi */
+      position: absolute; /* Posisi ikon di tengah atas */
+      top: 15px;
+      left: 15px;
       transition: transform 0.2s;
     }
     .metro-tile:hover .icon {
-      transform: scale(1.1); /* Ikon membesar saat hover */
+      transform: scale(1.05); /* Ikon sedikit membesar saat hover */
     }
 
-    /* Judul tile */
+    /* Judul tile (gaya Windows 8) */
     .metro-tile .label {
-      font-size: 1rem; /* Ukuran font label sedikit lebih besar */
-      line-height: 1.2;
-      font-weight: bold; /* Label lebih tebal */
+      font-size: 1.1rem; /* Ukuran font label lebih besar */
+      line-height: 1.3;
+      font-weight: normal; /* Label tidak terlalu tebal */
+      text-align: left; /* Teks rata kiri */
+      width: 100%; /* Memastikan label mengisi lebar */
+      padding-top: 50px; /* Memberi ruang untuk ikon di atasnya */
+      position: relative;
+      z-index: 1; /* Memastikan label di atas ripple */
     }
 
-    /* Efek ripple saat klik */
+    /* Efek ripple saat klik (disesuaikan untuk Windows 8) */
     .ripple {
       position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.7); /* Warna ripple putih transparan */
-      animation: ripple-animation 0.6s linear forwards;
+      border-radius: 0; /* Ripple berbentuk kotak */
+      background: rgba(255, 255, 255, 0.4); /* Warna ripple putih transparan */
+      animation: ripple-animation 0.4s ease-out forwards; /* Animasi lebih cepat */
       transform: scale(0);
       pointer-events: none; /* Memastikan ripple tidak mengganggu klik */
     }
 
     @keyframes ripple-animation {
       to {
-        transform: scale(2.5); /* Memperbesar ripple */
+        transform: scale(1); /* Ripple mengisi tile */
         opacity: 0; /* Menghilangkan ripple */
       }
     }
@@ -235,10 +245,12 @@
           const size = Math.max(this.offsetWidth, this.offsetHeight);
           ripple.style.width = ripple.style.height = `${size}px`;
 
-          // Menentukan posisi ripple berdasarkan posisi klik
-          const rect = this.getBoundingClientRect();
-          ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
-          ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+          // Menentukan posisi ripple agar selalu di tengah tile
+          ripple.style.left = `0`;
+          ripple.style.top = `0`;
+          ripple.style.width = `100%`;
+          ripple.style.height = `100%`;
+
 
           // Menambahkan ripple ke dalam tile
           this.appendChild(ripple);
@@ -253,7 +265,7 @@
           if (targetHref) {
             setTimeout(() => {
               window.location.href = targetHref;
-            }, 200); // Penundaan singkat agar efek ripple terlihat
+            }, 100); // Penundaan singkat agar efek ripple terlihat
           }
         }
       });
