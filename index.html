@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Metro UI Tiles</title>
+  <style>
+    /* Variabel warna tema Metro */
+    :root {
+      --tile-bg-1: #00aba9;
+      --tile-bg-2: #2b5797;
+      --tile-bg-3: #da532c;
+      --tile-bg-4: #ffc40d;
+      --tile-bg-5: #7e3878;
+      --tile-bg-6: #e671b8;
+      --tile-bg-7: #00a300;
+      --tile-bg-8: #d8c100; /* Warna baru untuk tile 'Enkripsi Kata' */
+      --tile-hover-opacity: 0.85;
+      --text-color: #ffffff;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --disabled-opacity: 0.6;
+    }
+
+    /* Reset dasar */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: var(--font-family);
+      background: #1b1b1b;
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* Container responsive */
+    .metro-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    /* Gaya dasar tiap tile */
+    .metro-tile {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      font-size: 1rem;
+      text-transform: uppercase;
+      text-align: center;
+      color: var(--text-color);
+      cursor: pointer;
+      overflow: hidden;
+      border-radius: 8px;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .metro-tile:hover {
+      opacity: var(--tile-hover-opacity);
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* Warna masing-masing tile */
+    .tile-1 { background: var(--tile-bg-1); }
+    .tile-2 { background: var(--tile-bg-2); }
+    .tile-3 { background: var(--tile-bg-3); }
+    .tile-4 { background: var(--tile-bg-4); }
+    .tile-5 { background: var(--tile-bg-5); }
+    .tile-6 { background: var(--tile-bg-6); }
+    .tile-7 { background: var(--tile-bg-7); }
+    .tile-8 { background: var(--tile-bg-8); } /* Style untuk tile baru */
+
+    /* Style untuk tombol disabled */
+    .disabled {
+      opacity: var(--disabled-opacity);
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* Ikon sederhana */
+    .metro-tile .icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      opacity: 0.7;
+    }
+
+    /* Judul tile */
+    .metro-tile .label {
+      font-size: 0.9rem;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="metro-container">
+    <div class="metro-tile tile-1" onclick="location.href='htmlrun.html'">
+      <div class="icon">🏃</div>
+      <div class="label">HTML Run</div>
+    </div>
+    <div class="metro-tile tile-2 disabled">
+      <div class="icon">📂</div>
+      <div class="label">Files (Disabled)</div>
+    </div>
+    <div class="metro-tile tile-3" onclick="location.href='enkripsi.html'">
+      <div class="icon">🔒</div>
+      <div class="label">Enkripsi File</div>
+    </div>
+    <div class="metro-tile tile-4" onclick="location.href='TingkatkanGambar.html'">
+      <div class="icon">🖼️</div>
+      <div class="label">Tingkatkan Gambar</div>
+    </div>
+    <div class="metro-tile tile-5" onclick="location.href='Steganografi.html'">
+      <div class="icon">🧬</div>
+      <div class="label">Steganografi</div>
+    </div>
+    <div class="metro-tile tile-6" onclick="location.href='SteganografiWav.html'">
+      <div class="icon">🎵</div>
+      <div class="label">Steganografi WAV</div>
+    </div>
+    <div class="metro-tile tile-7" onclick="location.href='VideoFrame.html'">
+      <div class="icon">🎬</div>
+      <div class="label">Video Frame</div>
+    </div>
+    <div class="metro-tile tile-8" onclick="location.href='EnkripsiKata.html'">
+      <div class="icon">🔑</div>
+      <div class="label">Enkripsi Kata</div>
+    </div>
+  </div>
+
+</body>
+</html>
