@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for better aesthetics */
+        .container {
+            background-color: #ffffff;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .button-secondary {
+            background-color: #6B7280; /* Gray 500 */
+            transition: background-color 0.3s ease;
+        }
+        .button-secondary:hover {
+            background-color: #4B5563; /* Gray 600 */
+        }
+        .input-field {
+            border: 1px solid #D1D5DB; /* Gray 300 */
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #6366F1; /* Indigo 500 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="container p-8 rounded-lg max-w-md w-full text-center">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">QR Code Generator</h1>
+
+        <div class="mb-6">
+            <input
+                type="text"
+                id="qrInput"
+                placeholder="Masukkan teks atau URL di sini"
+                class="input-field w-full text-gray-700 focus:ring-indigo-500 focus:border-indigo-500"
+            />
+        </div>
+
+        <div id="qrcode" class="mt-8 flex justify-center items-center p-4 bg-gray-50 rounded-lg border border-gray-200 min-h-[200px]">
+            <!-- QR Code akan dirender di sini -->
+            <p class="text-gray-500">Kode QR akan muncul di sini.</p>
+        </div>
+
+        <div id="qrTextDisplay" class="mt-4 text-gray-700 font-medium text-lg hidden">
+            <!-- Teks input akan ditampilkan di sini -->
+        </div>
+
+        <div class="flex flex-col space-y-4 mt-6">
+            <button
+                id="downloadBtn"
+                class="button-secondary text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75 hidden"
+            >
+                Unduh QR Code
+            </button>
+        </div>
+    </div>
+
+    <!-- qrcode.js library from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const qrInput = document.getElementById('qrInput');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const qrTextDisplay = document.getElementById('qrTextDisplay');
+            let qrcodeInstance = null; // To store the QR code instance
+
+            // Function to generate QR code
+            function generateQrCode() {
+                const text = qrInput.value.trim();
+
+                // Clear previous QR code and text display
+                qrcodeDiv.innerHTML = '';
+                qrTextDisplay.textContent = '';
+                downloadBtn.classList.add('hidden'); // Hide download button initially
+
+                if (text) {
+                    // Initialize QR code generator
+                    qrcodeInstance = new QRCode(qrcodeDiv, {
+                        text: text,
+                        width: 200,
+                        height: 200,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+
+                    // Display the input text below the QR code
+                    qrTextDisplay.textContent = text;
+                    qrTextDisplay.classList.remove('hidden');
+
+                    // Show the download button after QR code is generated
+                    downloadBtn.classList.remove('hidden');
+                } else {
+                    // Display a message if input is empty
+                    qrcodeDiv.innerHTML = '<p class="text-gray-500">Kode QR akan muncul di sini.</p>';
+                    qrTextDisplay.classList.add('hidden'); // Hide text display if no input
+                }
+            }
+
+            // Function to download QR code with text
+            function downloadQrCode() {
+                const qrCodeCanvas = qrcodeDiv.querySelector('canvas');
+                const textToDownload = qrInput.value.trim();
+
+                if (qrCodeCanvas && textToDownload) {
+                    // Create a new canvas to combine QR code and text
+                    const combinedCanvas = document.createElement('canvas');
+                    const ctx = combinedCanvas.getContext('2d');
+
+                    // Define padding and font size for text
+                    const textPadding = 30; // Increased padding for better spacing
+                    const fontSize = 32; // Larger font size for better readability in download
+                    const fontFamily = 'Inter, sans-serif'; // Use the same font as the body
+
+                    // Define target QR code size for download (e.g., 300x300 for better resolution)
+                    const targetQrWidth = 300;
+                    const targetQrHeight = 300;
+
+                    // Set font for text measurement
+                    ctx.font = `${fontSize}px ${fontFamily}`;
+                    const textMetrics = ctx.measureText(textToDownload);
+                    let textWidth = textMetrics.width;
+
+                    // Calculate max text width based on target QR width, with some margin
+                    const maxTextWidth = targetQrWidth + textPadding * 2;
+                    let displayFontSize = fontSize;
+
+                    // If text is too long, reduce font size to fit within maxTextWidth
+                    if (textWidth > maxTextWidth) {
+                        displayFontSize = Math.floor(fontSize * (maxTextWidth / textWidth));
+                        ctx.font = `${displayFontSize}px ${fontFamily}`;
+                        textWidth = ctx.measureText(textToDownload).width; // Recalculate after font size change
+                    }
+
+                    // Determine the wider dimension (QR code or text) for consistent width
+                    combinedCanvas.width = Math.max(targetQrWidth + textPadding * 2, textWidth + textPadding * 2);
+                    combinedCanvas.height = targetQrHeight + textPadding + displayFontSize + textPadding; // QR + padding + text height + bottom padding
+
+                    // Fill background with white
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height);
+
+                    // Draw QR code onto the combined canvas, centered horizontally
+                    const qrX = (combinedCanvas.width - targetQrWidth) / 2;
+                    // Draw image with scaling to targetQrWidth/Height
+                    ctx.drawImage(qrCodeCanvas, qrX, textPadding, targetQrWidth, targetQrHeight);
+
+                    // Draw text below the QR code, centered horizontally
+                    ctx.fillStyle = '#000000'; // Black color for text
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    const textX = combinedCanvas.width / 2;
+                    const textY = targetQrHeight + textPadding * 2; // Adjusted Y position for text
+                    ctx.fillText(textToDownload, textX, textY);
+
+                    // Sanitize filename: replace non-alphanumeric characters with underscores, truncate if too long
+                    const safeFilename = textToDownload.replace(/[^a-z0-9]/gi, '_').toLowerCase().substring(0, 50);
+                    const filename = safeFilename ? `${safeFilename}_qrcode.png` : 'qrcode.png';
+
+                    // Create a link to download the combined canvas
+                    const image = combinedCanvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = image;
+                    link.download = filename; // Dynamic filename
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } else {
+                    console.error("Tidak ada kode QR atau teks untuk diunduh.");
+                }
+            }
+
+            // Event listener for input field to generate QR code automatically
+            qrInput.addEventListener('input', generateQrCode);
+
+            // Event listener for download button
+            downloadBtn.addEventListener('click', downloadQrCode);
+
+            // Initial message when the page loads
+            qrcodeDiv.innerHTML = '<p class="text-gray-500">Kode QR akan muncul di sini.</p>';
+            qrTextDisplay.classList.add('hidden'); // Ensure text display is hidden on load
+            downloadBtn.classList.add('hidden'); // Ensure download button is hidden on load
+        });
+    </script>
+</body>
+</html>
