@@ -29,13 +29,28 @@
     }
     body {
       font-family: var(--font-family);
-      background: #1b1b1b;
       color: var(--text-color);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
       padding: 16px;
+      overflow: hidden; /* Mencegah scroll saat animasi awal */
+
+      /* Animasi latar belakang gradien */
+      background: linear-gradient(135deg, #1b1b1b, #2c3e50, #1b1b1b);
+      background-size: 300% 300%;
+      animation: backgroundPan 15s ease infinite alternate;
+    }
+
+    /* Keyframes untuk animasi latar belakang */
+    @keyframes backgroundPan {
+      0% {
+        background-position: 0% 50%;
+      }
+      100% {
+        background-position: 100% 50%;
+      }
     }
 
     /* Container responsive */
@@ -63,11 +78,34 @@
       overflow: hidden;
       border-radius: 8px;
       transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      /* Animasi masuk */
+      transform: translateY(20px);
+      opacity: 0;
+      animation: tileEntrance 0.5s forwards;
     }
+    /* Delay animasi untuk setiap tile */
+    .metro-tile:nth-child(1) { animation-delay: 0.1s; }
+    .metro-tile:nth-child(2) { animation-delay: 0.2s; }
+    .metro-tile:nth-child(3) { animation-delay: 0.3s; }
+    .metro-tile:nth-child(4) { animation-delay: 0.4s; }
+    .metro-tile:nth-child(5) { animation-delay: 0.5s; }
+    .metro-tile:nth-child(6) { animation-delay: 0.6s; }
+    .metro-tile:nth-child(7) { animation-delay: 0.7s; }
+    .metro-tile:nth-child(8) { animation-delay: 0.8s; }
+
+    /* Keyframes untuk animasi masuk */
+    @keyframes tileEntrance {
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Efek hover yang lebih dinamis */
     .metro-tile:hover {
       opacity: var(--tile-hover-opacity);
-      transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transform: translateY(-8px) scale(1.02); /* Sedikit lebih naik dan membesar */
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6); /* Bayangan lebih kuat */
     }
 
     /* Warna masing-masing tile */
@@ -83,28 +121,62 @@
     /* Style untuk tombol disabled */
     .disabled {
       opacity: var(--disabled-opacity);
-      cursor: default;
-      pointer-events: none;
+      cursor: not-allowed; /* Kursor 'tidak diizinkan' */
+      pointer-events: none; /* Mencegah interaksi mouse */
+      filter: grayscale(100%); /* Membuat tile disabled terlihat abu-abu */
+    }
+
+    /* Animasi goyang untuk tile disabled saat diklik */
+    .metro-tile.disabled.shake {
+      animation: shake 0.3s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
     }
 
     /* Ikon sederhana */
     .metro-tile .icon {
-      font-size: 2rem;
+      font-size: 2.5rem; /* Ukuran ikon sedikit lebih besar */
       margin-bottom: 8px;
-      opacity: 0.7;
+      opacity: 0.8; /* Opasitas ikon sedikit lebih tinggi */
+      transition: transform 0.2s;
+    }
+    .metro-tile:hover .icon {
+      transform: scale(1.1); /* Ikon membesar saat hover */
     }
 
     /* Judul tile */
     .metro-tile .label {
-      font-size: 0.9rem;
+      font-size: 1rem; /* Ukuran font label sedikit lebih besar */
       line-height: 1.2;
+      font-weight: bold; /* Label lebih tebal */
+    }
+
+    /* Efek ripple saat klik */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.7); /* Warna ripple putih transparan */
+      animation: ripple-animation 0.6s linear forwards;
+      transform: scale(0);
+      pointer-events: none; /* Memastikan ripple tidak mengganggu klik */
+    }
+
+    @keyframes ripple-animation {
+      to {
+        transform: scale(2.5); /* Memperbesar ripple */
+        opacity: 0; /* Menghilangkan ripple */
+      }
     }
   </style>
 </head>
 <body>
 
   <div class="metro-container">
-    <div class="metro-tile tile-1" onclick="location.href='htmlrun.html'">
+    <div class="metro-tile tile-1" data-href="htmlrun.html">
       <div class="icon">🏃</div>
       <div class="label">HTML Run</div>
     </div>
@@ -112,31 +184,80 @@
       <div class="icon">📂</div>
       <div class="label">Files (Disabled)</div>
     </div>
-    <div class="metro-tile tile-3" onclick="location.href='enkripsi.html'">
+    <div class="metro-tile tile-3" data-href="enkripsi.html">
       <div class="icon">🔒</div>
       <div class="label">Enkripsi File</div>
     </div>
-    <div class="metro-tile tile-4" onclick="location.href='TingkatkanGambar.html'">
+    <div class="metro-tile tile-4" data-href="TingkatkanGambar.html">
       <div class="icon">🖼️</div>
       <div class="label">Tingkatkan Gambar</div>
     </div>
-    <div class="metro-tile tile-5" onclick="location.href='Steganografi.html'">
+    <div class="metro-tile tile-5" data-href="Steganografi.html">
       <div class="icon">🧬</div>
       <div class="label">Steganografi</div>
     </div>
-    <div class="metro-tile tile-6" onclick="location.href='SteganografiWav.html'">
+    <div class="metro-tile tile-6" data-href="SteganografiWav.html">
       <div class="icon">🎵</div>
       <div class="label">Steganografi WAV</div>
     </div>
-    <div class="metro-tile tile-7" onclick="location.href='VideoFrame.html'">
+    <div class="metro-tile tile-7" data-href="VideoFrame.html">
       <div class="icon">🎬</div>
       <div class="label">Video Frame</div>
     </div>
-    <div class="metro-tile tile-8" onclick="location.href='EnkripsiKata.html'">
+    <div class="metro-tile tile-8" data-href="EnkripsiKata.html">
       <div class="icon">🔑</div>
       <div class="label">Enkripsi Kata</div>
     </div>
   </div>
 
+  <script>
+    // Mendapatkan semua elemen tile
+    const tiles = document.querySelectorAll('.metro-tile');
+
+    tiles.forEach(tile => {
+      // Menambahkan event listener untuk klik pada setiap tile
+      tile.addEventListener('click', function(e) {
+        // Memeriksa apakah tile disabled
+        if (this.classList.contains('disabled')) {
+          // Menambahkan kelas 'shake' untuk memicu animasi
+          this.classList.add('shake');
+          // Menghapus kelas 'shake' setelah animasi selesai
+          this.addEventListener('animationend', () => {
+            this.classList.remove('shake');
+          }, { once: true }); // Event listener hanya berjalan sekali
+          e.preventDefault(); // Mencegah tindakan default (misalnya navigasi) untuk tile disabled
+        } else {
+          // Membuat elemen ripple baru
+          const ripple = document.createElement('span');
+          ripple.classList.add('ripple');
+
+          // Mendapatkan ukuran tile untuk menentukan ukuran ripple
+          const size = Math.max(this.offsetWidth, this.offsetHeight);
+          ripple.style.width = ripple.style.height = `${size}px`;
+
+          // Menentukan posisi ripple berdasarkan posisi klik
+          const rect = this.getBoundingClientRect();
+          ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+          ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+
+          // Menambahkan ripple ke dalam tile
+          this.appendChild(ripple);
+
+          // Menghapus ripple setelah animasi selesai
+          ripple.addEventListener('animationend', () => {
+            ripple.remove();
+          });
+
+          // Mengarahkan ke halaman yang dituju setelah efek ripple terlihat sedikit
+          const targetHref = this.dataset.href;
+          if (targetHref) {
+            setTimeout(() => {
+              window.location.href = targetHref;
+            }, 200); // Penundaan singkat agar efek ripple terlihat
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>
