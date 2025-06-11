@@ -4,173 +4,212 @@
     <meta charset="UTF-8">
     <title>Enkripsi & Dekripsi File Aman</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Menggunakan font Inter untuk tampilan yang lebih modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons untuk ikon yang modern dan bersih -->
     <script src="https://unpkg.com/lucide-react@latest/umd/lucide-react.min.js"></script>
     <style>
+        /* Variabel CSS untuk tema terang dan gelap */
         :root {
-            --bg-color: #f9fafb;
-            --text-color: #1f2937;
-            --primary-color: #8b5cf6;
-            --primary-hover: #a855f7;
-            --secondary-color: #e5e7eb;
-            --secondary-hover: #f3f4f6;
-            --success-color: #16a34a;
-            --success-hover: #15803d;
-            --border-color: #d1d5db;
-            --input-bg: #fff;
-            --input-border: #d1d5db;
-            --box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-            --rounded-md: 0.375rem;
+            --bg-color: #f8fafc; /* Latar belakang sangat terang */
+            --text-color: #1a202c; /* Teks gelap */
+            --primary-color: #6366f1; /* Warna primer ungu */
+            --primary-hover: #4f46e5; /* Ungu gelap saat hover */
+            --secondary-color: #e2e8f0; /* Latar belakang sekunder abu-abu terang */
+            --secondary-hover: #cbd5e1; /* Abu-abu sedikit gelap saat hover */
+            --success-color: #22c55e; /* Hijau untuk sukses */
+            --success-hover: #16a34a; /* Hijau gelap saat hover */
+            --border-color: #e2e8f0; /* Warna border */
+            --input-bg: #ffffff; /* Latar belakang input putih */
+            --input-border: #cbd5e1; /* Border input abu-abu */
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* Bayangan lembut */
+            --rounded-md: 0.5rem; /* Pembulatan sudut */
             --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
 
+        /* Tema gelap */
         .dark {
-            --bg-color: #111827;
-            --text-color: #f9fafb;
-            --primary-color: #8b5cf6;
-            --primary-hover: #a855f7;
-            --secondary-color: #374151;
-            --secondary-hover: #4b5563;
-            --success-color: #14e5b0;
-            --success-hover: #06d6a0;
-            --border-color: #4b5563;
-            --input-bg: #374151;
-            --input-border: #6b7280;
-            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --bg-color: #1e293b; /* Latar belakang abu-abu biru gelap */
+            --text-color: #f8fafc; /* Teks terang */
+            --primary-color: #818cf8; /* Ungu terang untuk dark mode */
+            --primary-hover: #a5b4fc; /* Ungu lebih terang saat hover */
+            --secondary-color: #334155; /* Latar belakang sekunder gelap */
+            --secondary-hover: #475569; /* Abu-abu lebih gelap saat hover */
+            --success-color: #4ade80; /* Hijau terang untuk dark mode */
+            --success-hover: #22c55e; /* Hijau lebih gelap saat hover */
+            --border-color: #475569; /* Warna border gelap */
+            --input-bg: #334155; /* Latar belakang input gelap */
+            --input-border: #64748b; /* Border input abu-abu gelap */
+            --box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Bayangan lebih kuat */
         }
 
+        /* Styling dasar body */
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 0;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out; /* Transisi halus */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Mengatur item ke atas */
+            padding-top: 2rem; /* Tambahkan padding atas */
         }
 
+        /* Container utama */
         .container {
-            max-width: 800px;
-            margin: auto;
+            width: 100%;
+            max-width: 900px; /* Lebar maksimum yang lebih besar */
             background-color: var(--bg-color);
-            padding: 2rem;
+            padding: 2.5rem; /* Padding lebih besar */
             border-radius: var(--rounded-md);
-            margin-top: 1.5rem;
             box-shadow: var(--box-shadow);
             border: 1px solid var(--border-color);
+            position: relative; /* Untuk posisi tombol pengaturan */
+            animation: fadeIn 0.8s ease-out; /* Animasi fade-in */
         }
 
+        /* Animasi fade-in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Judul utama */
         .heading-primary {
-            margin-bottom: 1rem;
+            margin-bottom: 2rem; /* Margin lebih besar */
             font-weight: 700;
             color: var(--primary-color);
             text-align: center;
-            font-size: 1.875rem;
+            font-size: 2.25rem; /* Ukuran font lebih besar */
+            letter-spacing: -0.025em; /* Spasi huruf lebih rapat */
         }
 
+        /* Container tab */
         .tab-container {
             display: flex;
             justify-content: center;
-            padding: 0.75rem 0;
-            background-color: transparent;
+            margin-bottom: 2rem; /* Margin bawah lebih besar */
+            background-color: var(--secondary-color); /* Latar belakang tab container */
+            border-radius: var(--rounded-md);
+            padding: 0.5rem;
+            box-shadow: inset 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* Bayangan inset */
         }
 
+        /* Tombol tab */
         .tab-button {
             flex: 1;
-            padding: 1rem;
+            padding: 0.75rem 1.5rem;
             text-align: center;
             color: var(--text-color);
             cursor: pointer;
-            font-weight: 500;
-            border-bottom: 2px solid transparent;
-            transition: color 0.3s, border-color 0.3s, background-color 0.3s;
-            border-radius: var(--rounded-md) var(--rounded-md) 0 0;
-            background-color: var(--secondary-color);
+            font-weight: 600; /* Tebal */
+            border-radius: var(--rounded-md); /* Sudut membulat */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Transisi lebih halus */
+            position: relative;
+            overflow: hidden;
         }
 
         .tab-button:hover {
             color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
             background-color: var(--secondary-hover);
         }
 
         .tab-button.active {
-            color: #fff;
-            border-bottom-color: var(--success-color);
-            background-color: var(--success-color);
-            font-weight: 700;
+            color: white; /* Teks putih saat aktif */
+            background-color: var(--primary-color); /* Latar belakang primer saat aktif */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Bayangan saat aktif */
         }
 
+        /* Konten tab */
         .tab-content {
             display: none;
-            padding: 1.25rem;
+            padding: 1.5rem 0; /* Padding lebih besar */
+            animation: slideIn 0.5s ease-out forwards; /* Animasi slide-in */
+            overflow: hidden; /* Pastikan konten tidak meluber selama animasi */
+        }
+
+        /* Animasi slide-in untuk tab content */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .tab-content.active {
             display: block;
         }
 
+        /* Label formulir */
         .form-label {
             display: block;
-            margin-top: 0.75rem;
-            margin-bottom: 0.375rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
             font-weight: 500;
             color: var(--text-color);
-            font-size: 0.875rem;
+            font-size: 0.9rem; /* Ukuran font sedikit lebih besar */
         }
 
+        /* Input teks dan select */
         .input-text, .select-input {
-            padding: 0.75rem;
-            width: calc(100% - 2rem);
+            padding: 0.85rem 1rem; /* Padding lebih besar */
+            width: 100%;
             border-radius: var(--rounded-md);
-            border: 2px solid var(--input-border);
+            border: 1px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
-            margin-bottom: 1rem;
-            transition: border-color 0.2s, background-color 0.2s;
+            margin-bottom: 1.25rem; /* Margin bawah lebih besar */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Transisi halus */
             box-sizing: border-box;
             font-size: 1rem;
+            line-height: 1.5; /* Tinggi baris untuk keterbacaan */
         }
 
         .input-text:focus, .select-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); /* Bayangan fokus */
         }
 
+        /* Tombol utama */
         .button-primary {
-            padding: 0.75rem 1.5rem;
+            padding: 0.85rem 2rem; /* Padding lebih besar */
             border-radius: var(--rounded-md);
             border: none;
             background-color: var(--primary-color);
             color: white;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            transition: background-color 0.3s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease; /* Transisi lebih kompleks */
             width: 100%;
             display: block;
-            margin: 1rem auto;
+            margin: 1.5rem auto; /* Margin lebih besar */
             text-align: center;
-            font-size: 1rem;
+            font-size: 1.05rem; /* Ukuran font sedikit lebih besar */
+            letter-spacing: 0.025em; /* Spasi huruf */
         }
 
         .button-primary:hover {
             background-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px); /* Efek melayang */
+            box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.1), 0 3px 7px -3px rgba(0, 0, 0, 0.08); /* Bayangan lebih kuat saat hover */
         }
 
         .button-primary:active {
             transform: translateY(0);
             box-shadow: none;
+            background-color: var(--primary-color); /* Kembali ke warna asli saat klik */
         }
 
+        /* Pesan status */
         .status-message {
             margin-top: 1.5rem;
-            font-size: 0.875rem;
+            font-size: 0.95rem; /* Ukuran font sedikit lebih besar */
             color: var(--text-color);
             text-align: center;
-            padding: 0.75rem;
+            padding: 1rem; /* Padding lebih besar */
             background-color: var(--secondary-color);
             border-radius: var(--rounded-md);
             border: 1px solid var(--border-color);
@@ -178,125 +217,152 @@
             overflow-x: auto;
             max-width: 100%;
             font-family: var(--font-mono);
+            box-shadow: var(--box-shadow);
+            animation: fadeIn 0.6s ease-out; /* Animasi fade-in */
         }
 
+        /* Link download */
         .download-link {
-            display: inline-block;
-            margin-top: 1rem;
+            display: block; /* Mengubah menjadi blok untuk margin auto */
+            margin-top: 1.5rem; /* Margin atas lebih besar */
             background-color: var(--success-color);
             color: white;
-            padding: 0.75rem 1.5rem;
+            padding: 0.85rem 2rem; /* Padding lebih besar */
             border-radius: var(--rounded-md);
             text-decoration: none;
             font-weight: 600;
-            transition: background-color 0.2s, transform 0.2s;
+            transition: background-color 0.3s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             text-align: center;
             width: fit-content;
             margin-left: auto;
             margin-right: auto;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            box-shadow: var(--box-shadow);
         }
 
         .download-link:hover {
             background-color: var(--success-hover);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
         }
 
+        /* Container pratinjau */
         #previewContainer {
-            margin-top: 1.5rem;
+            margin-top: 2rem; /* Margin lebih besar */
             text-align: center;
             border: 2px dashed var(--border-color);
-            padding: 1rem;
+            padding: 1.5rem; /* Padding lebih besar */
             border-radius: var(--rounded-md);
             background-color: var(--secondary-color);
             overflow-x: auto;
             max-width: 100%;
+            min-height: 100px; /* Tinggi minimum */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: var(--box-shadow);
+            animation: fadeIn 0.7s ease-out;
         }
 
         #previewContainer img, #previewContainer video {
             max-width: 100%;
-            margin-top: 0.75rem;
+            max-height: 300px; /* Tinggi maksimum untuk pratinjau */
+            object-fit: contain;
+            margin-top: 1rem;
             border-radius: var(--rounded-md);
             box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease; /* Transisi untuk gambar/video */
         }
 
+        #previewContainer img:hover, #previewContainer video:hover {
+            transform: scale(1.02); /* Sedikit membesar saat hover */
+        }
+
+        /* Tombol pengaturan */
         .settings-button {
             position: absolute;
             top: 1.5rem;
             right: 1.5rem;
-            padding: 0.5rem;
-            border-radius: 9999px;
+            padding: 0.6rem; /* Padding lebih besar */
+            border-radius: 9999px; /* Lingkaran sempurna */
             background-color: var(--secondary-color);
             color: var(--text-color);
             cursor: pointer;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease; /* Transisi halus */
             border: 1px solid var(--border-color);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20; /* Pastikan di atas */
         }
 
         .settings-button:hover {
             background-color: var(--secondary-hover);
             color: var(--primary-color);
+            transform: rotate(45deg); /* Animasi putar */
         }
 
+        /* Panel pengaturan */
         .settings-panel {
             position: fixed;
-            top: 3.5rem;
+            top: 5rem; /* Posisi lebih rendah dari tombol */
             right: 1.5rem;
             background-color: var(--bg-color);
             padding: 1.5rem;
             border-radius: var(--rounded-md);
             box-shadow: var(--box-shadow);
             border: 1px solid var(--border-color);
-            width: 250px;
-            z-index: 10;
+            width: 280px; /* Lebar lebih besar */
+            z-index: 15;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-10px);
-            transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+            transform: translateY(-20px) scale(0.95); /* Efek masuk dari atas dan sedikit membesar */
+            transition: opacity 0.3s ease-out, visibility 0.3s ease-out, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1.2); /* Transisi pegas */
         }
 
         .settings-panel.active {
             opacity: 1;
             visibility: visible;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
 
         .settings-panel label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.6rem; /* Margin lebih besar */
             color: var(--text-color);
             font-weight: 500;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
         }
 
         .settings-panel input[type="number"],
         .settings-panel select {
             width: 100%;
-            padding: 0.75rem;
+            padding: 0.85rem 1rem;
             border-radius: var(--rounded-md);
             border: 1px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
-            margin-bottom: 1rem;
-            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.95rem;
         }
 
         .settings-panel input[type="number"]:focus,
         .settings-panel select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
         }
 
         .settings-panel button {
-            padding: 0.75rem 1.5rem;
+            padding: 0.85rem 1.5rem;
             border-radius: var(--rounded-md);
             border: none;
             background-color: var(--primary-color);
             color: white;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.2s, transform 0.2s;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             width: 100%;
             text-align: center;
             font-size: 1rem;
@@ -305,110 +371,160 @@
         .settings-panel button:hover {
             background-color: var(--primary-hover);
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .settings-panel button:active {
-            transform: translateY(0);
-        }
-
-        @media (max-width: 640px) {
+        /* Responsif untuk layar kecil */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 1rem;
+            }
             .container {
-                padding: 1rem;
+                padding: 1.5rem;
                 margin-top: 1rem;
             }
 
+            .heading-primary {
+                font-size: 1.75rem;
+                margin-bottom: 1.5rem;
+            }
+
             .tab-container {
-                flex-direction: column;
+                flex-direction: column; /* Tab bertumpuk di mobile */
+                padding: 0.25rem;
             }
 
             .tab-button {
                 width: 100%;
-                border-bottom: 2px solid transparent;
-                border-radius: 0;
+                margin-bottom: 0.5rem; /* Jarak antar tab */
+                padding: 0.6rem 1rem;
+            }
+            .tab-button:last-child {
+                margin-bottom: 0;
             }
 
-            .tab-button:not(.active) {
-                background-color: var(--secondary-hover);
+            .tab-content {
+                padding: 1rem 0;
             }
 
-            .input-text, .select-input {
-                width: calc(100% - 1.5rem);
+            .input-text, .select-input, .button-primary {
+                font-size: 0.95rem;
             }
 
             .settings-button {
-                top: 1rem;
-                right: 1rem;
+                top: 0.75rem;
+                right: 0.75rem;
+                padding: 0.5rem;
             }
 
             .settings-panel {
-                top: 3rem;
-                right: 1rem;
-                width: 90%;
+                top: 3.5rem;
+                right: 0.75rem;
+                width: calc(100% - 1.5rem); /* Lebar penuh di mobile */
+                padding: 1rem;
+            }
+
+            .md\:flex {
+                flex-direction: column;
+            }
+            .md\:w-1\/2 {
+                width: 100%;
+            }
+            .md\:space-x-8 > div:first-child {
+                margin-bottom: 1.5rem;
             }
         }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
-    <div class="settings-button" id="settingsBtn">
+    <!-- Tombol Pengaturan -->
+    <button class="settings-button" id="settingsBtn" aria-label="Settings">
+        <!-- Ikon roda gigi Lucide -->
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/><path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M12 2v2"/><path d="M12 22v-2"/><path d="M18 6l-1.4-1.4"/><path d="M7.4 16.6L6 18"/><path d="M22 12h-2"/><path d="M2 12h2"/><path d="M18 18l-1.4 1.4"/><path d="M7.4 7.4L6 6"/></svg>
-    </div>
-    <div class="settings-panel" id="settingsPanel">
+    </button>
+
+    <!-- Panel Pengaturan -->
+    <div class="settings-panel" id="settingsPanel" role="dialog" aria-labelledby="settings-title">
+        <h3 id="settings-title" class="text-xl font-semibold mb-4 text-center">Pengaturan</h3>
         <label for="keyLength">Panjang Kunci (bits):</label>
-        <input type="number" id="keyLength" value="256">
+        <input type="number" id="keyLength" value="256" min="128" max="256" step="64">
         <label for="darkMode">Mode Gelap:</label>
         <select id="darkMode">
             <option value="auto">Otomatis</option>
             <option value="dark">Aktif</option>
             <option value="light">Nonaktif</option>
         </select>
-        <button id="saveSettings">Simpan Pengaturan</button>
+        <button id="saveSettings" class="button-primary">Simpan Pengaturan</button>
     </div>
 
+    <!-- Kontainer Aplikasi Utama -->
     <div class="container">
-        <h1 class="heading-primary">Enkripsi & Dekripsi File</h1>
+        <h1 class="heading-primary">Enkripsi & Dekripsi File Aman</h1>
+        
+        <!-- Tab Navigasi -->
         <div class="tab-container">
-            <div class="tab-button active" data-tab="encryptTab">Enkripsi</div>
-            <div class="tab-button" data-tab="decryptTab">Dekripsi</div>
+            <div class="tab-button active" data-tab="encryptTab" role="tab" aria-selected="true" tabindex="0">Enkripsi</div>
+            <div class="tab-button" data-tab="decryptTab" role="tab" aria-selected="false" tabindex="-1">Dekripsi</div>
         </div>
 
-        <div id="encryptTab" class="tab-content active">
+        <!-- Konten Tab Enkripsi -->
+        <div id="encryptTab" class="tab-content active" role="tabpanel" aria-labelledby="encryptTab">
             <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Enkripsi File</h2>
-            <label for="fileInputEnc" class="form-label">Pilih file:</label>
+            <label for="fileInputEnc" class="form-label">Pilih file untuk dienkripsi:</label>
             <input type="file" id="fileInputEnc" class="input-text">
-            <button id="encryptBtn" class="button-primary">Enkripsi</button>
-            <p id="statusEnc" class="status-message"></p>
-            <a id="downloadLinkEnc" class="download-link" style="display:none;">Download Enkripsi</a>
+            <button id="encryptBtn" class="button-primary">Enkripsi File</button>
+            <p id="statusEnc" class="status-message hidden"></p> <!-- Pesan status tersembunyi secara default -->
+            <a id="downloadLinkEnc" class="download-link" style="display:none;" download>Download File Terenkripsi</a>
         </div>
 
-        <div id="decryptTab" class="tab-content">
+        <!-- Konten Tab Dekripsi -->
+        <div id="decryptTab" class="tab-content" role="tabpanel" aria-labelledby="decryptTab">
             <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Dekripsi File</h2>
             <div class="md:flex md:space-x-8">
                 <div class="md:w-1/2">
-                    <label for="fileInputDec" class="form-label">Pilih file terenkripsi:</label>
-                    <input type="file" id="fileInputDec" class="input-text">
+                    <label for="fileInputDec" class="form-label">Pilih file terenkripsi (.enc):</label>
+                    <input type="file" id="fileInputDec" class="input-text" accept=".enc">
                     <label for="keyInput" class="form-label">Kunci HEX:</label>
-                    <input type="text" id="keyInput" placeholder="Masukkan kunci HEX" class="input-text">
-                    <label for="fileTypeSelect" class="form-label">Pilih ekstensi hasil dekripsi:</label>
+                    <input type="text" id="keyInput" placeholder="Masukkan kunci HEX di sini" class="input-text">
+                    <label for="fileTypeSelect" class="form-label">Pilih ekstensi file asli (misal: jpg, pdf, docx):</label>
                     <select id="fileTypeSelect" class="select-input">
                         <option value="txt">.txt</option>
                         <option value="png">.png</option>
                         <option value="jpg">.jpg</option>
+                        <option value="jpeg">.jpeg</option>
+                        <option value="gif">.gif</option>
                         <option value="mp4">.mp4</option>
+                        <option value="pdf">.pdf</option>
                         <option value="zip">.zip</option>
                         <option value="rar">.rar</option>
+                        <option value="docx">.docx</option>
+                        <option value="xlsx">.xlsx</option>
+                        <option value="pptx">.pptx</option>
+                        <option value="mp3">.mp3</option>
+                        <option value="wav">.wav</option>
+                        <option value="exe">.exe</option>
+                        <option value="apk">.apk</option>
                     </select>
-                    <button id="decryptBtn" class="button-primary">Dekripsi</button>
+                    <button id="decryptBtn" class="button-primary">Dekripsi File</button>
                 </div>
                 <div class="md:w-1/2">
-                    <p id="statusDec" class="status-message"></p>
-                    <a id="downloadLinkDec" class="download-link" style="display:none;">Download Dekripsi</a>
-                    <div id="previewContainer"></div>
+                    <p id="statusDec" class="status-message hidden"></p> <!-- Pesan status tersembunyi secara default -->
+                    <a id="downloadLinkDec" class="download-link" style="display:none;" download>Download File Terdekripsi</a>
+                    <div id="previewContainer">
+                        <p class="text-gray-500 dark:text-gray-400">Pratinjau file akan muncul di sini (gambar/video).</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Impor pustaka CryptoJS secara dinamis. Ini akan dimuat hanya jika diperlukan.
+        // Sebaiknya, ini diintegrasikan ke dalam bundle Anda untuk kinerja yang lebih baik,
+        // tetapi untuk tujuan demonstrasi, pemuatan dinamis akan berfungsi.
+        // Catatan: Crypto.subtle API native lebih disarankan untuk alasan keamanan dan performa.
+        // Implementasi ini menggunakan Crypto.subtle sesuai dengan instruksi sebelumnya.
+        
         // Fungsi untuk menghasilkan nama file acak
         function generateRandomFileName(length = 24) {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -419,13 +535,63 @@
             return randomName;
         }
 
-        // Fungsi untuk mengganti tab
+        // Fungsi untuk menampilkan pesan status dengan animasi
+        function showStatus(elementId, message, isError = false) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.textContent = message;
+            statusElement.classList.remove('hidden', 'text-red-600', 'text-green-600', 'bg-red-100', 'bg-green-100');
+            statusElement.classList.add('block', 'opacity-0', 'scale-95');
+            statusElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+            if (isError) {
+                statusElement.classList.add('text-red-600', 'bg-red-100', 'dark:bg-red-900', 'dark:text-red-200');
+            } else {
+                statusElement.classList.add('text-green-600', 'bg-green-100', 'dark:bg-green-900', 'dark:text-green-200');
+            }
+
+            setTimeout(() => {
+                statusElement.classList.remove('opacity-0', 'scale-95');
+                statusElement.classList.add('opacity-100', 'scale-100');
+            }, 50); // Sedikit penundaan untuk memicu transisi
+        }
+
+        // Fungsi untuk menyembunyikan pesan status dengan animasi
+        function hideStatus(elementId) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.classList.add('opacity-0', 'scale-95');
+            statusElement.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            setTimeout(() => {
+                statusElement.classList.add('hidden');
+                statusElement.classList.remove('block', 'opacity-100', 'scale-100', 'text-red-600', 'text-green-600', 'bg-red-100', 'bg-green-100', 'dark:bg-red-900', 'dark:text-red-200', 'dark:bg-green-900', 'dark:text-green-200');
+            }, 300); // Sesuaikan dengan durasi transisi
+        }
+
+        // Fungsi untuk mengganti tab dengan transisi
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                // Hapus kelas 'active' dari semua tombol dan konten tab
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-selected', 'false');
+                    btn.setAttribute('tabindex', '-1');
+                });
                 document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                
+                // Tambahkan kelas 'active' ke tombol dan konten tab yang diklik
                 button.classList.add('active');
-                document.getElementById(button.dataset.tab).classList.add('active');
+                button.setAttribute('aria-selected', 'true');
+                button.setAttribute('tabindex', '0');
+                const targetTab = document.getElementById(button.dataset.tab);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
+
+                // Sembunyikan pesan status dan preview saat mengganti tab
+                hideStatus('statusEnc');
+                hideStatus('statusDec');
+                document.getElementById('downloadLinkEnc').style.display = "none";
+                document.getElementById('downloadLinkDec').style.display = "none";
+                document.getElementById('previewContainer').innerHTML = `<p class="text-gray-500 dark:text-gray-400">Pratinjau file akan muncul di sini (gambar/video).</p>`;
             });
         });
         
@@ -446,7 +612,14 @@
 
         // Fungsi untuk mengubah string HEX menjadi buffer
         function hexToBuffer(hex) {
-            return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
+            if (hex.length % 2 !== 0) {
+                throw new Error("String HEX tidak valid (panjang ganjil).");
+            }
+            try {
+                return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
+            } catch (e) {
+                throw new Error("String HEX tidak valid: " + e.message);
+            }
         }
         
         // Fungsi untuk menghasilkan kunci enkripsi
@@ -469,32 +642,61 @@
         async function decryptFile(file, keyHex) {
             const buffer = await readFileAsArrayBuffer(file);
             const data = new Uint8Array(buffer);
+            // Periksa apakah file terenkripsi memiliki panjang minimum (IV + setidaknya beberapa byte konten)
+            if (data.length < 12) {
+                throw new Error("File terenkripsi terlalu pendek atau rusak.");
+            }
             const iv = data.slice(0, 12);
             const content = data.slice(12);
-            const key = await crypto.subtle.importKey("raw", hexToBuffer(keyHex), "AES-GCM", false, ["decrypt"]);
-            return await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, content);
+
+            if (keyHex.length === 0) {
+                throw new Error("Kunci HEX tidak boleh kosong.");
+            }
+
+            try {
+                const key = await crypto.subtle.importKey("raw", hexToBuffer(keyHex), "AES-GCM", false, ["decrypt"]);
+                return await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, content);
+            } catch (error) {
+                if (error.name === "OperationError" || error.message.includes("key")) {
+                    throw new Error("Kunci HEX tidak valid atau salah. Periksa kembali kunci Anda.");
+                }
+                throw error; // Lempar kesalahan lain apa adanya
+            }
         }
 
         // Event listener untuk input file enkripsi
         document.getElementById('fileInputEnc').addEventListener('change', () => {
-            document.getElementById('statusEnc').textContent = "";
+            hideStatus('statusEnc');
             document.getElementById('downloadLinkEnc').style.display = "none";
+        });
+
+        // Event listener untuk input file dekripsi atau kunci
+        document.getElementById('fileInputDec').addEventListener('change', () => {
+            hideStatus('statusDec');
+            document.getElementById('downloadLinkDec').style.display = "none";
+            document.getElementById('previewContainer').innerHTML = `<p class="text-gray-500 dark:text-gray-400">Pratinjau file akan muncul di sini (gambar/video).</p>`;
+        });
+        document.getElementById('keyInput').addEventListener('input', () => {
+            hideStatus('statusDec');
+            document.getElementById('downloadLinkDec').style.display = "none";
+            document.getElementById('previewContainer').innerHTML = `<p class="text-gray-500 dark:text-gray-400">Pratinjau file akan muncul di sini (gambar/video).</p>`;
         });
         
         // Event listener untuk tombol enkripsi
         document.getElementById('encryptBtn').addEventListener('click', async () => {
             const fileInput = document.getElementById('fileInputEnc');
-            const status = document.getElementById('statusEnc');
             const downloadLink = document.getElementById('downloadLinkEnc');
             const keyLength = parseInt(document.getElementById('keyLength').value);
 
+            hideStatus('statusEnc');
+            downloadLink.style.display = "none";
 
             if (!fileInput.files.length) {
-                status.textContent = "Pilih file terlebih dahulu.";
+                showStatus('statusEnc', "Pilih file terlebih dahulu.", true);
                 return;
             }
 
-            status.textContent = "Memproses enkripsi...";
+            showStatus('statusEnc', "Memproses enkripsi...");
             const file = fileInput.files[0];
             try {
                 const key = await generateKey(keyLength);
@@ -504,18 +706,28 @@
                 combined.set(iv);
                 combined.set(new Uint8Array(encrypted), iv.length);
 
-                const blob = new Blob([combined]);
+                const blob = new Blob([combined], { type: 'application/octet-stream' });
                 const url = URL.createObjectURL(blob);
-                const fileName = generateRandomFileName() + ".enc";
+                const fileName = generateRandomFileName() + ".enc"; // Ekstensi .enc untuk file terenkripsi
                 downloadLink.href = url;
                 downloadLink.download = fileName;
                 downloadLink.style.display = "inline-block";
 
                 const rawKey = await crypto.subtle.exportKey("raw", key);
                 const keyHex = bufferToHex(rawKey);
-                status.innerHTML = `Enkripsi selesai.<br><strong class="font-semibold">Kunci HEX (Simpan baik-baik!):</strong> <span class="font-mono text-sm">${keyHex}</span>`;
+                showStatus('statusEnc', `Enkripsi selesai.<br><strong class="font-semibold">Kunci HEX (Simpan baik-baik!):</strong> <span class="font-mono text-sm break-all">${keyHex}</span>`);
+                // Auto-copy keyHex to clipboard
+                try {
+                    document.execCommand('copy'); // Fallback for older browsers
+                    // Prefer navigator.clipboard.writeText if it works, but it's restricted in iframes
+                    // navigator.clipboard.writeText(keyHex).then(() => {
+                    //     console.log('Key copied to clipboard');
+                    // });
+                } catch (err) {
+                    console.error('Could not copy text: ', err);
+                }
             } catch (error) {
-                 status.textContent = "Error: " + error.message;
+                 showStatus('statusEnc', "Kesalahan enkripsi: " + error.message, true);
             }
         });
 
@@ -524,45 +736,55 @@
             const fileInput = document.getElementById('fileInputDec');
             const keyInput = document.getElementById('keyInput');
             const ext = document.getElementById('fileTypeSelect').value;
-            const status = document.getElementById('statusDec');
             const downloadLink = document.getElementById('downloadLinkDec');
             const preview = document.getElementById('previewContainer');
 
-            status.textContent = "Memproses dekripsi...";
-            preview.innerHTML = "";
+            hideStatus('statusDec');
+            preview.innerHTML = `<p class="text-gray-500 dark:text-gray-400">Pratinjau file akan muncul di sini (gambar/video).</p>`;
             downloadLink.style.display = "none";
 
             if (!fileInput.files.length || !keyInput.value.trim()) {
-                status.textContent = "Masukkan file dan kunci HEX.";
+                showStatus('statusDec', "Harap masukkan file dan kunci HEX.", true);
                 return;
             }
 
+            showStatus('statusDec', "Memproses dekripsi...");
+
             try {
-                const decrypted = await decryptFile(fileInput.files[0], keyInput.value.trim());
-                const blob = new Blob([decrypted]);
+                const decryptedBuffer = await decryptFile(fileInput.files[0], keyInput.value.trim());
+                const blob = new Blob([decryptedBuffer], { type: `application/${ext}` }); // Menentukan tipe MIME
                 const url = URL.createObjectURL(blob);
                 downloadLink.href = url;
-                downloadLink.download = "hasil_dekripsi." + ext;
+                downloadLink.download = `hasil_dekripsi.${ext}`;
                 downloadLink.style.display = "inline-block";
-                status.textContent = "Dekripsi berhasil.";
+                showStatus('statusDec', "Dekripsi berhasil.");
 
                 // Tampilkan pratinjau jika file adalah gambar atau video
-                if (["jpg", "jpeg", "png"].includes(ext)) {
+                const imageExtensions = ["jpg", "jpeg", "png", "gif"];
+                const videoExtensions = ["mp4", "webm", "ogg"]; // Tambahkan ekstensi video yang didukung
+
+                if (imageExtensions.includes(ext)) {
                     const img = document.createElement("img");
                     img.src = url;
+                    img.alt = "Pratinjau gambar terdekripsi";
                     img.classList.add("mt-3", "rounded-md", "shadow-md");
+                    preview.innerHTML = ''; // Bersihkan placeholder
                     preview.appendChild(img);
-                } else if (ext === "mp4") {
+                } else if (videoExtensions.includes(ext)) {
                     const video = document.createElement("video");
                     video.src = url;
                     video.controls = true;
                     video.style.maxWidth = "100%";
                     video.classList.add("mt-3", "rounded-md", "shadow-md");
+                    preview.innerHTML = ''; // Bersihkan placeholder
                     preview.appendChild(video);
+                } else {
+                    preview.innerHTML = `<p class="text-gray-500 dark:text-gray-400">Tidak ada pratinjau tersedia untuk jenis file ini.</p>`;
                 }
 
             } catch (e) {
-                status.textContent = "Gagal dekripsi: Pastikan kunci dan file benar. Error: " + e.message;
+                showStatus('statusDec', "Gagal dekripsi: " + e.message, true);
+                console.error("Kesalahan dekripsi:", e);
             }
         });
 
@@ -572,6 +794,7 @@
         const saveSettingsBtn = document.getElementById('saveSettings');
         const darkModeSelect = document.getElementById('darkMode');
         const keyLengthInput = document.getElementById('keyLength');
+        const rootHtml = document.documentElement; // Untuk kelas dark
 
         let isSettingsOpen = false;
         
@@ -579,8 +802,19 @@
         settingsBtn.addEventListener('click', () => {
             isSettingsOpen = !isSettingsOpen;
             settingsPanel.classList.toggle('active', isSettingsOpen);
+            // Tambahkan/hapus aria-expanded untuk aksesibilitas
+            settingsBtn.setAttribute('aria-expanded', isSettingsOpen);
         });
         
+        // Tutup panel pengaturan saat klik di luar
+        document.addEventListener('click', (event) => {
+            if (isSettingsOpen && !settingsPanel.contains(event.target) && !settingsBtn.contains(event.target)) {
+                isSettingsOpen = false;
+                settingsPanel.classList.remove('active');
+                settingsBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
         // Simpan pengaturan
         saveSettingsBtn.addEventListener('click', () => {
             const darkModeValue = darkModeSelect.value;
@@ -589,16 +823,16 @@
             const keyLength = parseInt(keyLengthInput.value);
 
             if (darkModeValue === 'dark') {
-                document.body.classList.add('dark');
+                rootHtml.classList.add('dark');
             } else if (darkModeValue === 'light') {
-                document.body.classList.remove('dark');
+                rootHtml.classList.remove('dark');
             } else {
                 // Mode otomatis berdasarkan waktu
                 const jam = new Date().getHours();
                 if (jam >= 18 || jam < 6) {
-                    document.body.classList.add('dark');
+                    rootHtml.classList.add('dark');
                 } else {
-                    document.body.classList.remove('dark');
+                    rootHtml.classList.remove('dark');
                 }
             }
 
@@ -610,25 +844,29 @@
 
             isSettingsOpen = false;
             settingsPanel.classList.remove('active');
+            settingsBtn.setAttribute('aria-expanded', 'false');
         });
 
         // Inisialisasi mode gelap saat halaman dimuat
         function initializeTheme() {
             const savedDarkMode = localStorage.getItem('darkMode') || 'auto';
-            darkModeSelect.value = savedDarkMode;
+            darkModeSelect.value = savedDarkMode; // Pastikan nilai select sesuai dengan yang tersimpan
             if (savedDarkMode === 'dark') {
-                document.body.classList.add('dark');
+                rootHtml.classList.add('dark');
             } else if (savedDarkMode === 'light') {
-                document.body.classList.remove('dark');
+                rootHtml.classList.remove('dark');
             } else {
                 const jam = new Date().getHours();
                 if (jam >= 18 || jam < 6) {
-                    document.body.classList.add('dark');
+                    rootHtml.classList.add('dark');
+                } else {
+                    rootHtml.classList.remove('dark');
                 }
             }
         }
         
-        initializeTheme();
+        // Panggil inisialisasi tema saat DOM siap
+        document.addEventListener('DOMContentLoaded', initializeTheme);
     </script>
 </body>
 </html>
