@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Konfigurasi Tailwind CSS untuk tema kustom dan transisi
         tailwind.config = {
             theme: {
                 extend: {
@@ -39,7 +38,6 @@
         }
     </script>
     <style>
-        /* Variabel CSS untuk tema terang */
         :root {
             --bg-color: #f9fafb;
             --text-color: #1f2937;
@@ -57,7 +55,6 @@
             --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
         }
 
-        /* Variabel CSS untuk tema gelap */
         .dark {
             --bg-color: #111827;
             --text-color: #f9fafb;
@@ -73,21 +70,19 @@
             --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
         }
 
-        /* Gaya dasar untuk body */
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
             padding: 0;
-            transition: background-color 0.3s ease, color 0.3s ease; /* Animasi transisi */
+            transition: background-color 0.3s ease, color 0.3s ease;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
         }
 
-        /* Container utama */
         .container {
             max-width: 800px;
             width: 100%;
@@ -97,41 +92,38 @@
             margin-top: 1.5rem;
             box-shadow: var(--box-shadow);
             border: 1px solid var(--border-color);
-            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; /* Animasi transisi */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
 
-        /* Judul utama */
         .heading-primary {
             margin-bottom: 1.5rem;
             font-weight: 700;
             color: var(--primary-color);
             text-align: center;
-            font-size: 2.25rem; /* Ukuran font lebih besar */
-            transition: color 0.3s ease; /* Animasi transisi */
+            font-size: 2.25rem;
+            transition: color 0.3s ease;
         }
 
-        /* Container tab */
         .tab-container {
             display: flex;
             justify-content: center;
             padding: 0.5rem;
             background-color: transparent;
-            border-bottom: 1px solid var(--border-color); /* Garis bawah tab */
+            border-bottom: 1px solid var(--border-color);
         }
 
-        /* Tombol tab */
         .tab-button {
             flex: 1;
             padding: 1rem;
             text-align: center;
             color: var(--text-color);
             cursor: pointer;
-            font-weight: 600; /* Font lebih tebal */
+            font-weight: 600;
             border-bottom: 2px solid transparent;
-            transition: color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease; /* Animasi transisi */
+            transition: color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
             border-radius: var(--rounded-md) var(--rounded-md) 0 0;
             background-color: var(--secondary-color);
-            margin: 0 0.25rem; /* Jarak antar tombol */
+            margin: 0 0.25rem;
         }
 
         .tab-button:hover {
@@ -145,21 +137,19 @@
             border-bottom-color: var(--success-color);
             background-color: var(--success-color);
             font-weight: 700;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Bayangan untuk tab aktif */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        /* Konten tab */
         .tab-content {
             display: none;
             padding: 1.5rem;
-            animation: fadeIn 0.5s ease-out; /* Animasi fade-in */
+            animation: fadeIn 0.5s ease-out;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        /* Label form */
         .form-label {
             display: block;
             margin-top: 1rem;
@@ -170,16 +160,15 @@
             transition: color 0.3s ease;
         }
 
-        /* Input teks dan select */
         .input-text, .select-input {
-            padding: 0.75rem 1rem; /* Padding lebih baik */
+            padding: 0.75rem 1rem;
             width: 100%;
             border-radius: var(--rounded-md);
             border: 2px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
             margin-bottom: 1rem;
-            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease; /* Animasi transisi */
+            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
             box-sizing: border-box;
             font-size: 1rem;
         }
@@ -187,10 +176,9 @@
         .input-text:focus, .select-input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25); /* Bayangan fokus */
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
         }
 
-        /* Tombol utama */
         .button-primary {
             padding: 0.75rem 1.5rem;
             border-radius: var(--rounded-md);
@@ -199,10 +187,10 @@
             color: white;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; /* Animasi transisi */
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
             width: 100%;
             display: block;
-            margin: 1.5rem auto 1rem auto; /* Margin lebih baik */
+            margin: 1.5rem auto 1rem auto;
             text-align: center;
             font-size: 1rem;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -210,8 +198,8 @@
 
         .button-primary:hover {
             background-color: var(--primary-hover);
-            transform: translateY(-3px); /* Efek melayang */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Bayangan lebih besar */
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .button-primary:active {
@@ -219,7 +207,6 @@
             box-shadow: none;
         }
 
-        /* Pesan status */
         .status-message {
             margin-top: 1.5rem;
             font-size: 0.9rem;
@@ -233,10 +220,9 @@
             overflow-x: auto;
             max-width: 100%;
             font-family: var(--font-mono);
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Animasi transisi */
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
-        /* Link unduh */
         .download-link {
             display: inline-block;
             margin-top: 1.5rem;
@@ -246,7 +232,7 @@
             border-radius: var(--rounded-md);
             text-decoration: none;
             font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; /* Animasi transisi */
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
             text-align: center;
             width: fit-content;
             margin-left: auto;
@@ -257,11 +243,10 @@
 
         .download-link:hover {
             background-color: var(--success-hover);
-            transform: translateY(-3px); /* Efek melayang */
+            transform: translateY(-3px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* Container pratinjau */
         #previewContainer {
             margin-top: 1.5rem;
             text-align: center;
@@ -271,7 +256,7 @@
             background-color: var(--secondary-color);
             overflow-x: auto;
             max-width: 100%;
-            min-height: 100px; /* Tinggi minimum untuk pratinjau */
+            min-height: 100px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -281,29 +266,28 @@
 
         #previewContainer img, #previewContainer video {
             max-width: 100%;
-            height: auto; /* Memastikan rasio aspek terjaga */
+            height: auto;
             margin-top: 0.75rem;
             border-radius: var(--rounded-md);
             box-shadow: var(--box-shadow);
-            transition: transform 0.3s ease; /* Animasi untuk gambar/video */
+            transition: transform 0.3s ease;
         }
         #previewContainer img:hover, #previewContainer video:hover {
-            transform: scale(1.02); /* Sedikit zoom saat hover */
+            transform: scale(1.02);
         }
 
-        /* Tombol pengaturan */
         .settings-button {
-            position: fixed; /* Menggunakan fixed untuk tetap terlihat */
+            position: fixed;
             top: 1.5rem;
             right: 1.5rem;
-            padding: 0.75rem; /* Padding lebih besar */
+            padding: 0.75rem;
             border-radius: 9999px;
             background-color: var(--secondary-color);
             color: var(--text-color);
             cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; /* Animasi transisi */
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
             border: 1px solid var(--border-color);
-            z-index: 20; /* Lebih tinggi dari panel pengaturan */
+            z-index: 20;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -313,26 +297,25 @@
         .settings-button:hover {
             background-color: var(--secondary-hover);
             color: var(--primary-color);
-            transform: rotate(45deg); /* Rotasi saat hover */
+            transform: rotate(45deg);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        /* Panel pengaturan */
         .settings-panel {
             position: fixed;
-            top: 4.5rem; /* Posisikan di bawah tombol pengaturan */
+            top: 4.5rem;
             right: 1.5rem;
             background-color: var(--bg-color);
             padding: 1.5rem;
             border-radius: var(--rounded-md);
             box-shadow: var(--box-shadow);
             border: 1px solid var(--border-color);
-            width: 280px; /* Lebar lebih besar */
+            width: 280px;
             z-index: 10;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-20px); /* Efek melayang */
-            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease; /* Animasi transisi */
+            transform: translateY(-20px);
+            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
         }
 
         .settings-panel.active {
@@ -343,7 +326,7 @@
 
         .settings-panel label {
             display: block;
-            margin-bottom: 0.75rem; /* Margin lebih besar */
+            margin-bottom: 0.75rem;
             color: var(--text-color);
             font-weight: 600;
             font-size: 0.875rem;
@@ -357,7 +340,7 @@
             border: 1px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
-            margin-bottom: 1.25rem; /* Margin lebih besar */
+            margin-bottom: 1.25rem;
             font-size: 0.9rem;
             transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -395,20 +378,17 @@
             box-shadow: none;
         }
 
-        /* Kelas untuk pesan kesalahan */
         .error-message {
-            color: #ef4444; /* Warna merah */
+            color: #ef4444;
             font-weight: 600;
             margin-top: 0.5rem;
         }
 
-        /* Animasi */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Gaya untuk area drag-and-drop */
         .drop-zone {
             border: 2px dashed var(--border-color);
             border-radius: var(--rounded-md);
@@ -426,7 +406,7 @@
         }
 
         .drop-zone input[type="file"] {
-            display: none; /* Sembunyikan input file asli */
+            display: none;
         }
 
         .file-name-display {
@@ -436,7 +416,7 @@
         }
 
         .copy-button {
-            background-color: #3b82f6; /* Warna biru */
+            background-color: #3b82f6;
             color: white;
             padding: 0.5rem 1rem;
             border-radius: var(--rounded-md);
@@ -451,15 +431,14 @@
             transform: translateY(-1px);
         }
 
-        /* Desain responsif */
         @media (max-width: 640px) {
             body {
-                align-items: flex-start; /* Sesuaikan untuk perangkat kecil */
+                align-items: flex-start;
             }
             .container {
                 padding: 1rem;
                 margin-top: 1rem;
-                border-radius: 0; /* Hilangkan sudut membulat di perangkat kecil */
+                border-radius: 0;
             }
 
             .heading-primary {
@@ -473,9 +452,9 @@
 
             .tab-button {
                 width: 100%;
-                border-bottom: 1px solid var(--border-color); /* Batas antar tab */
+                border-bottom: 1px solid var(--border-color);
                 border-radius: 0;
-                margin: 0; /* Hapus margin antar tombol */
+                margin: 0;
             }
 
             .tab-button:first-child {
@@ -504,24 +483,23 @@
             .settings-panel {
                 top: 3.5rem;
                 right: 1rem;
-                width: calc(100% - 2rem); /* Lebar penuh dengan margin */
+                width: calc(100% - 2rem);
             }
 
             .md\:flex {
-                flex-direction: column; /* Stack vertikal untuk dekripsi */
+                flex-direction: column;
             }
             .md\:w-1\/2 {
                 width: 100%;
             }
             .md\:space-x-8 > *:not(:last-child) {
-                margin-right: 0; /* Hapus margin horizontal */
-                margin-bottom: 1rem; /* Tambahkan margin vertikal */
+                margin-right: 0;
+                margin-bottom: 1rem;
             }
         }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
-    <!-- Tombol Pengaturan -->
     <button class="settings-button" id="settingsBtn">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2">
             <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/>
@@ -536,7 +514,6 @@
             <path d="M7.4 7.4L6 6"/>
         </svg>
     </button>
-    <!-- Panel Pengaturan -->
     <div class="settings-panel" id="settingsPanel">
         <label for="keyLength">Panjang Kunci (bits):</label>
         <input type="number" id="keyLength" value="256" class="input-text">
@@ -549,7 +526,6 @@
         <button id="saveSettings" class="button-primary">Simpan Pengaturan</button>
     </div>
 
-    <!-- Container Utama Aplikasi -->
     <div class="container">
         <h1 class="heading-primary">Enkripsi & Dekripsi File</h1>
         <div class="tab-container">
@@ -557,7 +533,6 @@
             <div class="tab-button" data-tab="decryptTab">Dekripsi</div>
         </div>
 
-        <!-- Tab Enkripsi -->
         <div id="encryptTab" class="tab-content active">
             <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Enkripsi File</h2>
             
@@ -575,7 +550,6 @@
             </div>
             
             <div id="hexKeySectionEnc" class="mt-4">
-                 <!-- Kunci HEX akan ditampilkan di sini setelah enkripsi -->
             </div>
 
             <div id="passwordSectionEnc" class="mt-4 hidden">
@@ -590,7 +564,6 @@
             <a id="downloadLinkEnc" class="download-link mx-auto" style="display:none;">Download Enkripsi</a>
         </div>
 
-        <!-- Tab Dekripsi -->
         <div id="decryptTab" class="tab-content">
             <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Dekripsi File</h2>
             <div class="md:flex md:space-x-8">
@@ -642,17 +615,10 @@
 
     <script src="https://unpkg.com/lucide-react@latest/umd/lucide-react.min.js"></script>
     <script>
-        // Memastikan Lucide Icons dimuat dan diinisialisasi
         if (typeof lucide !== 'undefined') {
             lucide.createIcons();
         }
 
-        /**
-         * Menampilkan pesan status ke pengguna.
-         * @param {HTMLElement} element Elemen paragraf tempat pesan akan ditampilkan.
-         * @param {string} message Pesan yang akan ditampilkan.
-         * @param {boolean} isError Menunjukkan apakah pesan tersebut adalah kesalahan (untuk styling).
-         */
         function showStatusMessage(element, message, isError = false) {
             element.innerHTML = message;
             element.classList.remove('error-message');
@@ -661,20 +627,11 @@
             }
         }
 
-        /**
-         * Menampilkan indikator loading.
-         * @param {HTMLElement} element Elemen status.
-         */
         function showLoading(element) {
             element.innerHTML = '<svg class="animate-spin h-5 w-5 text-current" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...';
             element.classList.remove('error-message');
         }
 
-        /**
-         * Menghasilkan nama file acak.
-         * @param {number} length Panjang nama file yang diinginkan.
-         * @returns {string} Nama file acak.
-         */
         function generateRandomFileName(length = 24) {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let randomName = '';
@@ -684,7 +641,6 @@
             return randomName;
         }
 
-        // Event listener untuk mengganti tab
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -694,11 +650,6 @@
             });
         });
         
-        /**
-         * Membaca file sebagai ArrayBuffer.
-         * @param {File} file Objek File yang akan dibaca.
-         * @returns {Promise<ArrayBuffer>} Promise yang resolve dengan ArrayBuffer dari file.
-         */
         function readFileAsArrayBuffer(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -708,20 +659,10 @@
             });
         }
         
-        /**
-         * Mengubah ArrayBuffer menjadi string HEX.
-         * @param {ArrayBuffer} buffer ArrayBuffer yang akan dikonversi.
-         * @returns {string} String HEX.
-         */
         function bufferToHex(buffer) {
             return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        /**
-         * Mengubah string HEX menjadi ArrayBuffer.
-         * @param {string} hex String HEX yang akan dikonversi.
-         * @returns {ArrayBuffer} ArrayBuffer.
-         */
         function hexToBuffer(hex) {
             if (hex.length % 2 !== 0) {
                 throw new Error("String HEX harus memiliki panjang genap.");
@@ -729,14 +670,6 @@
             return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
         }
         
-        /**
-         * Menghasilkan kunci enkripsi AES-GCM dari kunci mentah atau password.
-         * @param {string} mode Mode kunci ('hex' atau 'password').
-         * @param {string} input Kunci HEX atau kata sandi.
-         * @param {Uint8Array} [salt] Salt untuk mode kata sandi.
-         * @param {number} [keyLength] Panjang kunci dalam bit (128, 192, atau 256).
-         * @returns {Promise<CryptoKey>} Promise yang resolve dengan objek CryptoKey.
-         */
         async function getKey(mode, input, salt, keyLength = 256) {
             if (keyLength !== 256 && keyLength !== 192 && keyLength !== 128) {
                 throw new Error("Panjang kunci harus 128, 192, atau 256 bits.");
@@ -752,7 +685,7 @@
                 const baseKey = await crypto.subtle.importKey(
                     "raw",
                     passwordBuffer,
-                    { name: "PBKDF2" }, // Menggunakan PBKDF2 untuk password hashing
+                    { name: "PBKDF2" },
                     false,
                     ["deriveBits", "deriveKey"]
                 );
@@ -761,7 +694,7 @@
                     {
                         name: "PBKDF2",
                         salt: salt,
-                        iterations: 100000, // Iterasi yang cukup tinggi untuk keamanan
+                        iterations: 100000,
                         hash: "SHA-256",
                     },
                     baseKey,
@@ -773,33 +706,17 @@
             throw new Error("Mode kunci tidak valid.");
         }
         
-        /**
-         * Melakukan enkripsi file.
-         * @param {File} file Objek File yang akan dienkripsi.
-         * @param {CryptoKey} key Kunci enkripsi.
-         * @returns {Promise<{encrypted: ArrayBuffer, iv: Uint8Array}>} Promise yang resolve dengan ArrayBuffer terenkripsi dan IV.
-         */
         async function encryptFile(file, key) {
             const buffer = await readFileAsArrayBuffer(file);
-            const iv = crypto.getRandomValues(new Uint8Array(12)); // Initialization Vector 12 bytes untuk AES-GCM
+            const iv = crypto.getRandomValues(new Uint8Array(12));
             const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, buffer);
             return { encrypted, iv };
         }
         
-        /**
-         * Melakukan dekripsi file.
-         * @param {File} file Objek File terenkripsi.
-         * @param {CryptoKey} key Kunci dekripsi.
-         * @param {Uint8Array} iv Initialization Vector.
-         * @returns {Promise<ArrayBuffer>} Promise yang resolve dengan ArrayBuffer terdekripsi.
-         */
-        async function decryptFile(file, key, iv) {
-            const buffer = await readFileAsArrayBuffer(file);
-            const content = new Uint8Array(buffer).slice(iv.length); // Konten terenkripsi setelah IV/Salt+IV
-            return await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, content);
+        async function decryptContent(contentBuffer, key, iv) {
+            return await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, contentBuffer);
         }
 
-        // --- CUSTOM FILE INPUT (DRAG & DROP) LOGIC ---
         function setupFileInput(inputElementId, dropZoneId, fileNameDisplayId) {
             const inputElement = document.getElementById(inputElementId);
             const dropZone = document.getElementById(dropZoneId);
@@ -846,7 +763,7 @@
                 getFile: () => selectedFile,
                 clearFile: () => {
                     selectedFile = null;
-                    inputElement.value = ''; // Reset input file
+                    inputElement.value = '';
                     fileNameDisplay.textContent = '';
                 }
             };
@@ -855,7 +772,6 @@
         const fileInputEncHandler = setupFileInput('fileInputEncHidden', 'dropZoneEnc', 'fileNameDisplayEnc');
         const fileInputDecHandler = setupFileInput('fileInputDecHidden', 'dropZoneDec', 'fileNameDisplayDec');
 
-        // --- ENCRYPTION LOGIC ---
         const encryptionModeEnc = document.getElementById('encryptionModeEnc');
         const hexKeySectionEnc = document.getElementById('hexKeySectionEnc');
         const passwordSectionEnc = document.getElementById('passwordSectionEnc');
@@ -865,7 +781,6 @@
         const statusEnc = document.getElementById('statusEnc');
         const downloadLinkEnc = document.getElementById('downloadLinkEnc');
 
-        // Toggle visibility based on encryption mode
         encryptionModeEnc.addEventListener('change', () => {
             if (encryptionModeEnc.value === 'hex') {
                 hexKeySectionEnc.classList.remove('hidden');
@@ -874,7 +789,7 @@
                 hexKeySectionEnc.classList.add('hidden');
                 passwordSectionEnc.classList.remove('hidden');
             }
-            showStatusMessage(statusEnc, ""); // Clear status when mode changes
+            showStatusMessage(statusEnc, "");
             downloadLinkEnc.style.display = "none";
         });
         
@@ -887,13 +802,13 @@
 
             showLoading(statusEnc);
             downloadLinkEnc.style.display = "none";
-            hexKeySectionEnc.innerHTML = ""; // Clear previous key display
+            hexKeySectionEnc.innerHTML = "";
 
             const mode = encryptionModeEnc.value;
             const keyLength = parseInt(document.getElementById('keyLength').value);
             let finalKey;
-            let exportedKeyHex = ''; // This will store the key if HEX mode, or derived key if password mode
-            let salt = null; // For password based encryption
+            let exportedKeyHex = '';
+            let salt = null;
 
             try {
                 if (mode === 'password') {
@@ -909,14 +824,12 @@
                         return;
                     }
                     
-                    salt = crypto.getRandomValues(new Uint8Array(16)); // 16 bytes salt
+                    salt = crypto.getRandomValues(new Uint8Array(16));
                     finalKey = await getKey('password', password, salt, keyLength);
-                    // For display purposes, we might want to show the derived key, but typically for password mode, the user just remembers the password.
-                    // However, for debugging or advanced use, showing the derived key can be useful.
                     const rawDerivedKey = await crypto.subtle.exportKey("raw", finalKey);
                     exportedKeyHex = bufferToHex(rawDerivedKey);
 
-                } else { // HEX mode
+                } else {
                     finalKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: keyLength }, true, ["encrypt", "decrypt"]);
                     const rawKey = await crypto.subtle.exportKey("raw", finalKey);
                     exportedKeyHex = bufferToHex(rawKey);
@@ -926,13 +839,11 @@
 
                 let combined;
                 if (mode === 'password') {
-                    // Combine salt (16 bytes), IV (12 bytes), and encrypted data
                     combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
                     combined.set(salt, 0);
                     combined.set(iv, salt.length);
                     combined.set(new Uint8Array(encrypted), salt.length + iv.length);
                 } else {
-                    // Combine IV (12 bytes) and encrypted data
                     combined = new Uint8Array(iv.length + encrypted.byteLength);
                     combined.set(iv, 0);
                     combined.set(new Uint8Array(encrypted), iv.length);
@@ -953,7 +864,6 @@
                     copyButton.classList.add('copy-button');
                     copyButton.onclick = () => {
                         const keyToCopy = exportedKeyHex;
-                        // Use document.execCommand('copy') for better iframe compatibility
                         const tempInput = document.createElement('textarea');
                         tempInput.value = keyToCopy;
                         document.body.appendChild(tempInput);
@@ -965,15 +875,15 @@
                     };
                     const statusSpan = document.createElement('span');
                     statusSpan.innerHTML = statusMessageHtml;
-                    statusEnc.innerHTML = ''; // Clear existing content
+                    statusEnc.innerHTML = '';
                     statusEnc.appendChild(statusSpan);
                     statusEnc.appendChild(copyButton);
 
-                } else { // Password mode
+                } else {
                     statusMessageHtml += `File berhasil dienkripsi menggunakan kata sandi Anda. Tidak ada kunci HEX yang perlu disimpan.`;
                     showStatusMessage(statusEnc, statusMessageHtml);
                 }
-                fileInputEncHandler.clearFile(); // Clear selected file after encryption
+                fileInputEncHandler.clearFile();
                 passwordInputEnc.value = '';
                 confirmPasswordInputEnc.value = '';
 
@@ -982,7 +892,6 @@
             }
         });
 
-        // --- DECRYPTION LOGIC ---
         const encryptionModeDec = document.getElementById('encryptionModeDec');
         const hexKeySectionDec = document.getElementById('hexKeySectionDec');
         const passwordSectionDec = document.getElementById('passwordSectionDec');
@@ -994,7 +903,6 @@
         const downloadLinkDec = document.getElementById('downloadLinkDec');
         const previewContainer = document.getElementById('previewContainer');
 
-        // Toggle visibility based on decryption mode
         encryptionModeDec.addEventListener('change', () => {
             if (encryptionModeDec.value === 'hex') {
                 hexKeySectionDec.classList.remove('hidden');
@@ -1003,7 +911,7 @@
                 hexKeySectionDec.classList.add('hidden');
                 passwordSectionDec.classList.remove('hidden');
             }
-            showStatusMessage(statusDec, ""); // Clear status when mode changes
+            showStatusMessage(statusDec, "");
             downloadLinkDec.style.display = "none";
             previewContainer.innerHTML = "";
         });
@@ -1023,7 +931,8 @@
             const keyLength = parseInt(document.getElementById('keyLength').value);
             let finalKey;
             let ivBytes;
-            let saltBytes; // For password based decryption
+            let saltBytes;
+            let encryptedContentBuffer;
 
             try {
                 const buffer = await readFileAsArrayBuffer(file);
@@ -1035,22 +944,22 @@
                         showStatusMessage(statusDec, "Masukkan kata sandi.", true);
                         return;
                     }
-                    // Extract salt (first 16 bytes) and IV (next 12 bytes)
                     saltBytes = data.slice(0, 16);
                     ivBytes = data.slice(16, 16 + 12);
+                    encryptedContentBuffer = data.slice(16 + 12); 
                     finalKey = await getKey('password', password, saltBytes, keyLength);
-                } else { // HEX mode
+                } else {
                     const keyHex = keyInput.value.trim();
                     if (!keyHex) {
                         showStatusMessage(statusDec, "Masukkan kunci HEX.", true);
                         return;
                     }
-                    // Extract IV (first 12 bytes)
                     ivBytes = data.slice(0, 12);
+                    encryptedContentBuffer = data.slice(12);
                     finalKey = await getKey('hex', keyHex, null, keyLength);
                 }
 
-                const decryptedBuffer = await decryptFile(file, finalKey, ivBytes);
+                const decryptedBuffer = await decryptContent(encryptedContentBuffer, finalKey, ivBytes);
                 const ext = fileTypeSelect.value;
                 
                 let mimeType;
@@ -1074,7 +983,6 @@
                 downloadLinkDec.style.display = "inline-block";
                 showStatusMessage(statusDec, "Dekripsi berhasil.");
 
-                // Tampilkan pratinjau jika file adalah gambar, video, atau PDF
                 if (["jpg", "jpeg", "png"].includes(ext)) {
                     const img = document.createElement("img");
                     img.src = url;
@@ -1096,13 +1004,12 @@
                     previewContainer.appendChild(pdfLink);
                     showStatusMessage(statusDec, "Dekripsi berhasil. Klik link untuk melihat PDF.");
                 } else {
-                    // Untuk jenis file lain, tampilkan pesan generik
                     const textNode = document.createElement("p");
                     textNode.textContent = "Tidak ada pratinjau yang tersedia untuk jenis file ini. Silakan unduh file.";
                     textNode.classList.add("text-gray-500", "dark:text-gray-400");
                     previewContainer.appendChild(textNode);
                 }
-                fileInputDecHandler.clearFile(); // Clear selected file after decryption
+                fileInputDecHandler.clearFile();
                 keyInput.value = '';
                 passwordInputDec.value = '';
 
@@ -1111,25 +1018,21 @@
             }
         });
 
-        // --- SETTINGS PANEL LOGIC ---
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsPanel = document.getElementById('settingsPanel');
         const saveSettingsBtn = document.getElementById('saveSettings');
         const darkModeSelect = document.getElementById('darkMode');
         const keyLengthInput = document.getElementById('keyLength');
-        const statusElements = [statusEnc, statusDec]; // Tambahkan elemen status ke daftar
+        const statusElements = [statusEnc, statusDec];
 
         let isSettingsOpen = false;
         
-        // Buka/tutup panel pengaturan
         settingsBtn.addEventListener('click', () => {
             isSettingsOpen = !isSettingsOpen;
             settingsPanel.classList.toggle('active', isSettingsOpen);
-            // Rotasi ikon pengaturan
             settingsBtn.classList.toggle('rotate-[45deg]', isSettingsOpen);
         });
         
-        // Tutup panel pengaturan saat mengklik di luar
         document.addEventListener('click', (event) => {
             if (isSettingsOpen && !settingsPanel.contains(event.target) && !settingsBtn.contains(event.target)) {
                 isSettingsOpen = false;
@@ -1138,21 +1041,18 @@
             }
         });
 
-        // Simpan pengaturan
         saveSettingsBtn.addEventListener('click', () => {
             const darkModeValue = darkModeSelect.value;
             localStorage.setItem('darkMode', darkModeValue);
             
             const keyLength = parseInt(keyLengthInput.value);
 
-            // Terapkan mode gelap
             applyTheme(darkModeValue);
 
-            // Validasi panjang kunci
             if (keyLength !== 128 && keyLength !== 192 && keyLength !== 256) {
                 showStatusMessage(statusEnc, "Panjang kunci harus 128, 192, atau 256 bits. Menggunakan 256 sebagai default.", true);
                 showStatusMessage(statusDec, "Panjang kunci harus 128, 192, atau 256 bits. Menggunakan 256 sebagai default.", true);
-                keyLengthInput.value = 256; // Setel kembali ke default
+                keyLengthInput.value = 256;
             }
 
             isSettingsOpen = false;
@@ -1160,19 +1060,14 @@
             settingsBtn.classList.remove('rotate-[45deg]');
         });
 
-        /**
-         * Menerapkan tema (mode gelap/terang) berdasarkan nilai yang dipilih.
-         * @param {string} mode Mode tema ('auto', 'dark', 'light').
-         */
         function applyTheme(mode) {
             if (mode === 'dark') {
                 document.body.classList.add('dark');
             } else if (mode === 'light') {
                 document.body.classList.remove('dark');
             } else {
-                // Mode otomatis berdasarkan waktu
                 const jam = new Date().getHours();
-                if (jam >= 18 || jam < 6) { // Antara jam 6 sore dan 6 pagi
+                if (jam >= 18 || jam < 6) {
                     document.body.classList.add('dark');
                 } else {
                     document.body.classList.remove('dark');
@@ -1180,7 +1075,6 @@
             }
         }
 
-        // Inisialisasi mode gelap saat halaman dimuat
         function initializeTheme() {
             const savedDarkMode = localStorage.getItem('darkMode') || 'auto';
             darkModeSelect.value = savedDarkMode;
@@ -1189,7 +1083,6 @@
         
         initializeTheme();
 
-        // Initial setup for encryption/decryption modes
         encryptionModeEnc.dispatchEvent(new Event('change'));
         encryptionModeDec.dispatchEvent(new Event('change'));
     </script>
