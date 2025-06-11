@@ -353,8 +353,8 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/><path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/><path d="M12 2v2"/><path d="M12 22v-2"/><path d="M18 6l-1.4-1.4"/><path d="M7.4 16.6L6 18"/><path d="M22 12h-2"/><path d="M2 12h2"/><path d="M18 18l-1.4 1.4"/><path d="M7.4 7.4L6 6"/></svg>
     </div>
     <div class="settings-panel" id="settingsPanel">
-        <label for="keyLength">Panjang Kunci (HEX):</label>
-        <input type="number" id="keyLength" value="64" min="32" step="8">
+        <label for="keyLength">Panjang Kunci (bits):</label>
+        <input type="number" id="keyLength" value="256">
         <label for="darkMode">Mode Gelap:</label>
         <select id="darkMode">
             <option value="auto">Otomatis</option>
@@ -419,7 +419,7 @@
             return randomName;
         }
 
-        // Tab switching
+        // Fungsi untuk mengganti tab
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', () => {
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -428,7 +428,8 @@
                 document.getElementById(button.dataset.tab).classList.add('active');
             });
         });
-
+        
+        // Fungsi untuk membaca file sebagai ArrayBuffer
         function readFileAsArrayBuffer(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -437,29 +438,34 @@
                 reader.readAsArrayBuffer(file);
             });
         }
-
+        
+        // Fungsi untuk mengubah buffer menjadi string HEX
         function bufferToHex(buffer) {
             return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        // Fungsi untuk mengubah string HEX menjadi buffer
         function hexToBuffer(hex) {
             return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
         }
-
+        
+        // Fungsi untuk menghasilkan kunci enkripsi
         async function generateKey(length = 256) {
           if (length !== 256 && length !== 192 && length !== 128) {
             throw new Error("Panjang kunci harus 128, 192, atau 256 bits.");
           }
             return await crypto.subtle.generateKey({ name: "AES-GCM", length: length }, true, ["encrypt", "decrypt"]);
         }
-
+        
+        // Fungsi untuk mengenkripsi file
         async function encryptFile(file, key) {
             const buffer = await readFileAsArrayBuffer(file);
-            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const iv = crypto.getRandomValues(new Uint8Array(12)); // Initialization Vector
             const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, buffer);
             return { encrypted, iv };
         }
-
+        
+        // Fungsi untuk mendekripsi file
         async function decryptFile(file, keyHex) {
             const buffer = await readFileAsArrayBuffer(file);
             const data = new Uint8Array(buffer);
@@ -469,12 +475,13 @@
             return await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, content);
         }
 
-        // Enkripsi
+        // Event listener untuk input file enkripsi
         document.getElementById('fileInputEnc').addEventListener('change', () => {
             document.getElementById('statusEnc').textContent = "";
             document.getElementById('downloadLinkEnc').style.display = "none";
         });
-
+        
+        // Event listener untuk tombol enkripsi
         document.getElementById('encryptBtn').addEventListener('click', async () => {
             const fileInput = document.getElementById('fileInputEnc');
             const status = document.getElementById('statusEnc');
@@ -506,13 +513,13 @@
 
                 const rawKey = await crypto.subtle.exportKey("raw", key);
                 const keyHex = bufferToHex(rawKey);
-                status.innerHTML = `Enkripsi selesai.<br><strong class="font-semibold">Kunci HEX:</strong> <span class="font-mono text-sm">${keyHex}</span>`;
+                status.innerHTML = `Enkripsi selesai.<br><strong class="font-semibold">Kunci HEX (Simpan baik-baik!):</strong> <span class="font-mono text-sm">${keyHex}</span>`;
             } catch (error) {
                  status.textContent = "Error: " + error.message;
             }
         });
 
-        // Dekripsi
+        // Event listener untuk tombol dekripsi
         document.getElementById('decryptBtn').addEventListener('click', async () => {
             const fileInput = document.getElementById('fileInputDec');
             const keyInput = document.getElementById('keyInput');
@@ -539,6 +546,7 @@
                 downloadLink.style.display = "inline-block";
                 status.textContent = "Dekripsi berhasil.";
 
+                // Tampilkan pratinjau jika file adalah gambar atau video
                 if (["jpg", "jpeg", "png"].includes(ext)) {
                     const img = document.createElement("img");
                     img.src = url;
@@ -554,11 +562,11 @@
                 }
 
             } catch (e) {
-                status.textContent = "Gagal dekripsi: " + e.message;
+                status.textContent = "Gagal dekripsi: Pastikan kunci dan file benar. Error: " + e.message;
             }
         });
 
-        // Settings Panel
+        // Logika untuk panel pengaturan
         const settingsBtn = document.getElementById('settingsBtn');
         const settingsPanel = document.getElementById('settingsPanel');
         const saveSettingsBtn = document.getElementById('saveSettings');
@@ -566,14 +574,18 @@
         const keyLengthInput = document.getElementById('keyLength');
 
         let isSettingsOpen = false;
-
+        
+        // Buka/tutup panel pengaturan
         settingsBtn.addEventListener('click', () => {
             isSettingsOpen = !isSettingsOpen;
             settingsPanel.classList.toggle('active', isSettingsOpen);
         });
-
+        
+        // Simpan pengaturan
         saveSettingsBtn.addEventListener('click', () => {
             const darkModeValue = darkModeSelect.value;
+            localStorage.setItem('darkMode', darkModeValue);
+            
             const keyLength = parseInt(keyLengthInput.value);
 
             if (darkModeValue === 'dark') {
@@ -581,6 +593,7 @@
             } else if (darkModeValue === 'light') {
                 document.body.classList.remove('dark');
             } else {
+                // Mode otomatis berdasarkan waktu
                 const jam = new Date().getHours();
                 if (jam >= 18 || jam < 6) {
                     document.body.classList.add('dark');
@@ -589,6 +602,7 @@
                 }
             }
 
+            // Validasi panjang kunci
             if (keyLength !== 128 && keyLength !== 192 && keyLength !== 256) {
                 alert("Panjang kunci harus 128, 192, atau 256 bits. Menggunakan 256 sebagai default.");
                 keyLengthInput.value = 256;
@@ -598,9 +612,9 @@
             settingsPanel.classList.remove('active');
         });
 
-        // Initial dark mode setup
-        const savedDarkMode = localStorage.getItem('darkMode');
-        if (savedDarkMode) {
+        // Inisialisasi mode gelap saat halaman dimuat
+        function initializeTheme() {
+            const savedDarkMode = localStorage.getItem('darkMode') || 'auto';
             darkModeSelect.value = savedDarkMode;
             if (savedDarkMode === 'dark') {
                 document.body.classList.add('dark');
@@ -612,13 +626,9 @@
                     document.body.classList.add('dark');
                 }
             }
-        } else {
-            const jam = new Date().getHours();
-            if (jam >= 18 || jam < 6) {
-                document.body.classList.add('dark');
-                darkModeSelect.value = 'auto';
-            }
         }
+        
+        initializeTheme();
     </script>
 </body>
 </html>
