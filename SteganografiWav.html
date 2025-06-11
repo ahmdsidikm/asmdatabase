@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/@tailwindcss/browser@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* Gaya kartu kaca */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
@@ -16,26 +17,31 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
+        /* Gaya kontainer gelombang audio */
         .waveform-container {
             background: linear-gradient(145deg, #f8fafc, #f1f5f9);
             border-radius: 12px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        /* Gaya kontainer gelombang audio dalam mode gelap */
         .dark .waveform-container {
             background: linear-gradient(145deg, #1e293b, #0f172a);
         }
 
+        /* Gaya tombol gradien */
         .gradient-btn {
             background-image: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
             background-size: 200% auto;
             transition: 0.5s;
         }
 
+        /* Efek hover tombol gradien */
         .gradient-btn:hover {
             background-position: right center;
         }
 
+        /* Gaya tombol pemilih file */
         .file-input::file-selector-button {
             background-image: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
             border: 2px solid #e0e7ff;
@@ -45,107 +51,209 @@
             transition: all 0.3s ease;
         }
 
+        /* Gaya tombol pemilih file dalam mode gelap */
         .dark .file-input::file-selector-button {
             background-image: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             border-color: #334155;
             color: #e2e8f0;
         }
 
+        /* Gaya kartu kaca dalam mode gelap */
         .dark .glass-card {
-            background: rgba(17, 24, 39, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(30, 41, 59, 0.95); /* Sedikit lebih terang dari latar belakang body gelap */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Border yang lebih jelas */
+        }
+
+        /* Gaya placeholder untuk mode gelap */
+        .dark input::placeholder {
+            color: #94a3b8; /* Tailwind slate-400 */
+        }
+        .dark select {
+            color: #e2e8f0; /* Tailwind slate-200 */
+        }
+        .dark select option {
+            background-color: #1e293b; /* Background for options */
+        }
+
+        /* Gaya tab aktif dalam mode gelap */
+        .dark .tab-active-encrypt {
+            border-color: #6366f1 !important; /* Warna ungu indigo untuk tab enkripsi */
+            color: #a78bfa !important; /* Warna teks yang lebih cerah */
+        }
+        .dark .tab-active-decrypt {
+            border-color: #ec4899 !important; /* Warna pink untuk tab dekripsi */
+            color: #f472b6 !important; /* Warna teks yang lebih cerah */
         }
     </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-50 to-purple-50 min-h-screen font-inter dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-800">
     <div class="container mx-auto px-4 py-10 max-w-3xl">
-        <header class="glass-card p-6 mb-12 text-center dark:bg-gray-800/80">
+        <header class="glass-card p-6 mb-12 text-center dark:bg-gray-800/90">
             <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
                 <i class="fas fa-shield-alt mr-2"></i>Steganografi Audio
             </h1>
             <p class="mt-2 text-gray-600 dark:text-gray-300">Sembunyikan file dalam format audio WAV</p>
         </header>
 
-        <!-- Enkripsi Section -->
-        <section class="glass-card p-6 mb-8">
-            <div class="flex items-center mb-6">
-                <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3 dark:bg-indigo-900">
-                    <i class="fas fa-lock text-indigo-600 dark:text-indigo-300"></i>
-                </div>
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Enkripsi File</h2>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">File Input</label>
-                    <input type="file" id="fileInput" 
-                           class="file-input w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Password</label>
-                    <input type="password" id="encPassword" placeholder="••••••••"
-                           class="w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500">
-                </div>
-
-                <button id="encryptBtn" 
-                        class="gradient-btn w-full py-3 px-6 text-white font-semibold rounded-lg transform transition-all hover:scale-[1.02]">
-                    <i class="fas fa-file-waveform mr-2"></i>Enkripsi ke WAV
+        <div class="bg-white dark:bg-gray-800/90 rounded-lg shadow-xl overflow-hidden">
+            <div class="flex border-b border-gray-200 dark:border-gray-700">
+                <button id="tabEncrypt" class="flex-1 py-4 text-center text-lg font-semibold text-gray-700 dark:text-gray-300 border-b-2 border-transparent transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="encrypt">
+                    Enkripsi
                 </button>
-
-                <div id="encResult" class="hidden mt-6">
-                    <canvas id="encWaveform" class="waveform-container w-full h-32 p-4"></canvas>
-                    <a id="downloadWav" class="mt-4 inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
-                        <i class="fas fa-download mr-2 text-indigo-600 dark:text-indigo-400"></i>
-                        <span class="text-gray-700 dark:text-gray-300">Download File WAV</span>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- Dekripsi Section -->
-        <section class="glass-card p-6">
-            <div class="flex items-center mb-6">
-                <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 dark:bg-purple-900">
-                    <i class="fas fa-unlock text-purple-600 dark:text-purple-300"></i>
-                </div>
-                <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Dekripsi File</h2>
-            </div>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">File WAV</label>
-                    <input type="file" id="wavInput" accept="audio/wav"
-                           class="file-input w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Password</label>
-                    <input type="password" id="decPassword" placeholder="••••••••"
-                           class="w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-purple-500">
-                </div>
-
-                <button id="decryptBtn" 
-                        class="gradient-btn w-full py-3 px-6 text-white font-semibold rounded-lg transform transition-all hover:scale-[1.02]">
-                    <i class="fas fa-file-export mr-2"></i>Dekripsi File
+                <button id="tabDecrypt" class="flex-1 py-4 text-center text-lg font-semibold text-gray-700 dark:text-gray-300 border-b-2 border-transparent transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700" data-tab="decrypt">
+                    Dekripsi
                 </button>
+            </div>
 
-                <div id="decResult" class="hidden mt-6">
-                    <canvas id="decWaveform" class="waveform-container w-full h-32 p-4"></canvas>
-                    <div id="previewContainer" class="mt-6 space-y-4">
-                        <a id="downloadFile" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
-                            <i class="fas fa-file-download mr-2 text-purple-600 dark:text-purple-400"></i>
-                            <span class="text-gray-700 dark:text-gray-300">Download File</span>
-                        </a>
+            <div id="encryptContent" class="p-6">
+                <!-- Bagian Enkripsi -->
+                <section class="glass-card p-6 mb-8 dark:bg-gray-800/90 shadow-none border-0">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3 dark:bg-indigo-900">
+                            <i class="fas fa-lock text-indigo-600 dark:text-indigo-300"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Enkripsi File</h2>
                     </div>
-                </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">File Input</label>
+                            <input type="file" id="fileInput" 
+                                class="file-input w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Password (Opsional)</label>
+                            <input type="password" id="encPassword" placeholder="Biarkan kosong untuk tanpa password"
+                                class="w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-indigo-500">
+                        </div>
+
+                        <button id="encryptBtn" 
+                                class="gradient-btn w-full py-3 px-6 text-white font-semibold rounded-lg transform transition-all hover:scale-[1.02]">
+                            <i class="fas fa-file-waveform mr-2"></i>Enkripsi ke WAV
+                        </button>
+
+                        <div id="encResult" class="hidden mt-6">
+                            <canvas id="encWaveform" class="waveform-container w-full h-32 p-4"></canvas>
+                            <div class="flex flex-wrap gap-2 mt-4">
+                                <a id="downloadWav" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                                    <i class="fas fa-download mr-2 text-indigo-600 dark:text-indigo-400"></i>
+                                    <span class="text-gray-700 dark:text-gray-300">Unduh File WAV</span>
+                                </a>
+                                <button id="playPauseEncBtn" class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:shadow-md transition-colors dark:bg-indigo-600 dark:hover:bg-indigo-700">
+                                    <i class="fas fa-play mr-2"></i>
+                                    <span>Mainkan</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
-        </section>
+
+            <div id="decryptContent" class="p-6 hidden">
+                <!-- Bagian Dekripsi -->
+                <section class="glass-card p-6 dark:bg-gray-800/90 shadow-none border-0">
+                    <div class="flex items-center mb-6">
+                        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 dark:bg-purple-900">
+                            <i class="fas fa-unlock text-purple-600 dark:text-purple-300"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Dekripsi File</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">File WAV</label>
+                            <input type="file" id="wavInput" accept="audio/wav"
+                                class="file-input w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Password (Opsional)</label>
+                            <input type="password" id="decPassword" placeholder="Biarkan kosong untuk tanpa password"
+                                class="w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-purple-500">
+                        </div>
+
+                        <!-- Pilihan format file untuk dekripsi -->
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Format File Output</label>
+                            <select id="outputFormat" 
+                                class="w-full px-4 py-2.5 border rounded-lg bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-purple-500">
+                                <option value="txt">Teks (.txt)</option>
+                                <option value="png">Gambar (.png)</option>
+                                <option value="jpg">Gambar (.jpg/.jpeg)</option>
+                                <option value="pdf">Dokumen (.pdf)</option>
+                                <option value="zip">Arsip (.zip)</option>
+                                <option value="mp3">Audio (.mp3)</option>
+                                <option value="mp4">Video (.mp4)</option>
+                                <option value="docx">Dokumen Word (.docx)</option>
+                                <option value="xlsx">Dokumen Excel (.xlsx)</option>
+                                <option value="pptx">Dokumen PowerPoint (.pptx)</option>
+                                <!-- Tambahkan format lain sesuai kebutuhan -->
+                            </select>
+                        </div>
+
+                        <button id="decryptBtn" 
+                                class="gradient-btn w-full py-3 px-6 text-white font-semibold rounded-lg transform transition-all hover:scale-[1.02]">
+                            <i class="fas fa-file-export mr-2"></i>Dekripsi File
+                        </button>
+
+                        <div id="decResult" class="hidden mt-6">
+                            <canvas id="decWaveform" class="waveform-container w-full h-32 p-4"></canvas>
+                            <div class="flex flex-wrap gap-2 mt-4">
+                                <a id="downloadFile" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                                    <i class="fas fa-file-download mr-2 text-purple-600 dark:text-purple-400"></i>
+                                    <span class="text-gray-700 dark:text-gray-300">Unduh File</span>
+                                </a>
+                                <button id="playPauseDecBtn" class="inline-flex items-center px-4 py-2 bg-indigo-500 text-white rounded-lg shadow hover:shadow-md transition-colors dark:bg-indigo-600 dark:hover:bg-indigo-700">
+                                    <i class="fas fa-play mr-2"></i>
+                                    <span>Mainkan</span>
+                                </button>
+                            </div>
+                            <div id="previewContainer" class="mt-6 space-y-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Pratinjau:</h3>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Fungsi kriptografi
+        // Objek global untuk menyimpan status audio (context, buffer, source, analyser) untuk enkripsi dan dekripsi
+        const globalAudioStates = {
+            enc: { audioContext: null, audioBuffer: null, audioSource: null, analyser: null, isPlaying: false },
+            dec: { audioContext: null, audioBuffer: null, audioSource: null, analyser: null, isPlaying: false }
+        };
+
+        let activeTab = 'encrypt'; // Default active tab
+
+        // Function to show/hide tabs
+        function showTab(tabName) {
+            document.getElementById('encryptContent').classList.add('hidden');
+            document.getElementById('decryptContent').classList.add('hidden');
+
+            // Remove active styles from both tabs
+            document.getElementById('tabEncrypt').classList.remove('border-indigo-500', 'text-indigo-600', 'dark:border-indigo-500', 'dark:text-indigo-400', 'tab-active-encrypt');
+            document.getElementById('tabDecrypt').classList.remove('border-purple-500', 'text-purple-600', 'dark:border-purple-500', 'dark:text-purple-400', 'tab-active-decrypt');
+
+            // Add active styles to the selected tab and show its content
+            if (tabName === 'encrypt') {
+                document.getElementById('encryptContent').classList.remove('hidden');
+                document.getElementById('tabEncrypt').classList.add('border-indigo-500', 'text-indigo-600', 'dark:border-indigo-500', 'dark:text-indigo-400', 'tab-active-encrypt');
+            } else {
+                document.getElementById('decryptContent').classList.remove('hidden');
+                document.getElementById('tabDecrypt').classList.add('border-purple-500', 'text-purple-600', 'dark:border-purple-500', 'dark:text-purple-400', 'tab-active-decrypt');
+            }
+            activeTab = tabName;
+        }
+
+        // Cryptography functions
+        // Derive key: returns an empty Uint8Array if no password is provided
         function deriveKey(password, length) {
+            if (!password) {
+                return new Uint8Array(0); // Return an empty key for no encryption
+            }
             const key = new Uint8Array(length);
             let hash = 0;
             for (let i = 0; i < password.length; i++) {
@@ -158,7 +266,11 @@
             return key;
         }
 
+        // XOR function to encrypt/decrypt buffer. If key is empty, returns original buffer.
         function xorBuffer(buffer, key) {
+            if (!key || key.byteLength === 0) {
+                return buffer; // No key means no XOR operation, return original buffer
+            }
             const out = new Uint8Array(buffer.byteLength);
             const src = new Uint8Array(buffer);
             for (let i = 0; i < out.length; i++) {
@@ -167,6 +279,7 @@
             return out.buffer;
         }
 
+        // Convert ArrayBuffer to WAV format
         function arrayBufferToWav(buffer, sampleRate = 44100) {
             const bytesPerSample = 1, numChannels = 1;
             const blockAlign = numChannels * bytesPerSample;
@@ -195,70 +308,185 @@
             return wavBuf;
         }
 
+        // Convert WAV format to ArrayBuffer (extracts data part)
         function wavToArrayBuffer(wav) {
             const data = new DataView(wav);
             const dataSize = data.getUint32(40, true);
             return wav.slice(44, 44 + dataSize);
         }
 
-        // Fungsi visualisasi audio
-        async function drawAudioSpectrum(arrayBuffer, canvas) {
+        // Audio visualization and buffer setup function
+        async function drawAudioSpectrum(arrayBuffer, canvas, type) {
             const ctx = canvas.getContext('2d');
+            // Close previous audio context if it exists to prevent issues
+            if (globalAudioStates[type].audioContext) {
+                globalAudioStates[type].audioContext.close();
+            }
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Store audio context and create analyser
+            globalAudioStates[type].audioContext = audioCtx; 
+            globalAudioStates[type].analyser = audioCtx.createAnalyser(); // Store analyser
+
             try {
                 const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-                const analyser = audioCtx.createAnalyser();
+                globalAudioStates[type].audioBuffer = audioBuffer; // Store audio buffer
+
+                const analyser = globalAudioStates[type].analyser;
                 analyser.fftSize = 2048;
                 const bufferLength = analyser.frequencyBinCount;
                 const dataArray = new Uint8Array(bufferLength);
 
-                const source = audioCtx.createBufferSource();
-                source.buffer = audioBuffer;
-                source.connect(analyser);
-                analyser.connect(audioCtx.destination);
-
-                source.start();
-
+                // Function to draw the spectrum
                 function draw() {
-                    if (source.playbackState === source.PLAYING) {
+                    // Only request animation frame if there's a valid audioContext and analyser
+                    if (globalAudioStates[type].audioContext && globalAudioStates[type].analyser) {
                         requestAnimationFrame(draw);
+                    } else {
+                        // If no context/analyser, stop drawing
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        return;
                     }
+
                     analyser.getByteTimeDomainData(dataArray);
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.fillStyle = '#007bff';
-                    ctx.beginPath();
+                    // Use a darker color for dark mode
+                    ctx.strokeStyle = document.body.classList.contains('dark') ? '#4f46e5' : '#007bff'; 
                     ctx.lineWidth = 2;
-                    ctx.moveTo(0, canvas.height / 2);
+                    ctx.beginPath();
+                    // Adjust X scale so waveform isn't too compressed
+                    const sliceWidth = canvas.width * 1.0 / bufferLength; 
+                    let x = 0;
+
                     for (let i = 0; i < bufferLength; i++) {
-                        const v = dataArray[i] / 128.0;
-                        const y = v * canvas.height / 2;
-                        ctx.lineTo(i, y);
+                        const v = dataArray[i] / 128.0; // Normalize to 0-2
+                        const y = v * canvas.height / 2; // Map to canvas height
+
+                        if (i === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                        x += sliceWidth;
                     }
-                    ctx.lineTo(canvas.width, canvas.height / 2);
+                    ctx.lineTo(canvas.width, canvas.height / 2); // Final line to center
                     ctx.stroke();
                 }
-                draw();
+                draw(); // Start drawing the spectrum
+                
+                // Automatically play audio after loading and drawing
+                playAudio(type);
+
             } catch (e) {
                 console.error("Error decoding audio data: ", e);
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#f44336';
                 ctx.font = '16px sans-serif';
-                ctx.fillText("Error: Invalid WAV File", 10, 50);
+                ctx.fillText("Error: File WAV Tidak Valid", 10, 50);
+                // Reset audio state on error
+                globalAudioStates[type].audioBuffer = null;
+                globalAudioStates[type].audioSource = null;
+                globalAudioStates[type].isPlaying = false;
+                // Stop analyser from drawing incorrect data
+                globalAudioStates[type].analyser = null; 
+                if (globalAudioStates[type].audioContext) {
+                    globalAudioStates[type].audioContext.close();
+                    globalAudioStates[type].audioContext = null;
+                }
+                updatePlayPauseButton(type);
             }
         }
 
-        // Event handlers
+        // Function to play audio
+        function playAudio(type) {
+            const state = globalAudioStates[type];
+            if (!state.audioBuffer || !state.audioContext || !state.analyser) {
+                showMessageBox('Tidak ada audio atau konteks audio yang valid untuk diputar.');
+                return;
+            }
+
+            // Stop any currently running source if it exists
+            if (state.audioSource) {
+                state.audioSource.stop();
+                // Disconnect source from audio graph, but keep analyser connected to destination
+                // this prevents disconnect errors if analyser is not connected to source
+                state.audioSource.disconnect(); 
+                state.audioSource = null;
+            }
+
+            // Create new source each time it's played because AudioBufferSourceNode is single-use
+            state.audioSource = state.audioContext.createBufferSource();
+            state.audioSource.buffer = state.audioBuffer;
+            
+            // KONEKSI KRUSIAL: Source -> Analyser -> Destination
+            state.audioSource.connect(state.analyser);
+            state.analyser.connect(state.audioContext.destination);
+
+            state.audioSource.start(0);
+            state.isPlaying = true;
+
+            state.audioSource.onended = () => {
+                state.isPlaying = false;
+                // Disconnect audio source from graph when finished
+                state.audioSource.disconnect();
+                updatePlayPauseButton(type);
+            };
+            updatePlayPauseButton(type);
+
+            // Ensure AudioContext is in 'running' state on user interaction
+            if (state.audioContext.state === 'suspended') {
+                state.audioContext.resume();
+            }
+        }
+
+        // Function to pause/resume audio
+        function togglePlayPause(type) {
+            const state = globalAudioStates[type];
+            if (state.isPlaying) {
+                if (state.audioSource) {
+                    state.audioSource.stop();
+                    // Disconnect audio source from graph when paused
+                    state.audioSource.disconnect(); 
+                    state.audioSource = null;
+                }
+                state.isPlaying = false;
+            } else {
+                playAudio(type);
+            }
+            updatePlayPauseButton(type);
+        }
+
+        // Function to update play/pause button text and icon
+        function updatePlayPauseButton(type) {
+            const button = document.getElementById(`playPause${type === 'enc' ? 'Enc' : 'Dec'}Btn`);
+            if (button) {
+                const icon = button.querySelector('i');
+                const text = button.querySelector('span');
+                if (globalAudioStates[type].isPlaying) {
+                    icon.className = 'fas fa-pause mr-2';
+                    text.textContent = 'Jeda';
+                } else {
+                    icon.className = 'fas fa-play mr-2';
+                    text.textContent = 'Mainkan';
+                }
+            }
+        }
+
+        // Event handler for encrypt button
         document.getElementById('encryptBtn').onclick = () => {
-            const pwd = document.getElementById('encPassword').value;
-            if (!pwd) return alert('Masukkan password untuk enkripsi');
+            const pwd = document.getElementById('encPassword').value; // Password is now optional
             
             const file = document.getElementById('fileInput').files[0];
-            if (!file) return alert('Pilih file dulu');
+            if (!file) {
+                showMessageBox('Pilih file dulu');
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = async () => {
                 const buf = reader.result;
-                const key = deriveKey(pwd, buf.byteLength);
+                // Derive key only if password is provided
+                const key = pwd ? deriveKey(pwd, buf.byteLength) : new Uint8Array(0);
                 const enc = xorBuffer(buf, key);
                 const wavBuf = arrayBufferToWav(enc);
                 
@@ -268,36 +496,64 @@
                 
                 document.getElementById('encResult').classList.remove('hidden');
                 const canvas = document.getElementById('encWaveform');
-                await drawAudioSpectrum(wavBuf, canvas);
+                await drawAudioSpectrum(wavBuf, canvas, 'enc'); // Pass 'enc' type
             };
             reader.readAsArrayBuffer(file);
         };
 
+        // Event handler for WAV file input (for decryption)
         document.getElementById('wavInput').addEventListener('change', async (e) => {
             const wavFile = e.target.files[0];
             const canvas = document.getElementById('decWaveform');
-            if (!wavFile) return canvas.style.display = 'none';
+            if (!wavFile) {
+                canvas.style.display = 'none';
+                return;
+            }
+
+            // Stop previous playback if any and clear state
+            if (globalAudioStates.dec.audioSource) {
+                globalAudioStates.dec.audioSource.stop();
+                globalAudioStates.dec.audioSource.disconnect();
+                globalAudioStates.dec.audioSource = null;
+            }
+            if (globalAudioStates.dec.audioContext) {
+                // Safely close AudioContext
+                if (globalAudioStates.dec.audioContext.state !== 'closed') {
+                    globalAudioStates.dec.audioContext.close().catch(e => console.warn("Error closing audio context:", e));
+                }
+                globalAudioStates.dec.audioContext = null;
+            }
+            globalAudioStates.dec.analyser = null;
+            globalAudioStates.dec.audioBuffer = null;
+            globalAudioStates.dec.isPlaying = false;
+            updatePlayPauseButton('dec');
 
             const reader = new FileReader();
             reader.onload = async () => {
                 document.getElementById('decResult').classList.remove('hidden');
-                await drawAudioSpectrum(reader.result, canvas);
+                await drawAudioSpectrum(reader.result, canvas, 'dec'); // Pass 'dec' type
             };
             reader.readAsArrayBuffer(wavFile);
         });
 
-        document.getElementById('decryptBtn').onclick = () => {
-            const pwd = document.getElementById('decPassword').value;
-            if (!pwd) return alert('Masukkan password untuk dekripsi');
+        // Event handler for decrypt button
+        document.getElementById('decryptBtn').onclick = async () => {
+            const pwd = document.getElementById('decPassword').value; // Password is now optional
             
             const wavFile = document.getElementById('wavInput').files[0];
-            if (!wavFile) return alert('Pilih WAV dulu');
+            if (!wavFile) {
+                showMessageBox('Pilih WAV dulu');
+                return;
+            }
+
+            const outputFormat = document.getElementById('outputFormat').value;
 
             const reader = new FileReader();
             reader.onload = async () => {
                 const wavBuf = reader.result;
                 const encBuf = wavToArrayBuffer(wavBuf);
-                const key = deriveKey(pwd, encBuf.byteLength);
+                // Derive key only if password is provided
+                const key = pwd ? deriveKey(pwd, encBuf.byteLength) : new Uint8Array(0);
                 const decBuf = xorBuffer(encBuf, key);
                 
                 const blob = new Blob([decBuf]);
@@ -305,30 +561,43 @@
                 
                 const link = document.getElementById('downloadFile');
                 link.href = url;
-                link.download = 'decrypted_' + wavFile.name.replace(/\.wav$/i, '');
+
+                let fileName = wavFile.name.replace(/\.wav$/i, ''); // Hapus ekstensi .wav
+                // Use the selected outputFormat, default to 'txt' if nothing is selected
+                let fileExtension = outputFormat || 'txt';
+                
+                link.download = `decrypted_${fileName}.${fileExtension}`;
                 
                 const preview = document.getElementById('previewContainer');
-                preview.innerHTML = '<h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Preview:</h3>';
+                preview.innerHTML = '<h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Pratinjau:</h3>';
                 
-                const header = new Uint8Array(decBuf.slice(0, 8));
+                // Existing preview logic
                 let elem;
-                if (header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4E && header[3] === 0x47) {
+
+                // Pratinjau berdasarkan ekstensi yang dipilih
+                if (fileExtension === 'png') {
                     elem = document.createElement('img');
                     elem.src = url;
                     elem.className = "max-w-full rounded-lg shadow border dark:border-gray-700";
-                } else if (header[0] === 0xFF && header[1] === 0xD8 && header[2] === 0xFF) {
+                } else if (fileExtension === 'jpg') {
                     elem = document.createElement('img');
                     elem.src = url;
                     elem.className = "max-w-full rounded-lg shadow border dark:border-gray-700";
-                } else if (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70) {
+                } else if (fileExtension === 'mp4') {
                     elem = document.createElement('video');
                     elem.src = url;
                     elem.controls = true;
                     elem.className = "max-w-full rounded-lg shadow border dark:border-gray-700";
+                } else if (fileExtension === 'pdf') {
+                    elem = document.createElement('iframe');
+                    elem.src = url;
+                    elem.className = "w-full h-64 border rounded-lg dark:border-gray-700";
+                    elem.setAttribute('allowfullscreen', '');
                 } else {
+                    // Default pratinjau untuk teks jika format lain tidak dikenali atau dipilih
                     const text = await new Response(blob).text();
                     elem = document.createElement('pre');
-                    elem.textContent = text.slice(0, 1000) + (text.length > 1000 ? '\n…(truncated)' : '');
+                    elem.textContent = text.slice(0, 1000) + (text.length > 1000 ? '\n…(dipotong)' : '');
                     elem.className = "whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-4 rounded-lg max-h-48 overflow-auto border dark:border-gray-700";
                 }
                 
@@ -337,9 +606,43 @@
             reader.readAsArrayBuffer(wavFile);
         };
 
+        // Event listener for encryption play/pause button
+        document.getElementById('playPauseEncBtn').onclick = () => togglePlayPause('enc');
+
+        // Event listener for decryption play/pause button
+        document.getElementById('playPauseDecBtn').onclick = () => togglePlayPause('dec');
+
+
+        // Initial tab display
+        showTab(activeTab);
+
+        // Event listeners for tab buttons
+        document.getElementById('tabEncrypt').onclick = () => showTab('encrypt');
+        document.getElementById('tabDecrypt').onclick = () => showTab('decrypt');
+
+
         // Dark mode detection
         if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             document.body.classList.add('dark');
+        }
+
+        // Function to display custom message box (replaces alert)
+        function showMessageBox(message) {
+            const messageBox = document.createElement('div');
+            messageBox.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50';
+            messageBox.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm mx-auto text-center">
+                    <p class="text-gray-800 dark:text-gray-200 mb-4">${message}</p>
+                    <button id="closeMessageBox" class="gradient-btn px-4 py-2 text-white font-semibold rounded-lg">
+                        OK
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(messageBox);
+
+            document.getElementById('closeMessageBox').onclick = () => {
+                document.body.removeChild(messageBox);
+            };
         }
     </script>
 </body>
