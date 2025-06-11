@@ -3,241 +3,385 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Metro UI Tiles</title>
+  <title>Aplikasi Inovatif</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Variabel warna tema Metro */
+    /* Variabel untuk warna dan font */
     :root {
-      --tile-bg-1: #00aba9;
-      --tile-bg-2: #2b5797; /* Ini sekarang akan digunakan oleh tile lain jika tidak dioverride */
-      --tile-bg-3: #da532c;
-      --tile-bg-4: #ffc40d;
-      --tile-bg-5: #7e3878;
-      --tile-bg-6: #e671b8;
-      --tile-bg-7: #00a300;
-      --tile-bg-8: #d8c100;
-      --tile-bg-9: #603cba;
-      --tile-hover-opacity: 0.85;
-      --text-color: #ffffff;
-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font khas Windows */
+      --primary-color: #3b82f6; /* Warna biru yang modern */
+      --secondary-color: #6366f1; /* Warna ungu-biru */
+      --accent-color: #ef4444; /* Warna merah aksen */
+      --text-color-dark: #1f2937; /* Teks gelap */
+      --text-color-light: #f9fafb; /* Teks terang */
+      --bg-color-light: #f3f4f6; /* Latar belakang terang */
+      --bg-color-dark: #111827; /* Latar belakang gelap */
+      --card-bg-light: #ffffff; /* Latar belakang kartu terang */
+      --card-bg-dark: #1f2937; /* Latar belakang kartu gelap */
+      --border-color: #e5e7eb; /* Warna border */
+      --font-family: 'Inter', sans-serif;
     }
 
-    /* Reset dasar */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
     body {
       font-family: var(--font-family);
-      color: var(--text-color);
+      color: var(--text-color-dark);
+      background-color: var(--bg-color-light);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 16px;
-      overflow: hidden; /* Mencegah scroll saat animasi awal */
-
-      /* Animasi latar belakang gradien */
-      background: linear-gradient(135deg, #1b1b1b, #2c3e50, #1b1b1b);
-      background-size: 300% 300%;
-      animation: backgroundPan 15s ease infinite alternate;
+      padding: 24px;
+      overflow: hidden;
+      transition: background-color 0.3s ease;
     }
 
-    /* Keyframes untuk animasi latar belakang */
-    @keyframes backgroundPan {
-      0% {
-        background-position: 0% 50%;
-      }
-      100% {
-        background-position: 100% 50%;
-      }
+    /* Mode gelap */
+    body.dark-mode {
+      color: var(--text-color-light);
+      background-color: var(--bg-color-dark);
     }
 
-    /* Container responsive */
-    .metro-container {
+    .container {
       display: grid;
-      /* Menggunakan ukuran tile yang lebih khas Windows 8 (misal 150px) */
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px; /* Jarak antar tile sedikit lebih kecil */
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Ukuran kartu yang lebih fleksibel */
+      gap: 16px; /* Jarak antar kartu */
       width: 100%;
-      max-width: 900px; /* Lebar maksimum disesuaikan */
+      max-width: 1000px; /* Lebar maksimum yang lebih besar */
+      animation: fadeIn 1s ease-out forwards;
     }
 
-    /* Gaya dasar tiap tile */
-    .metro-tile {
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
       position: relative;
       display: flex;
       flex-direction: column;
-      /* Penempatan ikon dan label di kiri bawah */
-      align-items: flex-start;
-      justify-content: flex-end;
-      padding: 15px; /* Padding disesuaikan */
-      font-size: 1rem;
-      text-transform: uppercase;
-      color: var(--text-color);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-size: 1.1rem;
+      text-align: center;
+      color: var(--text-color-dark);
+      background-color: var(--card-bg-light);
       cursor: pointer;
       overflow: hidden;
-      border-radius: 0; /* Menghilangkan sudut membulat untuk gaya Windows 8 */
-      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out; /* Transisi lebih halus */
-      /* Animasi masuk */
-      transform: translateY(20px);
-      opacity: 0;
-      animation: tileEntrance 0.5s forwards;
-    }
-    /* Delay animasi untuk setiap tile */
-    .metro-tile:nth-child(1) { animation-delay: 0.1s; }
-    .metro-tile:nth-child(2) { animation-delay: 0.15s; }
-    .metro-tile:nth-child(3) { animation-delay: 0.2s; }
-    .metro-tile:nth-child(4) { animation-delay: 0.25s; }
-    .metro-tile:nth-child(5) { animation-delay: 0.3s; }
-    .metro-tile:nth-child(6) { animation-delay: 0.35s; }
-    .metro-tile:nth-child(7) { animation-delay: 0.4s; }
-    .metro-tile:nth-child(8) { animation-delay: 0.45s; }
-
-    /* Keyframes untuk animasi masuk */
-    @keyframes tileEntrance {
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      border-radius: 12px; /* Sudut membulat yang lebih modern */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Bayangan lembut */
+      transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* Efek hover yang lebih dinamis (gaya Windows 8) */
-    .metro-tile:hover {
-      opacity: 1; /* Opasitas penuh */
-      transform: scale(1.01); /* Sedikit membesar */
-      box-shadow: none; /* Menghilangkan bayangan */
-      filter: brightness(1.1); /* Sedikit mencerahkan warna tile */
+    /* Mode gelap untuk kartu */
+    body.dark-mode .card {
+      background-color: var(--card-bg-dark);
+      color: var(--text-color-light);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
 
-    /* Warna masing-masing tile */
-    .tile-1 { background: var(--tile-bg-1); }
-    /* .tile-2 dihapus */
-    .tile-3 { background: var(--tile-bg-3); }
-    .tile-4 { background: var(--tile-bg-4); }
-    .tile-5 { background: var(--tile-bg-5); }
-    .tile-6 { background: var(--tile-bg-6); }
-    .tile-7 { background: var(--tile-bg-7); }
-    .tile-8 { background: var(--tile-bg-8); }
-    .tile-9 { background: var(--tile-bg-9); }
-
-    /* Ikon sederhana (gaya Windows 8) */
-    .metro-tile .icon {
-      font-size: 3rem; /* Ukuran ikon lebih besar */
-      margin-bottom: 10px; /* Jarak bawah ikon */
-      opacity: 0.9; /* Opasitas ikon lebih tinggi */
-      position: absolute; /* Posisi ikon di tengah atas */
-      top: 15px;
-      left: 15px;
-      transition: transform 0.2s;
-    }
-    .metro-tile:hover .icon {
-      transform: scale(1.05); /* Ikon sedikit membesar saat hover */
+    .card:hover {
+      transform: translateY(-5px) scale(1.02); /* Sedikit naik dan membesar */
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15); /* Bayangan lebih dalam */
     }
 
-    /* Judul tile (gaya Windows 8) */
-    .metro-tile .label {
-      font-size: 1.1rem; /* Ukuran font label lebih besar */
-      line-height: 1.3;
-      font-weight: normal; /* Label tidak terlalu tebal */
-      text-align: left; /* Teks rata kiri */
-      width: 100%; /* Memastikan label mengisi lebar */
-      padding-top: 50px; /* Memberi ruang untuk ikon di atasnya */
-      position: relative;
-      z-index: 1; /* Memastikan label di atas ripple */
+    body.dark-mode .card:hover {
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
     }
 
-    /* Efek ripple saat klik (disesuaikan untuk Windows 8) */
+    .card .icon {
+      font-size: 3.5rem; /* Ukuran ikon lebih besar */
+      margin-bottom: 12px;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover .icon {
+      transform: rotate(5deg) scale(1.1); /* Rotasi dan membesar saat hover */
+    }
+
+    .card .label {
+      font-size: 1rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    /* Efek ripple */
     .ripple {
       position: absolute;
-      border-radius: 0; /* Ripple berbentuk kotak */
-      background: rgba(255, 255, 255, 0.4); /* Warna ripple putih transparan */
-      animation: ripple-animation 0.4s ease-out forwards; /* Animasi lebih cepat */
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.7); /* Warna ripple lebih lembut */
+      animation: ripple-animation 0.6s ease-out forwards;
       transform: scale(0);
-      pointer-events: none; /* Memastikan ripple tidak mengganggu klik */
+      pointer-events: none;
+      z-index: 0; /* Pastikan ripple di bawah konten kartu */
     }
 
     @keyframes ripple-animation {
       to {
-        transform: scale(1); /* Ripple mengisi tile */
-        opacity: 0; /* Menghilangkan ripple */
+        transform: scale(2.5); /* Ripple mengisi area yang lebih luas */
+        opacity: 0;
+      }
+    }
+
+    /* Tombol mode gelap */
+    .dark-mode-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background-color: var(--primary-color);
+      color: var(--text-color-light);
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark-mode-toggle:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+
+    /* Icon untuk mode gelap */
+    .dark-mode-toggle .icon {
+      font-size: 1.2rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        padding: 16px;
+      }
+      .card {
+        padding: 15px;
+      }
+      .card .icon {
+        font-size: 3rem;
+        margin-bottom: 8px;
+      }
+      .card .label {
+        font-size: 0.9rem;
+      }
+      .dark-mode-toggle {
+        top: 15px;
+        right: 15px;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+      }
+      .container {
+        grid-template-columns: 1fr 1fr; /* 2 kolom untuk layar sangat kecil */
+        gap: 10px;
+      }
+      .card {
+        padding: 10px;
+        border-radius: 10px;
+      }
+      .card .icon {
+        font-size: 2.5rem;
+      }
+      .card .label {
+        font-size: 0.85rem;
+      }
+      .dark-mode-toggle {
+        top: 10px;
+        right: 10px;
       }
     }
   </style>
 </head>
 <body>
 
-  <div class="metro-container">
-    <div class="metro-tile tile-1" data-href="htmlrun.html">
-      <div class="icon">🏃</div>
+  <button id="darkModeToggle" class="dark-mode-toggle">
+    <span class="icon">💡</span> Mode Gelap
+  </button>
+
+  <div class="container">
+    <div class="card" data-href="htmlrun.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-2">
+          <path d="m18 16 4-4-4-4"/>
+          <path d="m6 8-4 4 4 4"/>
+          <path d="m14.5 4-5 16"/>
+        </svg>
+      </div>
       <div class="label">HTML Run</div>
     </div>
-    <div class="metro-tile tile-3" data-href="enkripsi.html">
-      <div class="icon">🔒</div>
+    <div class="card" data-href="enkripsi.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
       <div class="label">Enkripsi File</div>
     </div>
-    <div class="metro-tile tile-4" data-href="TingkatkanGambar.html">
-      <div class="icon">🖼️</div>
+    <div class="card" data-href="TingkatkanGambar.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-up">
+          <path d="M12 6v6"/>
+          <path d="M15 9l-3-3-3 3"/>
+          <path d="M11 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/>
+          <circle cx="9" cy="9" r="2"/>
+          <path d="m22 15-3.24-3.24a1 1 0 0 0-1.1-.12L9 22"/>
+        </svg>
+      </div>
       <div class="label">Tingkatkan Gambar</div>
     </div>
-    <div class="metro-tile tile-5" data-href="Steganografi.html">
-      <div class="icon">🧬</div>
+    <div class="card" data-href="Steganografi.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dna">
+          <path d="M2 12c.6 0 1.2-.4 1.4-1 2-4 5-5 8-5 4.5 0 7.5 2.5 8 5.5"/>
+          <path d="M22 12c-.6 0-1.2.4-1.4 1-2 4-5 5-8 5-4.5 0-7.5-2.5-8-5.5"/>
+          <path d="M11.5 5c-.3 0-.5.2-.5.5v13c0 .3.2.5.5.5h1c.3 0 .5-.2.5-.5V5.5c0-.3-.2-.5-.5-.5h-1Z"/>
+        </svg>
+      </div>
       <div class="label">Steganografi</div>
     </div>
-    <div class="metro-tile tile-6" data-href="SteganografiWav.html">
-      <div class="icon">🎵</div>
+    <div class="card" data-href="SteganografiWav.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-waveform">
+          <path d="M2 10v3"/>
+          <path d="M6 6v11"/>
+          <path d="M10 10v3"/>
+          <path d="M14 4v15"/>
+          <path d="M18 8v7"/>
+          <path d="M22 10v3"/>
+        </svg>
+      </div>
       <div class="label">Steganografi WAV</div>
     </div>
-    <div class="metro-tile tile-7" data-href="VideoFrame.html">
-      <div class="icon">🎬</div>
+    <div class="card" data-href="VideoFrame.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video">
+          <path d="m22 8-6 4 6 4V8Z"/>
+          <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+        </svg>
+      </div>
       <div class="label">Video Frame</div>
     </div>
-    <div class="metro-tile tile-8" data-href="EnkripsiKata.html">
-      <div class="icon">🔑</div>
+    <div class="card" data-href="EnkripsiKata.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-key">
+          <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778Z"/>
+          <path d="m15.5 5.5 3.5 3.5L8 20l-3.5-3.5L15.5 5.5Z"/>
+        </svg>
+      </div>
       <div class="label">Enkripsi Kata</div>
     </div>
-    <div class="metro-tile tile-9" data-href="QrCode.html">
-      <div class="icon">📱</div>
+    <div class="card" data-href="QrCode.html">
+      <div class="icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-qr-code">
+          <rect width="4" height="4" x="2" y="2" rx="1"/>
+          <rect width="4" height="4" x="18" y="2" rx="1"/>
+          <rect width="4" height="4" x="2" y="18" rx="1"/>
+          <path d="M8 6h.01"/>
+          <path d="M16 6h.01"/>
+          <path d="M6 18h.01"/>
+          <path d="M18 18h.01"/>
+          <path d="M18 13h.01"/>
+          <path d="M18 9h.01"/>
+          <path d="M13 18h.01"/>
+          <path d="M13 22h.01"/>
+          <path d="M13 13h.01"/>
+          <path d="M13 9h.01"/>
+          <path d="M9 13h.01"/>
+          <path d="M6 14h.01"/>
+          <path d="M9 18h.01"/>
+          <path d="M12 18h.01"/>
+          <path d="M12 14h.01"/>
+          <path d="M16 14h.01"/>
+          <path d="M22 6h.01"/>
+          <path d="M22 10h.01"/>
+        </svg>
+      </div>
       <div class="label">QR Code</div>
     </div>
   </div>
 
   <script>
-    // Mendapatkan semua elemen tile
-    const tiles = document.querySelectorAll('.metro-tile');
+    document.addEventListener('DOMContentLoaded', () => {
+      // Mendapatkan semua elemen kartu
+      const cards = document.querySelectorAll('.card');
+      const darkModeToggle = document.getElementById('darkModeToggle');
+      const body = document.body;
 
-    tiles.forEach(tile => {
-      // Menambahkan event listener untuk klik pada setiap tile
-      tile.addEventListener('click', function(e) {
-        // Membuat elemen ripple baru
-        const ripple = document.createElement('span');
-        ripple.classList.add('ripple');
+      // Fungsi untuk mengatur atau mengambil mode gelap dari localStorage
+      const enableDarkMode = () => {
+        body.classList.add('dark-mode');
+        darkModeToggle.innerHTML = '<span class="icon">💡</span> Mode Terang';
+        localStorage.setItem('theme', 'dark');
+      };
 
-        // Mendapatkan ukuran tile untuk menentukan ukuran ripple
-        const size = Math.max(this.offsetWidth, this.offsetHeight);
-        ripple.style.width = ripple.style.height = `${size}px`;
+      const disableDarkMode = () => {
+        body.classList.remove('dark-mode');
+        darkModeToggle.innerHTML = '<span class="icon">🌙</span> Mode Gelap';
+        localStorage.setItem('theme', 'light');
+      };
 
-        // Menentukan posisi ripple agar selalu di tengah tile
-        ripple.style.left = `0`;
-        ripple.style.top = `0`;
-        ripple.style.width = `100%`;
-        ripple.style.height = `100%`;
-
-        // Menambahkan ripple ke dalam tile
-        this.appendChild(ripple);
-
-        // Menghapus ripple setelah animasi selesai
-        ripple.addEventListener('animationend', () => {
-          ripple.remove();
-        });
-
-        // Mengarahkan ke halaman yang dituju setelah efek ripple terlihat sedikit
-        const targetHref = this.dataset.href;
-        if (targetHref) {
-          setTimeout(() => {
-            window.location.href = targetHref;
-          }, 100); // Penundaan singkat agar efek ripple terlihat
+      const toggleDarkMode = () => {
+        if (body.classList.contains('dark-mode')) {
+          disableDarkMode();
+        } else {
+          enableDarkMode();
         }
+      };
+
+      // Memeriksa preferensi mode gelap saat halaman dimuat
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        enableDarkMode();
+      } else {
+        disableDarkMode();
+      }
+
+      darkModeToggle.addEventListener('click', toggleDarkMode);
+
+      cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+          // Membuat elemen ripple baru
+          const ripple = document.createElement('span');
+          ripple.classList.add('ripple');
+
+          // Menentukan posisi ripple di tengah klik
+          const rect = this.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          const x = e.clientX - rect.left - size / 2;
+          const y = e.clientY - rect.top - size / 2;
+
+          ripple.style.width = ripple.style.height = `${size}px`;
+          ripple.style.left = `${x}px`;
+          ripple.style.top = `${y}px`;
+
+          // Menambahkan ripple ke dalam kartu
+          this.appendChild(ripple);
+
+          // Menghapus ripple setelah animasi selesai
+          ripple.addEventListener('animationend', () => {
+            ripple.remove();
+          });
+
+          // Mengarahkan ke halaman yang dituju setelah efek ripple terlihat
+          const targetHref = this.dataset.href;
+          if (targetHref) {
+            setTimeout(() => {
+              window.location.href = targetHref;
+            }, 200); // Penundaan lebih lama untuk efek ripple yang lebih baik
+          }
+        });
       });
     });
   </script>
