@@ -3,244 +3,835 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Steganografi: Enkripsi dan Dekripsi File ke Media</title>
-  <!-- Tailwind CSS -->
+  <title>Steganografi Multi-Media</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     .transition-all { transition: all 0.3s ease; }
-    .dark-theme {
-      --bg-from: #1f2937;
-      --bg-to: #111827;
-      --nav-bg: #1f2937;
-      --main-bg: #111827;
-      --text-primary: #f3f4f6;
-      --input-bg: #374151;
-      --input-border: #4b5563;
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #1a202c;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .loading-spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .image-fade-in {
+      animation: fadeInScale 0.5s ease-out forwards;
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    @keyframes fadeInScale {
+      0% {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1a202c;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 1;
+      transition: opacity 1s ease-out;
+    }
+
+    .splash-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash-logo {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #f97316;
+      animation: bounceIn 1s ease-out;
+      margin-bottom: 1rem;
+    }
+
+    .splash-text {
+      font-size: 1.5rem;
+      color: #a0aec0;
+      animation: fadeIn 1.5s ease-out 0.5s forwards;
+      opacity: 0;
+    }
+
+    @keyframes bounceIn {
+      0%, 20%, 40%, 60%, 80%, 100% {
+        transition-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+      }
+      0% {
+        opacity: 0;
+        transform: scale3d(0.3, 0.3, 0.3);
+      }
+      20% {
+        transform: scale3d(1.1, 1.1, 1.1);
+      }
+      40% {
+        transform: scale3d(0.9, 0.9, 0.9);
+      }
+      60% {
+        opacity: 1;
+        transform: scale3d(1.03, 1.03, 1.03);
+      }
+      80% {
+        transform: scale3d(0.97, 0.97, 0.97);
+      }
+      100% {
+        opacity: 1;
+        transform: scale3d(1, 1, 1);
+      }
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    .tab-button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      color: #e2e8f0;
+      background-color: #4a5568;
+    }
+
+    .tab-button.active {
+      color: #ffffff;
+      background-color: #f97316;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-button:hover:not(.active) {
+      background-color: #6a7587;
+    }
+
+    .custom-file-input-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      border: 1px solid #4a5568;
+      border-radius: 0.375rem;
+      background-color: #2d3748;
+      color: #e2e8f0;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .custom-file-input-wrapper:hover {
+      background-color: #4a5568;
+    }
+
+    .custom-file-input-wrapper:focus-within {
+      border-color: #f97316;
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.5);
+    }
+
+    .custom-file-input-text {
+      flex-grow: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      margin-right: 0.5rem;
+    }
+
+    .custom-file-input-icon {
+      color: #a0aec0;
     }
   </style>
 </head>
-<body class="bg-gradient-to-br from-gray-200 to-gray-400 font-roboto min-h-screen flex flex-col">
-  <!-- Navbar -->
-  <nav class="bg-white shadow-lg">
-    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-blue-600">Steganografi</h1>
-      <span class="text-gray-700">Enkripsi & Dekripsi File ke Media</span>
+<body class="flex flex-col min-h-screen">
+  <div id="splashScreen" class="splash-screen">
+    <div class="splash-logo">Steganografi</div>
+    <div class="splash-text">Sembunyikan dan Dekripsi File</div>
+  </div>
+
+  <nav class="bg-gray-800 shadow-sm">
+    <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row justify-between items-center">
+      <h1 class="text-2xl font-bold text-white mb-4 sm:mb-0">Steganografi Multi-Media</h1>
     </div>
   </nav>
 
-  <main class="container mx-auto p-6 flex-grow">
-    <div class="bg-white rounded-lg shadow-2xl p-8">
-      <div class="grid gap-6">
-        <!-- Input enkripsi -->
-        <div class="space-y-2">
-          <label class="block text-lg font-medium">Pilih Media</label>
-          <input type="file" id="mediaInput" accept="video/*,audio/*,image/*,*/*"
-            class="block w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
+  <main class="flex-grow">
+    <div class="container mx-auto p-6 max-w-7xl">
+      <div class="text-center mb-8">
+        <h2 class="text-4xl font-bold text-white mb-4">Sembunyikan & Dekripsi File dalam Media</h2>
+        <p class="text-lg text-gray-400 max-w-2xl mx-auto">Gunakan aplikasi ini untuk menyembunyikan file rahasia di dalam gambar, video, audio, atau teks, serta mendekripsi file yang sudah tersembunyi.</p>
+        <div class="flex justify-center space-x-4 mt-8">
+          <button id="showEmbedTab" class="tab-button active">
+            <i class="fas fa-eye-slash mr-2"></i> Sembunyikan File
+          </button>
+          <button id="showDecryptTab" class="tab-button">
+            <i class="fas fa-lock-open mr-2"></i> Dekripsi File
+          </button>
         </div>
-        <div class="space-y-2">
-          <label class="block text-lg font-medium">Pilih File</label>
-          <input type="file" id="fileInput" accept="*/*"
-            class="block w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
-        </div>
-        <button id="embedButton"
-          class="w-full flex items-center justify-center bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-all">
-          <i class="fas fa-lock mr-2"></i> Sisipkan File
-        </button>
-
-        <!-- Preview hasil enkripsi -->
-        <div class="space-y-4">
-          <video id="outputVideo" controls class="hidden w-full rounded shadow-lg"></video>
-          <audio id="outputAudio" controls class="hidden w-full rounded shadow-lg"></audio>
-          <img id="outputImage" class="hidden w-full rounded shadow-lg" alt="Encrypted">
-          <iframe id="outputPDF" class="hidden w-full rounded shadow-lg" style="height:300px;"></iframe>
-          <a id="downloadLink" class="hidden block text-center bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition-all">
-            <i class="fas fa-download mr-2"></i> Download
-          </a>
-        </div>
-
-        <!-- Input dekripsi -->
-        <div class="space-y-2">
-          <label class="block text-lg font-medium">Pilih Media Terenkripsi</label>
-          <input type="file" id="encryptedMediaInput" accept="*/*"
-            class="block w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
-        </div>
-        <button id="decryptButton"
-          class="w-full flex items-center justify-center bg-red-600 text-white py-3 rounded-md hover:bg-red-700 transition-all">
-          <i class="fas fa-unlock mr-2"></i> Dekripsi File
-        </button>
-
-        <!-- Pilih format & preview dekripsi -->
-        <div id="fileFormatSelection" class="hidden space-y-2">
-          <label class="block text-lg font-medium">Format Hasil</label>
-          <select id="fileFormat"
-            class="block w-full px-4 py-2 border rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white">
-            <option value="">Pilih...</option>
-            <option value="zip">ZIP</option>
-            <option value="rar">RAR</option>
-            <option value="txt">TXT</option>
-            <option value="jpg">JPG</option>
-            <option value="png">PNG</option>
-            <option value="mp3">MP3</option>
-            <option value="mp4">MP4</option>
-            <option value="docx">DOCX</option>
-            <option value="doc">DOC</option>
-            <option value="pdf">PDF</option>
-          </select>
-        </div>
-        <div class="space-y-4">
-          <video id="decryptedVideo" controls class="hidden max-w-1/3 w-full rounded shadow-lg"></video>
-          <img id="decryptedImage" class="hidden max-w-1/3 w-full rounded shadow-lg" alt="Decrypted">
-          <a id="downloadFileLink" class="hidden block text-center bg-green-600 text-white py-3 rounded-md hover:bg-green-700 transition-all">
-            <i class="fas fa-download mr-2"></i> Download
-          </a>
-        </div>
-
-        <div id="statusMessage" class="hidden text-center text-lg font-medium"></div>
       </div>
     </div>
+
+    <div id="embedSection" class="bg-gray-700 p-8 rounded-lg shadow-lg border-t-4 border-orange-500 transition-opacity duration-500 opacity-100 mb-8 mx-4 md:mx-auto max-w-7xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h3 class="text-2xl font-bold text-orange-500 mb-6 text-center">Sembunyikan File</h3>
+          <div class="space-y-6">
+            <div>
+              <label for="mediaInput" class="block text-base font-medium text-gray-200 mb-2">Unggah File Cover (Gambar, Video, Audio, Teks):</label>
+              <label for="mediaInput" class="custom-file-input-wrapper">
+                <span id="mediaFileName" class="custom-file-input-text">Tidak ada file terpilih</span>
+                <i class="fas fa-upload custom-file-input-icon"></i>
+              </label>
+              <input type="file" id="mediaInput" accept="*/*" class="hidden">
+            </div>
+            <div>
+              <label for="fileInput" class="block text-base font-medium text-gray-200 mb-2">Pilih File yang akan Disembunyikan:</label>
+              <label for="fileInput" class="custom-file-input-wrapper">
+                <span id="secretFileName" class="custom-file-input-text">Tidak ada file terpilih</span>
+                <i class="fas fa-upload custom-file-input-icon"></i>
+              </label>
+              <input type="file" id="fileInput" accept="*/*" class="hidden">
+            </div>
+            <button id="embedButton"
+              class="w-full flex items-center justify-center bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-all font-semibold shadow-md">
+              <span id="embedButtonText">Sembunyikan File</span>
+              <div id="embedSpinner" class="loading-spinner ml-2 hidden"></div>
+            </button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 md:mt-0 relative">
+          <div class="text-center">
+            <h4 id="previewCoverTitle" class="text-lg font-semibold text-gray-200 mb-2 hidden">Cover:</h4>
+            <img id="outputImageOriginal" class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800 flex items-center justify-center text-gray-400" alt="File cover Asli" src="https://placehold.co/200x150/374151/9CA3AF?text=File+cover">
+            <video id="outputVideoOriginal" controls class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800"></video>
+            <audio id="outputAudioOriginal" controls class="hidden w-full border border-gray-600 rounded-md shadow-sm bg-gray-800"></audio>
+            <p id="outputTextOriginal" class="hidden w-full h-48 overflow-auto text-sm text-gray-200 border border-gray-600 rounded-md shadow-sm bg-gray-800 p-2"></p>
+          </div>
+
+          <div class="text-center">
+            <h4 id="previewSecretTitle" class="text-lg font-semibold text-gray-200 mb-2 hidden">Sembunyikan:</h4>
+            <img id="outputImageSecret" class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800 flex items-center justify-center text-gray-400" alt="File Rahasia" src="https://placehold.co/200x150/374151/9CA3AF?text=File+Rahasia">
+            <video id="outputVideoSecret" controls class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800"></video>
+            <audio id="outputAudioSecret" controls class="hidden w-full border border-gray-600 rounded-md shadow-sm bg-gray-800"></audio>
+            <p id="outputTextSecret" class="hidden w-full h-48 overflow-auto text-sm text-gray-200 border border-gray-600 rounded-md shadow-sm bg-gray-800 p-2"></p>
+          </div>
+          <div class="text-center">
+            <h4 id="previewStegoTitle" class="text-lg font-semibold text-gray-200 mb-2 hidden">Hasil:</h4>
+            <img id="outputImageStego" class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800 flex items-center justify-center text-gray-400" alt="File Stego" src="https://placehold.co/200x150/374151/9CA3AF?text=File+Stego">
+            <video id="outputVideoStego" controls class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800"></video>
+            <audio id="outputAudioStego" controls class="hidden w-full border border-gray-600 rounded-md shadow-sm bg-gray-800"></audio>
+            <p id="outputTextStego" class="hidden w-full h-48 overflow-auto text-sm text-gray-200 border border-gray-600 rounded-md shadow-sm bg-gray-800 p-2"></p>
+            <a id="downloadLink" class="hidden block text-center bg-green-700 text-white py-2 px-3 mt-4 rounded-md hover:bg-green-800 transition-all font-semibold shadow-md text-sm">
+              <i class="fas fa-download mr-2"></i> Unduh            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="decryptSection" class="bg-gray-700 p-8 rounded-lg shadow-lg border-t-4 border-purple-500 transition-opacity duration-500 opacity-0 hidden mb-8 mx-4 md:mx-auto max-w-7xl">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h3 class="text-2xl font-bold text-purple-500 mb-6 text-center">Dekripsi File</h3>
+          <div class="space-y-6">
+            <div>
+              <label for="encryptedMediaInput" class="block text-base font-medium text-gray-200 mb-2">Unggah File Stego (Gambar, Video, Audio, Teks):</label>
+              <label for="encryptedMediaInput" class="custom-file-input-wrapper">
+                <span id="encryptedMediaFileName" class="custom-file-input-text">Tidak ada file terpilih</span>
+                <i class="fas fa-upload custom-file-input-icon"></i>
+              </label>
+              <input type="file" id="encryptedMediaInput" accept="*/*" class="hidden">
+            </div>
+            <button id="decryptButton"
+              class="w-full flex items-center justify-center bg-purple-700 text-white py-3 px-4 rounded-md hover:bg-purple-800 transition-all font-semibold shadow-md">
+              <span id="decryptButtonText">Dekripsi File</span>
+              <div id="decryptSpinner" class="loading-spinner ml-2 hidden"></div>
+            </button>
+          </div>
+        </div>
+        <div class="space-y-4 mt-6 md:mt-0 relative">
+          <div id="fileFormatSelection" class="hidden space-y-2 mt-4">
+            <label for="fileFormat" class="block text-base font-medium text-gray-200">Format Hasil Dekripsi:</label>
+            <select id="fileFormat"
+              class="block w-full px-4 py-2 border border-gray-600 rounded-md focus:ring-purple-500 focus:border-purple-500 bg-gray-800 text-gray-200 shadow-sm">
+              <option value="">Pilih...</option>
+              <option value="txt">TXT</option>
+              <option value="jpg">JPG</option>
+              <option value="png">PNG</option>
+              <option value="mp3">MP3</option>
+              <option value="mp4">MP4</option>
+              <option value="pdf">PDF</option>
+              <option value="zip">ZIP</option>
+              <option value="rar">RAR</option>
+              <option value="doc">DOC</option>
+              <option value="docx">DOCX</option>
+              <option value="xlsx">XLSX</option>
+              <option value="pptx">PPTX</option>
+              <option value="exe">EXE</option>
+              <option value="bin">BIN</option>
+            </select>
+          </div>
+          <h4 id="decryptedFileTitle" class="text-lg font-semibold text-gray-200 mb-2 hidden">File Terdekripsi:</h4>
+          <video id="decryptedVideo" controls class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800"></video>
+          <img id="decryptedImage" class="hidden w-full h-48 object-contain border border-gray-600 rounded-md shadow-sm bg-gray-800" alt="Decrypted">
+          <audio id="decryptedAudio" controls class="hidden w-full border border-gray-600 rounded-md shadow-sm bg-gray-800"></audio>
+          <p id="decryptedText" class="hidden w-full h-48 overflow-auto text-sm text-gray-200 border border-gray-600 rounded-md shadow-sm bg-gray-800 p-2"></p>
+          <a id="downloadFileLink" class="hidden block text-center bg-green-700 text-white py-3 px-4 rounded-md hover:bg-green-800 transition-all font-semibold shadow-md">
+            <i class="fas fa-download mr-2"></i> Unduh File Terdekripsi
+          </a>
+        </div>
+      </div>
+    </div>
+    <div id="statusMessage" class="hidden text-center text-base font-medium mt-8 py-2 px-4 rounded-md"></div>
   </main>
 
-  <footer class="bg-white shadow-inner">
-    <div class="container mx-auto px-4 py-4 text-center text-gray-600">
+  <footer class="bg-gray-800 shadow-inner mt-8">
+    <div class="container mx-auto px-6 py-4 text-center text-gray-400 text-sm">
       &copy; 2025 - Steganografi, Inc.
     </div>
   </footer>
 
   <script>
-    // Fungsi untuk mengaktifkan tema gelap
-    function applyDarkTheme() {
-      document.body.classList.add('dark-theme');
-      document.body.classList.remove('from-gray-200', 'to-gray-400');
-      document.body.classList.add('from-[var(--bg-from)]', 'to-[var(--bg-to)]');
-      
-      document.querySelector('nav').classList.remove('bg-white');
-      document.querySelector('nav').classList.add('bg-[var(--nav-bg)]', 'text-gray-100');
-      
-      document.querySelector('main > div').classList.remove('bg-white');
-      document.querySelector('main > div').classList.add('bg-[var(--main-bg)]', 'text-[var(--text-primary)]');
-      
-      document.querySelector('footer').classList.remove('bg-white', 'text-gray-600');
-      document.querySelector('footer').classList.add('bg-[var(--nav-bg)]', 'text-gray-300');
-      
-      document.querySelectorAll('input, select').forEach(el => {
-        el.classList.add('bg-[var(--input-bg)]', 'border-[var(--input-border)]', 'text-white');
-      });
-    }
-
-    // Cek waktu saat halaman dimuat
-    document.addEventListener('DOMContentLoaded', () => {
-      const hour = new Date().getHours();
-      if (hour >= 18 || hour < 6) applyDarkTheme();
-    });
-
-    // Sisanya tetap sama seperti kode sebelumnya
-    let fileName = '';
-
     function showMessage(msg, isError) {
-      const el = document.getElementById('statusMessage');
-      el.textContent = msg;
-      el.className = `text-center text-lg font-medium transition-all ${isError ? 'text-red-500' : 'text-green-500'}`;
-      el.classList.remove('hidden');
-      setTimeout(() => el.classList.add('hidden'), 5000);
+      const statusEl = document.getElementById('statusMessage');
+
+      statusEl.classList.add('hidden');
+
+      if (isError) {
+        statusEl.textContent = msg;
+        statusEl.className = `text-center text-base font-medium transition-all py-2 px-4 rounded-md bg-red-800 text-red-200`;
+        statusEl.classList.remove('hidden');
+        setTimeout(() => statusEl.classList.add('hidden'), 5000);
+      } else {
+        statusEl.textContent = msg;
+        statusEl.className = `text-center text-base font-medium transition-all py-2 px-4 rounded-md bg-green-800 text-green-200`;
+        statusEl.classList.remove('hidden');
+        setTimeout(() => statusEl.classList.add('hidden'), 5000);
+      }
     }
 
     function readFileAsArrayBuffer(file) {
-      return new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onload = e => res(e.target.result);
-        r.onerror = e => rej(new Error(e.target.error.message));
-        r.readAsArrayBuffer(file);
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(new Error(e.target.error.message));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(new Error(e.target.error.message));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = e => reject(new Error(e.target.error.message));
+        reader.readAsText(file);
       });
     }
 
     function getMimeType(ext) {
-      const m = {
-        jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png',
-        txt:'text/plain', pdf:'application/pdf',
-        mp3:'audio/mpeg', mp4:'video/mp4',
-        zip:'application/zip', rar:'application/x-rar-compressed',
-        doc:'application/msword', docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      const mimeTypes = {
+        jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', bmp: 'image/bmp', webp: 'image/webp',
+        txt: 'text/plain', html: 'text/html', css: 'text/css', js: 'application/javascript', json: 'application/json', xml: 'application/xml',
+        pdf: 'application/pdf',
+        mp3: 'audio/mpeg', wav: 'audio/wav', ogg: 'audio/ogg',
+        mp4: 'video/mp4', webm: 'video/webm', ogv: 'video/ogg',
+        zip: 'application/zip', rar: 'application/x-rar-compressed',
+        doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ppt: 'application/vnd.ms-powerpoint', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        exe: 'application/x-ms-dos-executable', bin: 'application/octet-stream',
       };
-      return m[ext]||'application/octet-stream';
+      return mimeTypes[ext.toLowerCase()] || 'application/octet-stream';
     }
 
+    function hideAllOutputPreviews() {
+      document.getElementById('outputImageOriginal').classList.add('hidden');
+      document.getElementById('outputVideoOriginal').classList.add('hidden');
+      document.getElementById('outputAudioOriginal').classList.add('hidden');
+      document.getElementById('outputTextOriginal').classList.add('hidden');
+
+      document.getElementById('outputImageSecret').classList.add('hidden');
+      document.getElementById('outputVideoSecret').classList.add('hidden');
+      document.getElementById('outputAudioSecret').classList.add('hidden');
+      document.getElementById('outputTextSecret').classList.add('hidden');
+
+      document.getElementById('outputImageStego').classList.add('hidden');
+      document.getElementById('outputVideoStego').classList.add('hidden');
+      document.getElementById('outputAudioStego').classList.add('hidden');
+      document.getElementById('outputTextStego').classList.add('hidden');
+
+      document.getElementById('decryptedVideo').classList.add('hidden');
+      document.getElementById('decryptedImage').classList.add('hidden');
+      document.getElementById('decryptedAudio').classList.add('hidden');
+      document.getElementById('decryptedText').classList.add('hidden');
+
+      document.getElementById('previewCoverTitle').classList.add('hidden');
+      document.getElementById('previewSecretTitle').classList.add('hidden');
+      document.getElementById('previewStegoTitle').classList.add('hidden');
+      document.getElementById('decryptedFileTitle').classList.add('hidden');
+
+      document.getElementById('outputImageOriginal').classList.remove('image-fade-in');
+      document.getElementById('outputImageSecret').classList.remove('image-fade-in');
+      document.getElementById('outputImageStego').classList.remove('image-fade-in');
+      document.getElementById('decryptedImage').classList.remove('image-fade-in');
+    }
+
+    function showTab(tabId) {
+      const embedSection = document.getElementById('embedSection');
+      const decryptSection = document.getElementById('decryptSection');
+      const showEmbedTabButton = document.getElementById('showEmbedTab');
+      const showDecryptTabButton = document.getElementById('showDecryptTab');
+
+      let currentSection;
+      let nextSection;
+      let currentTabButton;
+      let nextTabButton;
+
+      if (tabId === 'embed') {
+        currentSection = decryptSection;
+        nextSection = embedSection;
+        currentTabButton = showDecryptTabButton;
+        nextTabButton = showEmbedTabButton;
+      } else if (tabId === 'decrypt') {
+        currentSection = embedSection;
+        nextSection = decryptSection;
+        currentTabButton = showEmbedTabButton;
+        nextTabButton = showDecryptTabButton;
+      }
+
+      if (nextSection.classList.contains('opacity-100') && !nextSection.classList.contains('hidden')) {
+          return;
+      }
+
+      showEmbedTabButton.classList.remove('active');
+      showDecryptTabButton.classList.remove('active');
+
+      if (nextTabButton) {
+        nextTabButton.classList.add('active');
+      }
+
+      if (!currentSection.classList.contains('hidden')) {
+        currentSection.style.opacity = '0';
+        currentSection.addEventListener('transitionend', function handler() {
+          currentSection.classList.add('hidden');
+          currentSection.style.opacity = '';
+          currentSection.removeEventListener('transitionend', handler);
+
+          nextSection.classList.remove('hidden');
+          nextSection.offsetWidth;
+          nextSection.style.opacity = '1';
+        }, { once: true });
+      } else {
+        nextSection.classList.remove('hidden');
+        nextSection.offsetWidth;
+        nextSection.style.opacity = '1';
+      }
+    }
+
+    async function displayOriginalMediaPreview(mediaFile) {
+      document.getElementById('outputImageOriginal').classList.add('hidden');
+      document.getElementById('outputVideoOriginal').classList.add('hidden');
+      document.getElementById('outputAudioOriginal').classList.add('hidden');
+      document.getElementById('outputTextOriginal').classList.add('hidden');
+      document.getElementById('outputImageOriginal').classList.remove('image-fade-in');
+
+      document.getElementById('previewCoverTitle').classList.add('hidden');
+
+      if (!mediaFile) {
+        return;
+      }
+
+      document.getElementById('previewCoverTitle').classList.remove('hidden');
+
+      const originalFileType = mediaFile.type.split('/')[0];
+      const originalFileExtension = mediaFile.name.split('.').pop().toLowerCase();
+
+      if (originalFileType === 'image') {
+        const readerOriginal = new FileReader();
+        readerOriginal.onload = (e) => {
+          const outputImageOriginal = document.getElementById('outputImageOriginal');
+          outputImageOriginal.src = e.target.result;
+          outputImageOriginal.classList.remove('hidden');
+          setTimeout(() => outputImageOriginal.classList.add('image-fade-in'), 10);
+        };
+        readerOriginal.readAsDataURL(mediaFile);
+      } else if (originalFileType === 'video') {
+        const outputVideoOriginal = document.getElementById('outputVideoOriginal');
+        outputVideoOriginal.src = URL.createObjectURL(mediaFile);
+        outputVideoOriginal.classList.remove('hidden');
+      } else if (originalFileType === 'audio') {
+        const outputAudioOriginal = document.getElementById('outputAudioOriginal');
+        outputAudioOriginal.src = URL.createObjectURL(mediaFile);
+        outputAudioOriginal.classList.remove('hidden');
+      } else if (originalFileExtension === 'txt') {
+        const outputTextOriginal = document.getElementById('outputTextOriginal');
+        outputTextOriginal.textContent = await readFileAsText(mediaFile);
+        outputTextOriginal.classList.remove('hidden');
+      }
+    }
+
+    async function displaySecretFilePreview(secretFile) {
+      document.getElementById('outputImageSecret').classList.add('hidden');
+      document.getElementById('outputVideoSecret').classList.add('hidden');
+      document.getElementById('outputAudioSecret').classList.add('hidden');
+      document.getElementById('outputTextSecret').classList.add('hidden');
+      document.getElementById('outputImageSecret').classList.remove('image-fade-in');
+
+      document.getElementById('previewSecretTitle').classList.add('hidden');
+
+      if (!secretFile) {
+        return;
+      }
+
+      document.getElementById('previewSecretTitle').classList.remove('hidden');
+
+      const secretFileType = secretFile.type.split('/')[0];
+      const secretFileExtension = secretFile.name.split('.').pop().toLowerCase();
+
+      if (secretFileType === 'image') {
+        const readerSecret = new FileReader();
+        readerSecret.onload = (e) => {
+          const outputImageSecret = document.getElementById('outputImageSecret');
+          outputImageSecret.src = e.target.result;
+          outputImageSecret.classList.remove('hidden');
+          setTimeout(() => outputImageSecret.classList.add('image-fade-in'), 10);
+        };
+        readerSecret.readAsDataURL(secretFile);
+      } else if (secretFileType === 'video') {
+        const outputVideoSecret = document.getElementById('outputVideoSecret');
+        outputVideoSecret.src = URL.createObjectURL(secretFile);
+        outputVideoSecret.classList.remove('hidden');
+      } else if (secretFileType === 'audio') {
+        const outputAudioSecret = document.getElementById('outputAudioSecret');
+        outputAudioSecret.src = URL.createObjectURL(secretFile);
+        outputAudioSecret.classList.remove('hidden');
+      } else if (secretFileExtension === 'txt') {
+        const outputTextSecret = document.getElementById('outputTextSecret');
+        outputTextSecret.textContent = await readFileAsText(secretFile);
+        outputTextSecret.classList.remove('hidden');
+      }
+    }
+
+
     document.getElementById('embedButton').onclick = async () => {
-      const media = document.getElementById('mediaInput').files[0];
-      const file = document.getElementById('fileInput').files[0];
-      if (!media||!file) return showMessage('Pilih media dan file!', true);
+      const mediaFile = document.getElementById('mediaInput').files[0];
+      const secretFile = document.getElementById('fileInput').files[0];
+      const embedButton = document.getElementById('embedButton');
+      const embedButtonText = document.getElementById('embedButtonText');
+      const embedSpinner = document.getElementById('embedSpinner');
+
+      if (!mediaFile || !secretFile) {
+        return showMessage('Pilih file cover dan file yang akan disembunyikan!', true);
+      }
+
+      embedButton.disabled = true;
+      embedButtonText.classList.add('hidden');
+      embedSpinner.classList.remove('hidden');
+      showMessage('Menyisipkan file...', false);
+
+      document.getElementById('downloadLink').classList.add('hidden');
+      document.getElementById('previewStegoTitle').classList.add('hidden');
+
       try {
-        const mBuf = await readFileAsArrayBuffer(media);
-        const fBuf = await readFileAsArrayBuffer(file);
-        const combined = new Uint8Array(mBuf.byteLength + fBuf.byteLength + 4);
-        combined.set(new Uint8Array(mBuf), 0);
-        combined.set(new Uint8Array(fBuf), mBuf.byteLength);
-        const size = fBuf.byteLength;
-        combined.set([
-          (size>>24)&0xFF, (size>>16)&0xFF, (size>>8)&0xFF, size&0xFF
-        ], mBuf.byteLength + fBuf.byteLength);
-        const blob = new Blob([combined], { type: media.type });
-        const url = URL.createObjectURL(blob);
-        ['outputVideo','outputAudio','outputImage','outputPDF','downloadLink'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-        if (media.type.startsWith('video/')) {
-          const v = document.getElementById('outputVideo');
-          v.src=url; v.classList.remove('hidden');
-        } else if (media.type.startsWith('audio/')) {
-          const a = document.getElementById('outputAudio');
-          a.src=url; a.classList.remove('hidden');
-        } else if (media.type.startsWith('image/')) {
-          const i = document.getElementById('outputImage');
-          i.src=url; i.classList.remove('hidden');
-        } else if (media.type==='application/pdf') {
-          const f = document.getElementById('outputPDF');
-          f.src=url; f.classList.remove('hidden');
-        } else {
-          const dl = document.getElementById('downloadLink');
-          dl.href=url; dl.classList.remove('hidden');
+        const mediaBuffer = await readFileAsArrayBuffer(mediaFile);
+        const secretBuffer = await readFileAsArrayBuffer(secretFile);
+
+        // Simulate a 3-second loading time
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        const combinedArray = new Uint8Array(mediaBuffer.byteLength + secretBuffer.byteLength + 4);
+
+        combinedArray.set(new Uint8Array(mediaBuffer), 0);
+        combinedArray.set(new Uint8Array(secretBuffer), mediaBuffer.byteLength);
+
+        const secretFileSize = secretBuffer.byteLength;
+        combinedArray.set([
+          (secretFileSize >> 24) & 0xFF,
+          (secretFileSize >> 16) & 0xFF,
+          (secretFileSize >> 8) & 0xFF,
+          secretFileSize & 0xFF
+        ], mediaBuffer.byteLength + secretBuffer.byteLength);
+
+        const outputBlob = new Blob([combinedArray], { type: mediaFile.type });
+        const outputUrl = URL.createObjectURL(outputBlob);
+
+        const stegoFileType = mediaFile.type.split('/')[0];
+        const stegoFileExtension = mediaFile.name.split('.').pop() || 'bin';
+
+        document.getElementById('previewStegoTitle').classList.remove('hidden');
+
+        if (stegoFileType === 'image') {
+          const outputImageStego = document.getElementById('outputImageStego');
+          outputImageStego.src = outputUrl;
+          outputImageStego.classList.remove('hidden');
+          setTimeout(() => outputImageStego.classList.add('image-fade-in'), 10);
+        } else if (stegoFileType === 'video') {
+          const outputVideoStego = document.getElementById('outputVideoStego');
+          outputVideoStego.src = outputUrl;
+          outputVideoStego.classList.remove('hidden');
+        } else if (stegoFileType === 'audio') {
+          const outputAudioStego = document.getElementById('outputAudioStego');
+          outputAudioStego.src = outputUrl;
+          outputAudioStego.classList.remove('hidden');
+        } else if (stegoFileExtension === 'txt') {
+          try {
+            const textBlob = new Blob([combinedArray], { type: 'text/plain' });
+            const textReader = new FileReader();
+            textReader.onload = (e) => {
+              document.getElementById('outputTextStego').textContent = e.target.result;
+              document.getElementById('outputTextStego').classList.remove('hidden');
+            };
+            textReader.readAsText(textBlob);
+          } catch (e) {
+            console.error("Could not read stego text as plain text:", e);
+          }
         }
-        showMessage('Enkripsi selesai!', false);
-      } catch (e) {
-        showMessage('Error: '+e.message, true);
+        
+        const downloadLink = document.getElementById('downloadLink');
+        downloadLink.href = outputUrl;
+        downloadLink.download = `stego_file.${stegoFileExtension}`;
+        downloadLink.classList.remove('hidden');
+        showMessage('Penyisipan file berhasil!', false);
+
+      } catch (error) {
+        showMessage(`Error saat menyisipkan file: ${error.message}`, true);
+        document.getElementById('previewStegoTitle').classList.add('hidden');
+      } finally {
+        embedButton.disabled = false;
+        embedButtonText.classList.remove('hidden');
+        embedSpinner.classList.add('hidden');
       }
     };
 
-    document.getElementById('decryptButton').onclick = () => {
-      const enc = document.getElementById('encryptedMediaInput').files[0];
-      if (!enc) return showMessage('Pilih file terenkripsi!', true);
-      document.getElementById('fileFormatSelection').classList.remove('hidden');
+    document.getElementById('decryptButton').onclick = async () => {
+      const encryptedMedia = document.getElementById('encryptedMediaInput').files[0];
+      const decryptButton = document.getElementById('decryptButton');
+      const decryptButtonText = document.getElementById('decryptButtonText');
+      const decryptSpinner = document.getElementById('decryptSpinner');
+
+      if (!encryptedMedia) {
+        return showMessage('Pilih file media terenkripsi untuk dekripsi!', true);
+      }
+
+      decryptButton.disabled = true;
+      decryptButtonText.classList.add('hidden');
+      decryptSpinner.classList.remove('hidden');
+      showMessage('Memeriksa file tersembunyi...', false);
+
+      document.getElementById('fileFormatSelection').classList.add('hidden');
+      hideAllOutputPreviews();
+      document.getElementById('downloadFileLink').classList.add('hidden');
+      document.getElementById('decryptedFileTitle').classList.add('hidden');
+      document.getElementById('fileFormat').value = ''; // Reset dropdown
+
+      try {
+        const buffer = await readFileAsArrayBuffer(encryptedMedia);
+        const uint8Array = new Uint8Array(buffer);
+
+        // Check if the file is large enough to contain the size indicator (at least 4 bytes)
+        if (uint8Array.length < 4) {
+          throw new Error('File terlalu kecil untuk berisi data tersembunyi.');
+        }
+
+        const hiddenFileSize = (uint8Array[uint8Array.length - 4] << 24) |
+                               (uint8Array[uint8Array.length - 3] << 16) |
+                               (uint8Array[uint8Array.length - 2] << 8) |
+                               uint8Array[uint8Array.length - 1];
+
+        if (hiddenFileSize <= 0 || hiddenFileSize > buffer.byteLength - 4) {
+          throw new Error('Tidak dapat menemukan file tersembunyi atau ukuran file tidak valid. File mungkin tidak berisi data tersembunyi atau rusak.');
+        }
+
+        // If a hidden file is detected, show the format selection
+        document.getElementById('fileFormatSelection').classList.remove('hidden');
+        showMessage('File tersembunyi terdeteksi. Pilih format file untuk dekripsi.', false);
+
+      } catch (error) {
+        showMessage(`Error: ${error.message}`, true);
+        document.getElementById('fileFormatSelection').classList.add('hidden');
+      } finally {
+        decryptButton.disabled = false;
+        decryptButtonText.classList.remove('hidden');
+        decryptSpinner.classList.add('hidden');
+      }
     };
 
     document.getElementById('fileFormat').onchange = async function() {
-      const fmt = this.value;
-      if (!fmt) return;
-      try {
-        const enc = document.getElementById('encryptedMediaInput').files[0];
-        const buf = await readFileAsArrayBuffer(enc);
-        const u8 = new Uint8Array(buf);
-        const size = (u8[u8.length-4]<<24)|(u8[u8.length-3]<<16)|(u8[u8.length-2]<<8)|u8[u8.length-1];
-        if (size<=0||size>buf.byteLength-4) throw new Error('Tidak ada file.');
-        const start = buf.byteLength-4-size;
-        const fBuf = buf.slice(start, buf.byteLength-4);
-        const blob = new Blob([fBuf], { type: getMimeType(fmt) });
-        const url = URL.createObjectURL(blob);
-        document.getElementById('decryptedVideo').classList.add('hidden');
-        document.getElementById('decryptedImage').classList.add('hidden');
-        if (fmt==='mp4') {
-          const v = document.getElementById('decryptedVideo');
-          v.src=url; v.classList.remove('hidden');
-        } else if (['jpg','jpeg','png'].includes(fmt)) {
-          const i = document.getElementById('decryptedImage');
-          i.src=url; i.classList.remove('hidden');
-        }
-        const dl = document.getElementById('downloadFileLink');
-        dl.href=url; dl.classList.remove('hidden');
-        showMessage('Dekripsi selesai!', false);
-      } catch (e) {
-        showMessage('Error: '+e.message, true);
+      const selectedFormat = this.value;
+      const decryptButton = document.getElementById('decryptButton');
+      const decryptButtonText = document.getElementById('decryptButtonText');
+      const decryptSpinner = document.getElementById('decryptSpinner');
+
+      if (!selectedFormat) {
+        return;
       }
+
+      decryptButton.disabled = true;
+      decryptButtonText.classList.add('hidden');
+      decryptSpinner.classList.remove('hidden');
+      showMessage('Mendekripsi file...', false);
+
+      try {
+        const encryptedMedia = document.getElementById('encryptedMediaInput').files[0];
+        if (!encryptedMedia) {
+          throw new Error('Tidak ada file media terenkripsi yang dipilih.');
+        }
+
+        const buffer = await readFileAsArrayBuffer(encryptedMedia);
+        const uint8Array = new Uint8Array(buffer);
+
+        // Simulate a 3-second loading time for decryption
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        const hiddenFileSize = (uint8Array[uint8Array.length - 4] << 24) |
+                               (uint8Array[uint8Array.length - 3] << 16) |
+                               (uint8Array[uint8Array.length - 2] << 8) |
+                               uint8Array[uint8Array.length - 1];
+
+        if (hiddenFileSize <= 0 || hiddenFileSize > buffer.byteLength - 4) {
+          throw new Error('Tidak dapat menemukan file tersembunyi atau ukuran file tidak valid. File mungkin tidak berisi data tersembunyi atau rusak.');
+        }
+
+        const hiddenFileStart = buffer.byteLength - 4 - hiddenFileSize;
+        const hiddenFileBuffer = buffer.slice(hiddenFileStart, buffer.byteLength - 4);
+
+        const decryptedBlob = new Blob([hiddenFileBuffer], { type: getMimeType(selectedFormat) });
+        const decryptedUrl = URL.createObjectURL(decryptedBlob);
+
+        hideAllOutputPreviews();
+        document.getElementById('downloadFileLink').classList.add('hidden');
+
+        const decryptedFileType = getMimeType(selectedFormat).split('/')[0];
+        const downloadFileLink = document.getElementById('downloadFileLink');
+
+        document.getElementById('decryptedFileTitle').classList.remove('hidden');
+
+        if (decryptedFileType === 'video' && selectedFormat === 'mp4') {
+          const videoElement = document.getElementById('decryptedVideo');
+          videoElement.src = decryptedUrl;
+          videoElement.classList.remove('hidden');
+          downloadFileLink.href = decryptedUrl;
+          downloadFileLink.download = `decrypted_video.${selectedFormat}`;
+          downloadFileLink.classList.remove('hidden');
+          showMessage('Dekripsi file berhasil!', false);
+        } else if (decryptedFileType === 'image') {
+          const decryptedImage = document.getElementById('decryptedImage');
+          decryptedImage.src = decryptedUrl;
+          decryptedImage.classList.remove('hidden');
+          setTimeout(() => decryptedImage.classList.add('image-fade-in'), 10);
+          downloadFileLink.href = decryptedUrl;
+          downloadFileLink.download = `decrypted_image.${selectedFormat}`;
+          downloadFileLink.classList.remove('hidden');
+          showMessage('Dekripsi file berhasil!', false);
+        } else if (decryptedFileType === 'audio') {
+          const audioElement = document.getElementById('decryptedAudio');
+          audioElement.src = decryptedUrl;
+          audioElement.classList.remove('hidden');
+          downloadFileLink.href = decryptedUrl;
+          downloadFileLink.download = `decrypted_audio.${selectedFormat}`;
+          downloadFileLink.classList.remove('hidden');
+          showMessage('Dekripsi file berhasil!', false);
+        } else if (selectedFormat === 'txt') {
+          try {
+            const textContent = await readFileAsText(decryptedBlob);
+            document.getElementById('decryptedText').textContent = textContent;
+            document.getElementById('decryptedText').classList.remove('hidden');
+            downloadFileLink.href = decryptedUrl;
+            downloadFileLink.download = `decrypted_text.${selectedFormat}`;
+            downloadFileLink.classList.remove('hidden');
+            showMessage('Dekripsi file berhasil!', false);
+          } catch (e) {
+            showMessage(`Error saat membaca file teks terdekripsi: ${e.message}`, true);
+            downloadFileLink.href = decryptedUrl;
+            downloadFileLink.download = `decrypted_file.${selectedFormat}`;
+            downloadFileLink.classList.remove('hidden');
+          }
+        }
+        else {
+          downloadFileLink.href = decryptedUrl;
+          downloadFileLink.download = `decrypted_file.${selectedFormat}`;
+          downloadFileLink.classList.remove('hidden');
+          showMessage('Dekripsi file berhasil!', false);
+        }
+      } catch (error) {
+        showMessage(`Error saat mendekripsi file: ${error.message}`, true);
+        document.getElementById('fileFormatSelection').classList.add('hidden');
+        document.getElementById('downloadFileLink').classList.add('hidden');
+        document.getElementById('decryptedFileTitle').classList.add('hidden');
+      } finally {
+        decryptButton.disabled = false;
+        decryptButtonText.classList.remove('hidden');
+        decryptSpinner.classList.add('hidden');
+      }
+    };
+
+    window.onload = () => {
+      const splashScreen = document.getElementById('splashScreen');
+      const body = document.body;
+
+      setTimeout(() => {
+        splashScreen.classList.add('fade-out');
+        splashScreen.addEventListener('transitionend', () => {
+          splashScreen.remove();
+          body.style.overflow = 'auto';
+        });
+      }, 2000);
+
+      document.getElementById('showEmbedTab').addEventListener('click', () => showTab('embed'));
+      document.getElementById('showDecryptTab').addEventListener('click', () => showTab('decrypt'));
+
+      showTab('embed');
+
+      document.getElementById('previewCoverTitle').classList.add('hidden');
+      document.getElementById('previewSecretTitle').classList.add('hidden');
+      document.getElementById('previewStegoTitle').classList.add('hidden');
+      document.getElementById('decryptedFileTitle').classList.add('hidden');
+
+      document.getElementById('mediaInput').addEventListener('change', function() {
+        document.getElementById('mediaFileName').textContent = this.files[0] ? this.files[0].name : 'Tidak ada file terpilih';
+        displayOriginalMediaPreview(this.files[0]);
+      });
+      document.getElementById('fileInput').addEventListener('change', function() {
+        document.getElementById('secretFileName').textContent = this.files[0] ? this.files[0].name : 'Tidak ada file terpilih';
+        displaySecretFilePreview(this.files[0]);
+      });
+      document.getElementById('encryptedMediaInput').addEventListener('change', function() {
+        document.getElementById('encryptedMediaFileName').textContent = this.files[0] ? this.files[0].name : 'Tidak ada file terpilih';
+      });
     };
   </script>
 </body>
