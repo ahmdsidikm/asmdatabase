@@ -8,18 +8,17 @@
     /* Variabel warna tema Metro */
     :root {
       --tile-bg-1: #00aba9;
-      --tile-bg-2: #2b5797;
+      --tile-bg-2: #2b5797; /* Ini sekarang akan digunakan oleh tile lain jika tidak dioverride */
       --tile-bg-3: #da532c;
       --tile-bg-4: #ffc40d;
       --tile-bg-5: #7e3878;
       --tile-bg-6: #e671b8;
       --tile-bg-7: #00a300;
-      --tile-bg-8: #d8c100; /* Warna baru untuk tile 'Enkripsi Kata' */
-      --tile-bg-9: #603cba; /* Warna baru untuk tile 'QR Code' */
+      --tile-bg-8: #d8c100;
+      --tile-bg-9: #603cba;
       --tile-hover-opacity: 0.85;
       --text-color: #ffffff;
       --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Font khas Windows */
-      --disabled-opacity: 0.4; /* Opasitas lebih rendah untuk disabled */
     }
 
     /* Reset dasar */
@@ -94,7 +93,6 @@
     .metro-tile:nth-child(6) { animation-delay: 0.35s; }
     .metro-tile:nth-child(7) { animation-delay: 0.4s; }
     .metro-tile:nth-child(8) { animation-delay: 0.45s; }
-    .metro-tile:nth-child(9) { animation-delay: 0.5s; } /* Delay untuk tile baru */
 
     /* Keyframes untuk animasi masuk */
     @keyframes tileEntrance {
@@ -114,33 +112,14 @@
 
     /* Warna masing-masing tile */
     .tile-1 { background: var(--tile-bg-1); }
-    .tile-2 { background: var(--tile-bg-2); }
+    /* .tile-2 dihapus */
     .tile-3 { background: var(--tile-bg-3); }
     .tile-4 { background: var(--tile-bg-4); }
     .tile-5 { background: var(--tile-bg-5); }
     .tile-6 { background: var(--tile-bg-6); }
     .tile-7 { background: var(--tile-bg-7); }
-    .tile-8 { background: var(--tile-bg-8); } /* Style untuk tile baru */
-    .tile-9 { background: var(--tile-bg-9); } /* Style untuk tile QR Code */
-
-    /* Style untuk tombol disabled */
-    .disabled {
-      opacity: var(--disabled-opacity);
-      cursor: not-allowed; /* Kursor 'tidak diizinkan' */
-      pointer-events: none; /* Mencegah interaksi mouse */
-      filter: grayscale(100%); /* Membuat tile disabled terlihat abu-abu */
-    }
-
-    /* Animasi goyang untuk tile disabled saat diklik */
-    .metro-tile.disabled.shake {
-      animation: shake 0.3s ease-in-out;
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-5px); }
-      40%, 80% { transform: translateX(5px); }
-    }
+    .tile-8 { background: var(--tile-bg-8); }
+    .tile-9 { background: var(--tile-bg-9); }
 
     /* Ikon sederhana (gaya Windows 8) */
     .metro-tile .icon {
@@ -193,10 +172,6 @@
       <div class="icon">🏃</div>
       <div class="label">HTML Run</div>
     </div>
-    <div class="metro-tile tile-2 disabled">
-      <div class="icon">📂</div>
-      <div class="label">Files (Disabled)</div>
-    </div>
     <div class="metro-tile tile-3" data-href="enkripsi.html">
       <div class="icon">🔒</div>
       <div class="label">Enkripsi File</div>
@@ -221,8 +196,8 @@
       <div class="icon">🔑</div>
       <div class="label">Enkripsi Kata</div>
     </div>
-    <div class="metro-tile tile-9" data-href="QrCode.html"> <!-- Tile baru untuk QR Code -->
-      <div class="icon">📱</div> <!-- Ikon QR Code -->
+    <div class="metro-tile tile-9" data-href="QrCode.html">
+      <div class="icon">📱</div>
       <div class="label">QR Code</div>
     </div>
   </div>
@@ -234,46 +209,34 @@
     tiles.forEach(tile => {
       // Menambahkan event listener untuk klik pada setiap tile
       tile.addEventListener('click', function(e) {
-        // Memeriksa apakah tile disabled
-        if (this.classList.contains('disabled')) {
-          // Menambahkan kelas 'shake' untuk memicu animasi
-          this.classList.add('shake');
-          // Menghapus kelas 'shake' setelah animasi selesai
-          this.addEventListener('animationend', () => {
-            this.classList.remove('shake');
-          }, { once: true }); // Event listener hanya berjalan sekali
-          e.preventDefault(); // Mencegah tindakan default (misalnya navigasi) untuk tile disabled
-        } else {
-          // Membuat elemen ripple baru
-          const ripple = document.createElement('span');
-          ripple.classList.add('ripple');
+        // Membuat elemen ripple baru
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
 
-          // Mendapatkan ukuran tile untuk menentukan ukuran ripple
-          const size = Math.max(this.offsetWidth, this.offsetHeight);
-          ripple.style.width = ripple.style.height = `${size}px`;
+        // Mendapatkan ukuran tile untuk menentukan ukuran ripple
+        const size = Math.max(this.offsetWidth, this.offsetHeight);
+        ripple.style.width = ripple.style.height = `${size}px`;
 
-          // Menentukan posisi ripple agar selalu di tengah tile
-          ripple.style.left = `0`;
-          ripple.style.top = `0`;
-          ripple.style.width = `100%`;
-          ripple.style.height = `100%`;
+        // Menentukan posisi ripple agar selalu di tengah tile
+        ripple.style.left = `0`;
+        ripple.style.top = `0`;
+        ripple.style.width = `100%`;
+        ripple.style.height = `100%`;
 
+        // Menambahkan ripple ke dalam tile
+        this.appendChild(ripple);
 
-          // Menambahkan ripple ke dalam tile
-          this.appendChild(ripple);
+        // Menghapus ripple setelah animasi selesai
+        ripple.addEventListener('animationend', () => {
+          ripple.remove();
+        });
 
-          // Menghapus ripple setelah animasi selesai
-          ripple.addEventListener('animationend', () => {
-            ripple.remove();
-          });
-
-          // Mengarahkan ke halaman yang dituju setelah efek ripple terlihat sedikit
-          const targetHref = this.dataset.href;
-          if (targetHref) {
-            setTimeout(() => {
-              window.location.href = targetHref;
-            }, 100); // Penundaan singkat agar efek ripple terlihat
-          }
+        // Mengarahkan ke halaman yang dituju setelah efek ripple terlihat sedikit
+        const targetHref = this.dataset.href;
+        if (targetHref) {
+          setTimeout(() => {
+            window.location.href = targetHref;
+          }, 100); // Penundaan singkat agar efek ripple terlihat
         }
       });
     });
