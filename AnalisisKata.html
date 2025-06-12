@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analisis Teks Canggih</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        :focus { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4); } /* Custom focus ring */
+
+        /* Dark mode styles */
+        body.dark {
+            background-color: #1a202c; /* Deeper dark background */
+            color: #e2e8f0; /* Light text for dark mode */
+        }
+        .dark .bg-gray-50 {
+            background-color: #1a202c;
+        }
+        .dark .bg-white {
+            background-color: #2d3748; /* Darker card background */
+            border-color: #4a5568; /* Darker border */
+        }
+        .dark .text-gray-800 {
+            color: #e2e8f0;
+        }
+        .dark .text-gray-500 {
+            color: #a0aec0;
+        }
+        .dark .border-gray-200 {
+            border-color: #4a5568;
+        }
+        .dark .placeholder-gray-400::placeholder {
+            color: #a0aec0;
+        }
+        .dark .focus\:border-blue-500:focus {
+            border-color: #63b3ed;
+        }
+        .dark .focus\:ring-blue-500:focus {
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.4);
+        }
+        .dark .text-blue-500 {
+            color: #63b3ed;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">Analisis Teks Canggih</h1>
+            <button id="themeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200">
+                <svg id="moonIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <svg id="sunIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M2 12h1m15.364 6.364l-.707.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
+        </div>
+        
+        <textarea
+            id="textInput"
+            class="w-full px-5 py-4 rounded-xl border border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 resize-y min-h-[150px] shadow-sm transition-all duration-200"
+            rows="7"
+            placeholder="Ketik atau tempel teks Anda di sini untuk memulai analisis..."
+        ></textarea>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 my-8">
+            <div class="bg-white dark:bg-gray-700 p-5 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+                <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">Jumlah Kata</div>
+                <div id="wordCount" class="text-3xl font-bold text-gray-800 dark:text-gray-100">0</div>
+            </div>
+            <div class="bg-white dark:bg-gray-700 p-5 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+                <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">Jumlah Karakter</div>
+                <div id="charCount" class="text-3xl font-bold text-gray-800 dark:text-gray-100">0</div>
+            </div>
+            <div class="bg-white dark:bg-gray-700 p-5 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+                <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">Jumlah Kalimat</div>
+                <div id="sentenceCount" class="text-3xl font-bold text-gray-800 dark:text-gray-100">0</div>
+            </div>
+            <div class="bg-white dark:bg-gray-700 p-5 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+                <div class="text-gray-500 dark:text-gray-400 text-sm mb-1">Jumlah Paragraf</div>
+                <div id="paragraphCount" class="text-3xl font-bold text-gray-800 dark:text-gray-100">0</div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white dark:bg-gray-700 p-6 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">STATISTIK LANJUTAN</h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                        <span class="text-gray-600 dark:text-gray-300">Waktu Baca Est. (200 wpm)</span>
+                        <span id="readTime" class="font-semibold text-blue-600 dark:text-blue-400">0 menit</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                        <span class="text-gray-600 dark:text-gray-300">Kata Terpanjang</span>
+                        <span id="longestWord" class="font-semibold text-gray-800 dark:text-gray-100">-</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                        <span class="text-gray-600 dark:text-gray-300">Kepadatan Kata Unik</span>
+                        <span id="uniqueWordDensity" class="font-semibold text-gray-800 dark:text-gray-100">0.00%</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-600 last:border-b-0">
+                        <span class="text-gray-600 dark:text-gray-300">Rata-rata Panjang Kata</span>
+                        <span id="averageWordLength" class="font-semibold text-gray-800 dark:text-gray-100">0.00 karakter</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-700 p-6 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4">KATA POPULER (TOP 15)</h2>
+                <ul id="topWordsList" class="space-y-2">
+                    <li class="flex justify-between items-center text-gray-800 dark:text-gray-200 py-1">
+                        <span>-</span>
+                        <span class="font-medium text-blue-600 dark:text-blue-400">0</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const wordCount = document.getElementById('wordCount');
+        const charCount = document.getElementById('charCount');
+        const sentenceCount = document.getElementById('sentenceCount');
+        const paragraphCount = document.getElementById('paragraphCount');
+        const readTime = document.getElementById('readTime');
+        const longestWord = document.getElementById('longestWord');
+        const uniqueWordDensity = document.getElementById('uniqueWordDensity');
+        const averageWordLength = document.getElementById('averageWordLength');
+        const topWordsList = document.getElementById('topWordsList');
+        const themeToggle = document.getElementById('themeToggle');
+        const moonIcon = document.getElementById('moonIcon');
+        const sunIcon = document.getElementById('sunIcon');
+
+        // Theme Toggle Functionality
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            if (document.body.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+            } else {
+                localStorage.setItem('theme', 'light');
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
+            }
+        });
+
+        // Apply saved theme on load
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark');
+            moonIcon.classList.add('hidden');
+            sunIcon.classList.remove('hidden');
+        } else {
+            moonIcon.classList.remove('hidden');
+            sunIcon.classList.add('hidden');
+        }
+
+        // Text Analysis Functionality
+        textInput.addEventListener('input', function() {
+            const text = this.value;
+
+            // Word Count
+            const words = text.match(/\b\w+\b/gi) || [];
+            wordCount.innerText = words.length;
+
+            // Character Count
+            charCount.innerText = text.length;
+
+            // Sentence Count
+            // More robust sentence detection, handling abbreviations and ellipses
+            const sentences = text.split(/(\.|\?|!|\u2026)(?=\s*[A-Z]|$)/).filter(Boolean); // Split by punctuation, keep punctuation, filter empty strings
+            sentenceCount.innerText = Math.ceil(sentences.length / 2); // Divide by 2 because split creates empty strings
+
+            // Paragraph Count
+            const paragraphs = text.split(/\n\s*\n/).filter(paragraph => paragraph.trim() !== '');
+            paragraphCount.innerText = paragraphs.length;
+
+            // Read Time (assuming 200 words per minute)
+            readTime.innerText = `${Math.ceil(words.length / 200)} menit`;
+
+            // Longest Word
+            const longest = words.reduce((a, b) => (a.length > b.length ? a : b), '') || '-';
+            longestWord.innerText = longest;
+
+            // Unique Word Density
+            const uniqueWords = new Set(words.map(word => word.toLowerCase()));
+            uniqueWordDensity.innerText = `${((uniqueWords.size / words.length) * 100 || 0).toFixed(2)}%`;
+
+            // Average Word Length
+            const totalWordLength = words.reduce((sum, word) => sum + word.length, 0);
+            averageWordLength.innerText = `${(words.length > 0 ? (totalWordLength / words.length) : 0).toFixed(2)} karakter`;
+
+
+            // Top Popular Words
+            const wordFrequency = {};
+            words.forEach(word => {
+                const cleanWord = word.toLowerCase(); // Case-insensitive counting
+                if (cleanWord.length > 1) { // Exclude single-character words (like 'a', 'I')
+                    wordFrequency[cleanWord] = (wordFrequency[cleanWord] || 0) + 1;
+                }
+            });
+
+            const sortedWords = Object.keys(wordFrequency).sort((a, b) => wordFrequency[b] - wordFrequency[a]);
+            topWordsList.innerHTML = ''; // Clear previous list
+            if (sortedWords.length === 0) {
+                 topWordsList.innerHTML = `
+                    <li class="flex justify-between items-center text-gray-600 dark:text-gray-300 py-1">
+                        <span>Tidak ada data</span>
+                        <span class="font-medium text-blue-600 dark:text-blue-400">0</span>
+                    </li>
+                `;
+            } else {
+                sortedWords.slice(0, 15).forEach(word => {
+                    const li = document.createElement('li');
+                    li.className = 'flex justify-between items-center text-gray-800 dark:text-gray-200 py-1';
+                    li.innerHTML = `<span>${word}</span><span class="font-medium text-blue-600 dark:text-blue-400">${wordFrequency[word]}</span>`;
+                    topWordsList.appendChild(li);
+                });
+            }
+        });
+
+        // Initial analysis on page load if there's any pre-filled text (or empty)
+        textInput.dispatchEvent(new Event('input'));
+    </script>
+</body>
+</html>
+<style></style>
+<script></script>
