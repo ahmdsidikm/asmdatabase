@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <!-- CryptoJS CDN for AES encryption -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
   <style>
     .transition-all { transition: all 0.3s ease; }
     body {
@@ -167,6 +169,60 @@
     .custom-file-input-icon {
       color: #a0aec0;
     }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid #4a5568;
+      border-radius: 0.25rem;
+      background-color: #2d3748;
+      cursor: pointer;
+      position: relative;
+      outline: none;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .checkbox-container input[type="checkbox"]:checked {
+      background-color: #f97316;
+      border-color: #f97316;
+    }
+
+    .checkbox-container input[type="checkbox"]:focus {
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.5);
+    }
+
+    .checkbox-container input[type="checkbox"]::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      width: 6px;
+      height: 12px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+    }
+
+    .checkbox-container input[type="checkbox"]:checked::after {
+      opacity: 1;
+    }
+
+    .checkbox-container label {
+      margin-left: 0.5rem;
+      font-weight: 500;
+      color: #e2e8f0;
+    }
   </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -203,12 +259,12 @@
           <h3 class="text-2xl font-bold text-orange-500 mb-6 text-center">Sembunyikan File</h3>
           <div class="space-y-6">
             <div>
-              <label for="mediaInput" class="block text-base font-medium text-gray-200 mb-2">Unggah File Cover (Gambar, Video, Audio, Teks):</label>
+              <label for="mediaInput" class="block text-base font-medium text-gray-200 mb-2">Unggah File Cover (Gambar PNG/Video/Audio/Teks):</label>
               <label for="mediaInput" class="custom-file-input-wrapper">
                 <span id="mediaFileName" class="custom-file-input-text">Tidak ada file terpilih</span>
                 <i class="fas fa-upload custom-file-input-icon"></i>
               </label>
-              <input type="file" id="mediaInput" accept="*/*" class="hidden">
+              <input type="file" id="mediaInput" accept="image/png,video/*,audio/*,text/plain" class="hidden">
             </div>
             <div>
               <label for="fileInput" class="block text-base font-medium text-gray-200 mb-2">Pilih File yang akan Disembunyikan (Multiple):</label>
@@ -217,6 +273,15 @@
                 <i class="fas fa-upload custom-file-input-icon"></i>
               </label>
               <input type="file" id="fileInput" accept="*/*" class="hidden" multiple>
+            </div>
+            <div class="checkbox-container">
+              <input type="checkbox" id="enableEmbedPasswordCheckbox">
+              <label for="enableEmbedPasswordCheckbox">Kata Sandi</label>
+            </div>
+            <div id="embedPasswordContainer" class="hidden">
+              <label for="embedPassword" class="block text-base font-medium text-gray-200 mb-2">Kata Sandi Enkripsi:</label>
+              <input type="password" id="embedPassword" placeholder="Masukkan kata sandi enkripsi"
+                     class="w-full px-4 py-2 border border-gray-600 rounded-md focus:ring-orange-500 focus:border-orange-500 bg-gray-800 text-gray-200 shadow-sm">
             </div>
             <button id="embedButton"
               class="w-full flex items-center justify-center bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-all font-semibold shadow-md">
@@ -267,6 +332,15 @@
                 <i class="fas fa-upload custom-file-input-icon"></i>
               </label>
               <input type="file" id="encryptedMediaInput" accept="*/*" class="hidden">
+            </div>
+            <div class="checkbox-container">
+              <input type="checkbox" id="enableDecryptPasswordCheckbox">
+              <label for="enableDecryptPasswordCheckbox">Kata Sandi</label>
+            </div>
+            <div id="decryptPasswordContainer" class="hidden">
+              <label for="decryptPassword" class="block text-base font-medium text-gray-200 mb-2">Kata Sandi Dekripsi:</label>
+              <input type="password" id="decryptPassword" placeholder="Masukkan kata sandi dekripsi"
+                     class="w-full px-4 py-2 border border-gray-600 rounded-md focus:ring-purple-500 focus:border-purple-500 bg-gray-800 text-gray-200 shadow-sm">
             </div>
             <button id="decryptButton"
               class="w-full flex items-center justify-center bg-purple-700 text-white py-3 px-4 rounded-md hover:bg-purple-800 transition-all font-semibold shadow-md">
@@ -379,7 +453,7 @@
 
       // Bersihkan dan sembunyikan daftar file terdekripsi
       const decryptedFilesList = document.getElementById('decryptedFilesList');
-      decryptedFilesList.innerHTML = `<h4 id="decryptedFileTitle" class="text-lg font-semibold text-gray-200 mb-2 hidden">File Terdekripsi:</h4>`;
+      decryptedFilesList.innerHTML = `<h4 id="decryptedFileTitle" class="text-lg font-semibold text-gray-200 mb-2 hidden">File Terdekripsi:</h4>`; // Re-add title element
       decryptedFilesList.classList.add('hidden');
       document.getElementById('decryptedFileTitle').classList.add('hidden');
 
@@ -387,7 +461,14 @@
       document.getElementById('previewCoverTitle').classList.add('hidden');
       document.getElementById('previewSecretTitle').classList.add('hidden');
       document.getElementById('previewStegoTitle').classList.add('hidden');
-      // decrypteFileTitle akan diatur ulang oleh innerHTML di atas
+
+      document.getElementById('outputImageOriginal').classList.remove('image-fade-in');
+      document.getElementById('outputImageSecret').classList.remove('image-fade-in');
+      document.getElementById('outputImageStego').classList.remove('image-fade-in');
+      
+      // Clear password fields (do not hide containers here, let checkbox handle it)
+      document.getElementById('embedPassword').value = '';
+      document.getElementById('decryptPassword').value = '';
     }
 
     // Fungsi untuk mengubah tab
@@ -547,11 +628,104 @@
         }
     }
 
+    // --- CryptoJS Helper Functions ---
+    // Helper function to convert ArrayBuffer to CryptoJS WordArray
+    function arrayBufferToWordArray(ab) {
+        const i8a = new Uint8Array(ab);
+        const wa = [];
+        for (let i = 0; i < i8a.length; i += 4) {
+            let word = (i8a[i] << 24) | (i8a[i + 1] << 16) | (i8a[i + 2] << 8) | i8a[i + 3];
+            wa.push(word);
+        }
+        return CryptoJS.lib.WordArray.create(wa, i8a.length);
+    }
+
+    // Helper function to convert CryptoJS WordArray to Uint8Array
+    function wordArrayToUint8Array(wordArray) {
+        const len = wordArray.sigBytes;
+        const words = wordArray.words;
+        const ui8a = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            ui8a[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+        }
+        return ui8a;
+    }
+
+    // --- LSB Steganography Helper Functions ---
+    // Helper function to convert a byte array to a bit string
+    function bytesToBitString(bytes) {
+        let bitString = '';
+        for (let i = 0; i < bytes.length; i++) {
+            bitString += bytes[i].toString(2).padStart(8, '0');
+        }
+        return bitString;
+    }
+
+    // Helper function to convert a bit string to a byte array
+    function bitStringToBytes(bitString) {
+        const bytes = [];
+        for (let i = 0; i < bitString.length; i += 8) {
+            bytes.push(parseInt(bitString.substring(i, i + 8), 2));
+        }
+        return new Uint8Array(bytes);
+    }
+
+    // LSB Embedding Function for PNG
+    async function embedDataInPNG(imageData, secretDataBytes) {
+        const pixels = imageData.data; // Uint8ClampedArray representing RGBA pixel data
+        const secretBitString = bytesToBitString(secretDataBytes);
+        let secretBitIndex = 0;
+
+        // Capacity check: 3 bits per pixel (R, G, B channels)
+        const availableBits = (pixels.length / 4) * 3;
+        if (secretBitString.length > availableBits) {
+            throw new Error(`Ukuran data rahasia (${(secretBitString.length / 8).toFixed(2)} KB) melebihi kapasitas LSB gambar (${(availableBits / 8).toFixed(2)} KB).`);
+        }
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            // Embed 1 bit into R, G, B channels
+            for (let j = 0; j < 3; j++) { // R, G, B channels (index 0, 1, 2)
+                if (secretBitIndex < secretBitString.length) {
+                    const bit = parseInt(secretBitString[secretBitIndex]);
+                    // Clear the last bit (LSB) and then set it
+                    pixels[i + j] = (pixels[i + j] & 0xFE) | bit; // 0xFE is 11111110 in binary
+                    secretBitIndex++;
+                } else {
+                    // All secret bits embedded. No need to modify further pixels.
+                    // The remaining pixels will keep their original LSBs.
+                    return; 
+                }
+            }
+        }
+    }
+
+    // LSB Extraction Function for PNG
+    function extractDataFromPNG(imageData, expectedByteLength) {
+        const pixels = imageData.data;
+        let extractedBitString = '';
+        const expectedBitLength = expectedByteLength * 8;
+        let bitsExtracted = 0;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            // Extract 1 bit from R, G, B channels
+            for (let j = 0; j < 3; j++) { // R, G, B channels (index 0, 1, 2)
+                if (bitsExtracted < expectedBitLength) {
+                    extractedBitString += (pixels[i + j] & 0x01).toString(); // 0x01 is 00000001 in binary
+                    bitsExtracted++;
+                } else {
+                    return bitStringToBytes(extractedBitString);
+                }
+            }
+        }
+        return bitStringToBytes(extractedBitString); // Should ideally be returned after enough bits are extracted
+    }
 
     // Event listener untuk tombol sembunyikan
     document.getElementById('embedButton').onclick = async () => {
       const mediaFile = document.getElementById('mediaInput').files[0];
       const secretFiles = document.getElementById('fileInput').files; // Mengambil beberapa file
+      const enableEmbedPassword = document.getElementById('enableEmbedPasswordCheckbox').checked;
+      const embedPassword = document.getElementById('embedPassword').value;
       const embedButton = document.getElementById('embedButton');
       const embedButtonText = document.getElementById('embedButtonText');
       const embedSpinner = document.getElementById('embedSpinner');
@@ -559,6 +733,10 @@
       if (!mediaFile || secretFiles.length === 0) {
         return showMessage('Pilih file cover dan setidaknya satu file yang akan disembunyikan!', true);
       }
+      if (enableEmbedPassword && !embedPassword) {
+        return showMessage('Harap masukkan kata sandi enkripsi!', true);
+      }
+
 
       embedButton.disabled = true;
       embedButtonText.classList.add('hidden');
@@ -571,7 +749,7 @@
       try {
         const mediaBuffer = await readFileAsArrayBuffer(mediaFile);
         let combinedSecretBuffers = [];
-        let totalSecretDataSize = 0; // Ini adalah ukuran gabungan data file rahasia + headernya masing-masing
+        let totalRawSecretDataSize = 0; // Ukuran gabungan data file rahasia + headernya masing-masing sebelum enkripsi
 
         // Baca setiap file rahasia dan tambahkan ke array
         for (let i = 0; i < secretFiles.length; i++) {
@@ -598,49 +776,122 @@
 
           combinedSecretBuffers.push(headerUint8);
           combinedSecretBuffers.push(new Uint8Array(buffer));
-          totalSecretDataSize += individualFileHeaderSize + buffer.byteLength;
+          totalRawSecretDataSize += individualFileHeaderSize + buffer.byteLength;
         }
 
-        // Gabungkan semua buffer file rahasia dan header menjadi satu Uint8Array
-        let currentOffset = 0;
-        const allSecretData = new Uint8Array(totalSecretDataSize);
+        // Gabungkan semua buffer file rahasia dan header menjadi satu Uint8Array (data mentah)
+        let rawSecretDataOffset = 0;
+        const allRawSecretData = new Uint8Array(totalRawSecretDataSize);
         for (const buffer of combinedSecretBuffers) {
-            allSecretData.set(buffer, currentOffset);
-            currentOffset += buffer.byteLength;
+            allRawSecretData.set(buffer, rawSecretDataOffset);
+            rawSecretDataOffset += buffer.byteLength;
         }
+
+        let finalSecretDataToEmbed;
+        let finalSecretDataByteLengthForMetadata;
+        let encryptionFlag = 0; // 0 for no encryption, 1 for encrypted
+
+        if (enableEmbedPassword) {
+            // Enkripsi data rahasia gabungan
+            showMessage('Mengenkripsi file rahasia...', false);
+            const rawSecretWordArray = arrayBufferToWordArray(allRawSecretData.buffer);
+            const encryptedWordArray = CryptoJS.AES.encrypt(rawSecretWordArray, embedPassword);
+            const encryptedString = encryptedWordArray.toString(); // Output string Base64 yang dapat disimpan
+
+            finalSecretDataToEmbed = new TextEncoder().encode(encryptedString); // Konversi string ke Uint8Array
+            finalSecretDataByteLengthForMetadata = finalSecretDataToEmbed.byteLength;
+            encryptionFlag = 1; // Setel flag bahwa data dienkripsi
+        } else {
+            finalSecretDataToEmbed = allRawSecretData;
+            finalSecretDataByteLengthForMetadata = totalRawSecretDataSize;
+        }
+
+        let embeddingMethodFlag = 0; // 0 for append, 1 for LSB
+        let outputBlob;
+        let stegoFileExtension = mediaFile.name.split('.').pop() || 'bin';
+
+        // Check if cover media is a PNG image for LSB embedding
+        if (mediaFile.type === 'image/png') {
+            embeddingMethodFlag = 1; // Set LSB flag
+            showMessage('Menyisipkan data menggunakan LSB Steganography...', false);
+
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            await new Promise((resolve, reject) => {
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    resolve();
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(mediaFile);
+            });
+
+            // Get ImageData from canvas
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            // Embed data using LSB
+            try {
+                await embedDataInPNG(imageData, finalSecretDataToEmbed);
+                ctx.putImageData(imageData, 0, 0);
+                outputBlob = await new Promise(resolve => {
+                    canvas.toBlob(blob => resolve(blob), 'image/png');
+                });
+            } catch (lsbError) {
+                // If LSB capacity is exceeded, revert to append method
+                if (lsbError.message.includes("melebihi kapasitas LSB")) {
+                    showMessage(`Peringatan: ${lsbError.message} Menggunakan metode penambahan data sebagai gantinya.`, false);
+                    embeddingMethodFlag = 0; // Revert to append
+                    // Fall through to appending logic
+                    const finalCombinedData = new Uint8Array(mediaBuffer.byteLength + finalSecretDataToEmbed.byteLength);
+                    finalCombinedData.set(new Uint8Array(mediaBuffer), 0);
+                    finalCombinedData.set(finalSecretDataToEmbed, mediaBuffer.byteLength);
+                    outputBlob = new Blob([finalCombinedData], { type: mediaFile.type });
+                } else {
+                    throw lsbError; // Re-throw other LSB errors
+                }
+            }
+
+        } else { // Not a PNG image, use appending method
+            const finalCombinedData = new Uint8Array(mediaBuffer.byteLength + finalSecretDataToEmbed.byteLength);
+            finalCombinedData.set(new Uint8Array(mediaBuffer), 0);
+            finalCombinedData.set(finalSecretDataToEmbed, mediaBuffer.byteLength);
+            outputBlob = new Blob([finalCombinedData], { type: mediaFile.type });
+        }
+
 
         // --- Metadata Akhir (Ditambahkan di Paling Belakang File Stego) ---
-        // Format: [magic_number_4_byte][total_ukuran_semua_data_rahasia_4_byte][jumlah_file_4_byte]
+        // Format: [magic_number_4_byte][total_secret_payload_byte_length_4_byte][jumlah_file_4_byte][encryption_flag_1_byte][embedding_method_flag_1_byte]
         const magicNumber = 0x53544547; // "STEG" dalam hex
-        const numFiles = secretFiles.length;
+        const numFiles = secretFiles.length; // Number of original secret files
 
-        const finalMetadataBuffer = new ArrayBuffer(4 + 4 + 4); // Magic, TotalSecretDataSize, NumFiles
+        const METADATA_BLOCK_SIZE = 4 + 4 + 4 + 1 + 1; // Magic, TotalPayloadSize, NumFiles, EncFlag, EmbedMethodFlag
+        const finalMetadataBuffer = new ArrayBuffer(METADATA_BLOCK_SIZE); 
         const finalMetadataView = new DataView(finalMetadataBuffer);
         finalMetadataView.setUint32(0, magicNumber, false);
-        finalMetadataView.setUint32(4, totalSecretDataSize, false); // Ukuran semua data rahasia + header individual
+        finalMetadataView.setUint32(4, finalSecretDataByteLengthForMetadata, false); 
         finalMetadataView.setUint32(8, numFiles, false);
+        finalMetadataView.setUint8(12, encryptionFlag); 
+        finalMetadataView.setUint8(13, embeddingMethodFlag); 
 
         const finalMetadataUint8 = new Uint8Array(finalMetadataBuffer);
         // -----------------------------------------------------------------
 
-        // Gabungkan data cover, data rahasia gabungan, dan metadata akhir
-        const finalCombinedData = new Uint8Array(mediaBuffer.byteLength + allSecretData.byteLength + finalMetadataUint8.byteLength);
+        // Gabungkan outputBlob (gambar PNG yang dimodifikasi atau file asli + appended data) dengan metadata akhir
+        const finalOutputCombinedBlob = new Blob([outputBlob, finalMetadataUint8], { type: mediaFile.type });
         
-        finalCombinedData.set(new Uint8Array(mediaBuffer), 0); // Data cover
-        finalCombinedData.set(allSecretData, mediaBuffer.byteLength); // Data rahasia gabungan
-        finalCombinedData.set(finalMetadataUint8, mediaBuffer.byteLength + allSecretData.byteLength); // Metadata akhir
-
         // Simulate a 3-second loading time
         await new Promise(resolve => setTimeout(resolve, 3000));
 
-        const outputBlob = new Blob([finalCombinedData], { type: mediaFile.type });
-        const outputUrl = URL.createObjectURL(outputBlob);
-
-        const stegoFileType = mediaFile.type.split('/')[0];
-        const stegoFileExtension = mediaFile.name.split('.').pop() || 'bin';
-
+        const outputUrl = URL.createObjectURL(finalOutputCombinedBlob);
+        
         document.getElementById('previewStegoTitle').classList.remove('hidden');
 
+        // Display preview based on original media type for consistency
+        const stegoFileType = mediaFile.type.split('/')[0];
         if (stegoFileType === 'image') {
           const outputImageStego = document.getElementById('outputImageStego');
           outputImageStego.src = outputUrl;
@@ -654,9 +905,9 @@
           const outputAudioStego = document.getElementById('outputAudioStego');
           outputAudioStego.src = outputUrl;
           outputAudioStego.classList.remove('hidden');
-        } else if (stegoFileExtension === 'txt') {
+        } else if (stegoFileExtension === 'txt') { // Note: LSB only for images, so for text it's always append
           try {
-            const textBlob = new Blob([finalCombinedData], { type: 'text/plain' });
+            const textBlob = new Blob([finalOutputCombinedBlob], { type: 'text/plain' });
             const textReader = new FileReader();
             textReader.onload = (e) => {
               document.getElementById('outputTextStego').textContent = e.target.result;
@@ -687,6 +938,8 @@
     // Event listener untuk tombol dekripsi
     document.getElementById('decryptButton').onclick = async () => {
       const encryptedMedia = document.getElementById('encryptedMediaInput').files[0];
+      const enableDecryptPassword = document.getElementById('enableDecryptPasswordCheckbox').checked;
+      const decryptPassword = document.getElementById('decryptPassword').value;
       const decryptButton = document.getElementById('decryptButton');
       const decryptButtonText = document.getElementById('decryptButtonText');
       const decryptSpinner = document.getElementById('decryptSpinner');
@@ -713,7 +966,7 @@
         await new Promise(resolve => setTimeout(resolve, 3000));
 
         const magicNumber = 0x53544547; // "STEG" in hex
-        const METADATA_BLOCK_SIZE = 12; // 4 (magic) + 4 (total_secret_data_size) + 4 (num_files)
+        const METADATA_BLOCK_SIZE = 14; // Magic (4) + TotalPayloadSize (4) + NumFiles (4) + EncFlag (1) + EmbedMethodFlag (1)
 
         // Pastikan ukuran file cukup untuk mengandung metadata akhir
         if (uint8Array.length < METADATA_BLOCK_SIZE) {
@@ -725,55 +978,112 @@
         const readMagicNumber = dataView.getUint32(metadataStartIndex, false);
         
         if (readMagicNumber !== magicNumber) {
-            throw new Error('Tidak ada data tersembunyi yang valid (magic number tidak ditemukan).');
+            throw new Error('Tidak ada data tersembunyi yang valid (magic number tidak ditemukan atau file tidak mengandung data steganografi ini).');
         }
 
-        const totalHiddenDataSize = dataView.getUint32(metadataStartIndex + 4, false);
+        const totalSecretPayloadByteLength = dataView.getUint32(metadataStartIndex + 4, false); 
         const numFiles = dataView.getUint32(metadataStartIndex + 8, false);
+        const encryptionFlag = dataView.getUint8(metadataStartIndex + 12); 
+        const embeddingMethodFlag = dataView.getUint8(metadataStartIndex + 13);
 
         // Validasi ukuran data rahasia
-        if (totalHiddenDataSize <= 0 || totalHiddenDataSize > uint8Array.length - METADATA_BLOCK_SIZE) {
+        if (totalSecretPayloadByteLength <= 0 || totalSecretPayloadByteLength > uint8Array.length - METADATA_BLOCK_SIZE) {
             throw new Error('Ukuran total data tersembunyi tidak valid atau lebih besar dari sisa file.');
         }
 
-        // Hitung awal blok data rahasia
-        const combinedSecretDataStart = metadataStartIndex - totalHiddenDataSize;
+        let extractedSecretData; // This will hold the raw or encrypted payload
 
-        if (combinedSecretDataStart < 0) {
-             throw new Error('Struktur file tersembunyi tidak valid atau data rahasia melebihi batas file.');
+        if (embeddingMethodFlag === 1) { // LSB method (for PNG images)
+            showMessage('Mengekstraksi data menggunakan LSB Steganography...', false);
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            await new Promise((resolve, reject) => {
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    resolve();
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(encryptedMedia);
+            });
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            extractedSecretData = extractDataFromPNG(imageData, totalSecretPayloadByteLength);
+
+        } else { // Append method (for other media types or non-PNG images)
+            const combinedSecretDataStart = metadataStartIndex - totalSecretPayloadByteLength;
+            if (combinedSecretDataStart < 0) {
+                 throw new Error('Struktur file tersembunyi tidak valid atau data rahasia melebihi batas file.');
+            }
+            extractedSecretData = uint8Array.slice(combinedSecretDataStart, metadataStartIndex);
         }
 
-        let currentDataOffset = combinedSecretDataStart;
+        let finalDecryptedRawData;
+
+        if (encryptionFlag === 1) {
+            if (!enableDecryptPassword) { // If encryption flag is set but checkbox is not checked
+                 throw new Error('File ini dienkripsi. Harap aktifkan "Kata Sandi" dan masukkan kata sandi dekripsi.');
+            }
+            if (!decryptPassword) {
+                throw new Error('File terenkripsi. Harap masukkan kata sandi dekripsi.');
+            }
+            showMessage('Mendekripsi file tersembunyi...', false);
+            try {
+                const encryptedString = new TextDecoder().decode(extractedSecretData);
+                const decryptedWordArray = CryptoJS.AES.decrypt(encryptedString, decryptPassword);
+                if (decryptedWordArray.sigBytes === 0) { 
+                    throw new Error('Kata sandi salah atau data terenkripsi rusak.');
+                }
+                finalDecryptedRawData = wordArrayToUint8Array(decryptedWordArray);
+            } catch (e) {
+                if (e.message.includes("Malformed UTF-8 data") || e.message.includes("Invalid characters")) {
+                    throw new Error("Data terenkripsi rusak atau kata sandi sangat mungkin salah. (" + e.message + ")");
+                }
+                throw e; 
+            }
+        } else {
+            if (enableDecryptPassword) { // If encryption flag is NOT set but checkbox IS checked
+                showMessage('File ini tidak dienkripsi. Kata sandi tidak diperlukan.', false);
+            }
+            finalDecryptedRawData = extractedSecretData; // Data tidak dienkripsi
+        }
+
+        let currentDataOffset = 0;
         const decodedFiles = [];
 
-        // Uraikan setiap file rahasia
+        // Gunakan DataView pada finalDecryptedRawData untuk parsing
+        const decryptedDataView = new DataView(finalDecryptedRawData.buffer);
+
         for (let i = 0; i < numFiles; i++) {
             // Minimal header untuk ukuran file (4 byte) dan panjang nama (1 byte)
-            if (currentDataOffset + 5 > uint8Array.length) { 
+            if (currentDataOffset + 5 > finalDecryptedRawData.byteLength) { 
                 console.warn(`Peringatan: Akhir data yang tidak diharapkan saat membaca header file ${i + 1}.`);
                 break;
             }
 
-            const fileBufferSize = dataView.getUint32(currentDataOffset, false);
-            const fileNameLength = dataView.getUint8(currentDataOffset + 4);
+            const fileBufferSize = decryptedDataView.getUint32(currentDataOffset, false);
+            const fileNameLength = decryptedDataView.getUint8(currentDataOffset + 4);
 
             currentDataOffset += 5; // Lewati ukuran file dan panjang nama file
 
-            if (currentDataOffset + fileNameLength > uint8Array.length) {
+            if (currentDataOffset + fileNameLength > finalDecryptedRawData.byteLength) {
                 console.warn(`Peringatan: Akhir data yang tidak diharapkan saat membaca nama file ${i + 1}.`);
                 break;
             }
 
-            const fileNameBytes = uint8Array.slice(currentDataOffset, currentDataOffset + fileNameLength);
+            const fileNameBytes = finalDecryptedRawData.slice(currentDataOffset, currentDataOffset + fileNameLength);
             const fileName = new TextDecoder().decode(fileNameBytes);
             currentDataOffset += fileNameLength; // Lewati nama file
 
-            if (currentDataOffset + fileBufferSize > uint8Array.length) {
+            if (currentDataOffset + fileBufferSize > finalDecryptedRawData.byteLength) {
                 console.warn(`Peringatan: Akhir data yang tidak diharapkan saat membaca konten file ${i + 1}.`);
                 break;
             }
 
-            const fileBuffer = uint8Array.slice(currentDataOffset, currentDataOffset + fileBufferSize);
+            const fileBuffer = finalDecryptedRawData.slice(currentDataOffset, currentDataOffset + fileBufferSize);
             decodedFiles.push({
                 name: fileName,
                 data: fileBuffer,
@@ -877,12 +1187,40 @@
       document.getElementById('showEmbedTab').addEventListener('click', () => showTab('embed'));
       document.getElementById('showDecryptTab').addEventListener('click', () => showTab('decrypt'));
 
-      showTab('embed');
+      showTab('embed'); // Set default tab to embed
 
       document.getElementById('previewCoverTitle').classList.add('hidden');
       document.getElementById('previewSecretTitle').classList.add('hidden');
       document.getElementById('previewStegoTitle').classList.add('hidden');
-      // decrypteFileTitle akan diatur ulang oleh innerHTML di `hideAllOutputPreviews`
+
+      // Setup checkbox listeners and initial state
+      const enableEmbedPasswordCheckbox = document.getElementById('enableEmbedPasswordCheckbox');
+      const embedPasswordContainer = document.getElementById('embedPasswordContainer');
+      enableEmbedPasswordCheckbox.addEventListener('change', () => {
+        if (enableEmbedPasswordCheckbox.checked) {
+          embedPasswordContainer.classList.remove('hidden');
+        } else {
+          embedPasswordContainer.classList.add('hidden');
+          document.getElementById('embedPassword').value = ''; // Clear password when hidden
+        }
+      });
+      // Ensure password fields are hidden on load
+      embedPasswordContainer.classList.add('hidden');
+
+
+      const enableDecryptPasswordCheckbox = document.getElementById('enableDecryptPasswordCheckbox');
+      const decryptPasswordContainer = document.getElementById('decryptPasswordContainer');
+      enableDecryptPasswordCheckbox.addEventListener('change', () => {
+        if (enableDecryptPasswordCheckbox.checked) {
+          decryptPasswordContainer.classList.remove('hidden');
+        } else {
+          decryptPasswordContainer.classList.add('hidden');
+          document.getElementById('decryptPassword').value = ''; // Clear password when hidden
+        }
+      });
+      // Ensure password fields are hidden on load
+      decryptPasswordContainer.classList.add('hidden');
+
 
       document.getElementById('mediaInput').addEventListener('change', function() {
         document.getElementById('mediaFileName').textContent = this.files[0] ? this.files[0].name : 'Tidak ada file terpilih';
