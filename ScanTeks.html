@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembaca Teks Gambar</title>
+    <!-- Tailwind CSS CDN untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Konfigurasi Tailwind CSS untuk mengaktifkan mode gelap berdasarkan kelas
+        tailwind.config = {
+            darkMode: 'class', // Mengaktifkan mode gelap berdasarkan kelas 'dark' pada elemen html
+            theme: {
+                extend: {
+                    // Anda bisa menambahkan kustomisasi tema di sini jika diperlukan
+                }
+            }
+        }
+    </script>
+    <!-- Tesseract.js CDN untuk OCR -->
+    <script src='https://unpkg.com/tesseract.js@5.0.0/dist/tesseract.min.js'></script>
+    <style>
+        /* Font Inter untuk konsistensi */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styling untuk loading indicator */
+        .loader {
+            border: 4px solid #f3f3f3; /* Abu-abu muda */
+            border-top: 4px solid #3498db; /* Biru */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            display: none; /* Sembunyikan secara default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Style untuk wadah kanvas untuk mengelola rasio aspek dan pemusatan */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* Rasio Aspek 16:9 (h/w * 100%) - bisa disesuaikan */
+            overflow: hidden;
+            background-color: #e2e8f0; /* Latar belakang placeholder */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+        }
+        .canvas-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: crosshair;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-2xl transition-colors duration-300">
+        <h1 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-6">Pembaca Teks dari Gambar</h1>
+
+        <!-- Bagian Unggah Gambar -->
+        <div class="mb-6">
+            <label for="imageUpload" class="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                Unggah Gambar:
+            </label>
+            <input type="file" id="imageUpload" accept="image/*" class="block w-full text-sm text-gray-500 dark:text-gray-400
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                dark:file:bg-blue-900 dark:file:text-blue-200
+                hover:file:bg-blue-100 dark:hover:file:bg-blue-800 cursor-pointer rounded-md border border-gray-300 dark:border-gray-600 p-2">
+        </div>
+
+        <!-- Pratinjau Gambar dan Area Seleksi -->
+        <div class="mb-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 flex justify-center items-center min-h-[200px] bg-gray-50 dark:bg-gray-700">
+            <div class="canvas-container">
+                <canvas id="imageCanvas"></canvas>
+            </div>
+        </div>
+
+        <!-- Tombol Proses OCR -->
+        <div class="flex justify-center mb-6">
+            <button id="processImage" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Ekstrak Teks
+            </button>
+        </div>
+
+        <!-- Indikator Loading -->
+        <div id="loadingIndicator" class="loader mx-auto mb-6"></div>
+
+        <!-- Area Teks Hasil OCR -->
+        <div class="mb-6">
+            <label for="extractedText" class="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                Teks yang Diekstrak:
+            </label>
+            <textarea id="extractedText" rows="10" class="shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 dark:text-gray-200 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600" placeholder="Teks yang diekstrak akan muncul di sini..."></textarea>
+        </div>
+
+        <!-- Tombol Salin Teks -->
+        <div class="flex justify-center">
+            <button id="copyText" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                Salin Teks
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Mendapatkan referensi elemen DOM
+        const imageUpload = document.getElementById('imageUpload');
+        const imageCanvas = document.getElementById('imageCanvas');
+        const ctx = imageCanvas.getContext('2d');
+        const processImageButton = document.getElementById('processImage');
+        const extractedTextarea = document.getElementById('extractedText');
+        const copyTextButton = document.getElementById('copyText');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        let uploadedImage = null; // Variabel untuk menyimpan objek gambar yang diunggah (HTML Image object)
+        let isDrawing = false;
+        let startX, startY, endX, endY;
+        let selectionRect = null; // { x, y, width, height } in canvas coordinates
+        let imageAspectRatio = 1; // Aspect ratio of the loaded image
+        let imageDisplayWidth, imageDisplayHeight; // Actual width/height image is drawn on canvas
+
+        // Fungsi untuk menampilkan pesan kustom (pengganti alert)
+        function displayMessage(message, bgColorClass) {
+            const messageBox = document.createElement('div');
+            messageBox.textContent = message;
+            // Menyesuaikan warna pesan untuk mode gelap
+            const baseClasses = `fixed top-4 right-4 p-4 rounded-lg text-white shadow-lg z-50`;
+            messageBox.className = `${baseClasses} ${bgColorClass}`;
+            document.body.appendChild(messageBox);
+
+            setTimeout(() => {
+                messageBox.remove();
+            }, 3000); // Pesan akan hilang setelah 3 detik
+        }
+
+        // Fungsi untuk menggambar gambar pada kanvas
+        function drawImageOnCanvas() {
+            if (!uploadedImage) {
+                ctx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
+                return;
+            }
+
+            const canvasWidth = imageCanvas.width;
+            const canvasHeight = imageCanvas.height;
+
+            // Hitung dimensi untuk menyesuaikan gambar dalam kanvas sambil mempertahankan rasio aspek
+            const imgWidth = uploadedImage.width;
+            const imgHeight = uploadedImage.height;
+            imageAspectRatio = imgWidth / imgHeight;
+
+            let renderWidth = canvasWidth;
+            let renderHeight = canvasWidth / imageAspectRatio;
+
+            if (renderHeight > canvasHeight) {
+                renderHeight = canvasHeight;
+                renderWidth = canvasHeight * imageAspectRatio;
+            }
+
+            imageDisplayWidth = renderWidth;
+            imageDisplayHeight = renderHeight;
+
+            // Hapus kanvas
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            // Gambar gambar di tengah
+            const xOffset = (canvasWidth - renderWidth) / 2;
+            const yOffset = (canvasHeight - renderHeight) / 2;
+            ctx.drawImage(uploadedImage, xOffset, yOffset, renderWidth, renderHeight);
+
+            // Gambar persegi panjang seleksi jika ada
+            if (selectionRect) {
+                ctx.strokeStyle = '#FF0000'; // Batas merah
+                ctx.lineWidth = 2;
+                ctx.strokeRect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height);
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.2)'; // Isi merah semi-transparan
+                ctx.fillRect(selectionRect.x, selectionRect.y, selectionRect.width, selectionRect.height);
+            }
+        }
+
+        // Sesuaikan ukuran kanvas agar sesuai dengan wadahnya
+        function resizeCanvas() {
+            const container = imageCanvas.parentElement;
+            imageCanvas.width = container.clientWidth;
+            imageCanvas.height = container.clientHeight;
+            drawImageOnCanvas(); // Gambar ulang konten setelah mengubah ukuran
+        }
+
+        // Fungsi untuk mengatur tema berdasarkan waktu (siang/malam)
+        function setThemeBasedOnTime() {
+            const currentHour = new Date().getHours();
+            const htmlElement = document.documentElement; // Menggunakan elemen html untuk kelas dark
+
+            // Anggap "malam" dari jam 6 sore (18) hingga jam 6 pagi (5)
+            if (currentHour >= 18 || currentHour < 6) {
+                htmlElement.classList.add('dark');
+            } else {
+                htmlElement.classList.remove('dark');
+            }
+        }
+
+        // Ukuran kanvas awal dan tambahkan pendengar perubahan ukuran serta tema
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            setThemeBasedOnTime(); // Panggil saat memuat halaman
+        });
+        window.addEventListener('resize', resizeCanvas);
+
+        // Pendengar acara untuk perubahan input file
+        imageUpload.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        uploadedImage = img;
+                        selectionRect = null; // Reset seleksi
+                        drawImageOnCanvas(); // Gambar gambar di kanvas
+                        extractedTextarea.value = ''; // Hapus area teks
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                uploadedImage = null;
+                selectionRect = null;
+                ctx.clearRect(0, 0, imageCanvas.width, imageCanvas.height); // Hapus kanvas
+                extractedTextarea.value = '';
+            }
+        });
+
+        // Acara mouse untuk menggambar persegi panjang seleksi
+        imageCanvas.addEventListener('mousedown', function(e) {
+            isDrawing = true;
+            const rect = imageCanvas.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+            selectionRect = null; // Hapus seleksi sebelumnya saat memulai yang baru
+        });
+
+        imageCanvas.addEventListener('mousemove', function(e) {
+            if (!isDrawing) return;
+
+            const rect = imageCanvas.getBoundingClientRect();
+            endX = e.clientX - rect.left;
+            endY = e.clientY - rect.top;
+
+            // Hitung koordinat persegi panjang seleksi
+            const x = Math.min(startX, endX);
+            const y = Math.min(startY, endY);
+            const width = Math.abs(startX - endX);
+            const height = Math.abs(startY - endY);
+
+            selectionRect = { x, y, width, height };
+            drawImageOnCanvas(); // Gambar ulang gambar dan seleksi saat ini
+        });
+
+        imageCanvas.addEventListener('mouseup', function() {
+            isDrawing = false;
+            // Finalisasi selectionRect, drawImageOnCanvas sudah dipanggil di mousemove
+        });
+
+        imageCanvas.addEventListener('mouseout', function() {
+            isDrawing = false; // Hentikan menggambar jika mouse meninggalkan area kanvas
+        });
+
+        // Pendengar acara untuk tombol "Ekstrak Teks"
+        processImageButton.addEventListener('click', async function() {
+            if (!uploadedImage) {
+                displayMessage('Silakan unggah gambar terlebih dahulu.', 'bg-red-500');
+                return;
+            }
+
+            loadingIndicator.style.display = 'block'; // Tampilkan indikator loading
+            extractedTextarea.value = 'Menganalisis gambar... Mohon tunggu.'; // Pesan saat memproses
+
+            let imageToProcess = uploadedImage.src; // Default ke gambar penuh
+
+            if (selectionRect) {
+                // Buat kanvas sementara di luar layar untuk memotong gambar
+                const tempCanvas = document.createElement('canvas');
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Hitung koordinat gambar sebenarnya berdasarkan tampilan
+                const canvasWidth = imageCanvas.width;
+                const canvasHeight = imageCanvas.height;
+                const imgWidth = uploadedImage.width;
+                const imgHeight = uploadedImage.height;
+
+                let renderWidth = canvasWidth;
+                let renderHeight = canvasWidth / imageAspectRatio;
+
+                if (renderHeight > canvasHeight) {
+                    renderHeight = canvasHeight;
+                    renderWidth = canvasHeight * imageAspectRatio;
+                }
+
+                const xOffset = (canvasWidth - renderWidth) / 2;
+                const yOffset = (canvasHeight - renderHeight) / 2;
+
+                // Faktor skala dari gambar yang ditampilkan ke gambar asli
+                const scaleX = imgWidth / renderWidth;
+                const scaleY = imgHeight / renderHeight;
+
+                // Sesuaikan koordinat seleksi ke ukuran gambar asli
+                const cropX = (selectionRect.x - xOffset) * scaleX;
+                const cropY = (selectionRect.y - yOffset) * scaleY;
+                const cropWidth = selectionRect.width * scaleX;
+                const cropHeight = selectionRect.height * scaleY;
+
+                tempCanvas.width = cropWidth;
+                tempCanvas.height = cropHeight;
+
+                tempCtx.drawImage(
+                    uploadedImage,
+                    cropX, cropY, cropWidth, cropHeight, // Persegi panjang sumber
+                    0, 0, cropWidth, cropHeight // Persegi panjang tujuan
+                );
+
+                imageToProcess = tempCanvas.toDataURL(); // Dapatkan URL data dari gambar yang dipotong
+            }
+
+            try {
+                // Gunakan Tesseract.js untuk mengenali teks dari gambar (yang dipotong)
+                const { data: { text } } = await Tesseract.recognize(
+                    imageToProcess,
+                    'eng+ind', // Bahasa yang akan dikenali (Inggris dan Indonesia)
+                    { logger: m => console.log(m) } // Logger untuk melihat kemajuan di konsol
+                );
+                extractedTextarea.value = text; // Tampilkan teks yang diekstrak
+                displayMessage('Teks berhasil diekstrak!', 'bg-green-500');
+            } catch (error) {
+                console.error('Error saat melakukan OCR:', error);
+                extractedTextarea.value = 'Gagal mengekstrak teks. Pastikan gambar jelas dan berisi teks.';
+                displayMessage('Gagal mengekstrak teks.', 'bg-red-500');
+            } finally {
+                loadingIndicator.style.display = 'none'; // Sembunyikan indikator loading
+            }
+        });
+
+        // Pendengar acara untuk tombol "Salin Teks"
+        copyTextButton.addEventListener('click', function() {
+            extractedTextarea.select(); // Pilih semua teks di textarea
+            extractedTextarea.setSelectionRange(0, 99999); // Untuk perangkat seluler
+            try {
+                document.execCommand('copy'); // Salin teks ke clipboard
+                displayMessage('Teks berhasil disalin!', 'bg-blue-500');
+            } catch (err) {
+                console.error('Gagal menyalin teks: ', err);
+                displayMessage('Gagal menyalin teks.', 'bg-red-500');
+            }
+        });
+    </script>
+</body>
+</html>
