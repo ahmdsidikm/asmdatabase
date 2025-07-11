@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deteksi Edit Gambar Otomatis</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem; /* Sudut membulat */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .file-input-wrapper {
+            border: 2px dashed #cbd5e1; /* Abu-abu-300 */
+            border-radius: 0.75rem; /* Membulat-lg */
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .file-input-wrapper:hover {
+            border-color: #93c5fd; /* Biru-300 */
+        }
+        .file-input-wrapper input[type="file"] {
+            display: none; /* Sembunyikan input file sebenarnya */
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            display: none; /* Tersembunyi secara default */
+            margin-top: 1rem;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6; /* Biru-500 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; /* Tersembunyi secara default */
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-2xl font-bold text-gray-800 text-center">Deteksi Edit Gambar Otomatis</h1>
+
+        <!-- File Upload Section -->
+        <div class="file-input-wrapper" id="fileInputWrapper">
+            <!-- Input file sebenarnya disembunyikan dan dipicu dengan mengklik wrapper -->
+            <input type="file" id="imageUpload" accept="image/*">
+            <p class="text-gray-600">Seret & lepas gambar di sini, atau <span class="text-blue-500 font-medium">klik untuk memilih file</span></p>
+            <img id="imagePreview" class="image-preview mt-4" alt="Pratinjau Gambar">
+        </div>
+
+        <!-- Analyze Button -->
+        <button id="analyzeButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            <span id="buttonText">Deteksi Edit</span>
+            <div id="loadingSpinner" class="loading-spinner"></div>
+        </button>
+
+        <!-- Analysis Result Section -->
+        <div id="analysisResult" class="p-4 bg-gray-50 border border-gray-200 rounded-lg mt-4 hidden">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Hasil Deteksi:</h2>
+            <p id="resultText" class="text-gray-700 whitespace-pre-wrap"></p>
+        </div>
+
+        <!-- Error Message Section -->
+        <div id="errorMessage" class="p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg mt-4 hidden">
+            <p id="errorText"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Elemen DOM
+        const imageUpload = document.getElementById('imageUpload');
+        const imagePreview = document.getElementById('imagePreview');
+        const fileInputWrapper = document.getElementById('fileInputWrapper');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const analysisResult = document.getElementById('analysisResult');
+        const resultText = document.getElementById('resultText');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        let selectedImageBase64 = null;
+
+        // Fungsi untuk menampilkan pesan kesalahan
+        function displayError(message) {
+            errorMessage.classList.remove('hidden');
+            errorText.textContent = message;
+            analysisResult.classList.add('hidden'); // Sembunyikan hasil jika terjadi kesalahan
+        }
+
+        // Fungsi untuk menyembunyikan pesan kesalahan
+        function hideError() {
+            errorMessage.classList.add('hidden');
+            errorText.textContent = '';
+        }
+
+        // Tambahkan pendengar klik ke wrapper untuk memicu input file yang tersembunyi
+        fileInputWrapper.addEventListener('click', () => {
+            imageUpload.click(); // Klik input file tersembunyi secara terprogram
+        });
+
+        // Tangani pemilihan file gambar
+        imageUpload.addEventListener('change', function(event) {
+            hideError();
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    // Pastikan mimeType diekstrak dengan benar atau diatur secara default
+                    const mimeType = file.type || 'image/png';
+                    selectedImageBase64 = e.target.result.split(',')[1]; // Dapatkan data base64
+                    analyzeButton.disabled = false; // Aktifkan tombol analisis setelah gambar dipilih
+                };
+                reader.onerror = function() {
+                    displayError("Gagal membaca file gambar.");
+                    selectedImageBase64 = null;
+                    imagePreview.style.display = 'none';
+                    analyzeButton.disabled = true;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedImageBase64 = null;
+                imagePreview.style.display = 'none';
+                analyzeButton.disabled = true;
+            }
+        });
+
+        // Tangani seret dan lepas untuk unggah gambar
+        fileInputWrapper.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            fileInputWrapper.classList.add('border-blue-500');
+        });
+
+        fileInputWrapper.addEventListener('dragleave', (event) => {
+            fileInputWrapper.classList.remove('border-blue-500');
+        });
+
+        fileInputWrapper.addEventListener('drop', (event) => {
+            event.preventDefault();
+            fileInputWrapper.classList.remove('border-blue-500');
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                imageUpload.files = files; // Tetapkan file yang dijatuhkan ke input
+                imageUpload.dispatchEvent(new Event('change')); // Picu event perubahan
+            }
+        });
+
+        // Tangani klik tombol analisis
+        analyzeButton.addEventListener('click', async () => {
+            if (!selectedImageBase64) {
+                displayError("Silakan unggah gambar terlebih dahulu.");
+                return;
+            }
+
+            hideError();
+            analysisResult.classList.add('hidden');
+            resultText.textContent = '';
+            analyzeButton.disabled = true;
+            buttonText.classList.add('hidden');
+            loadingSpinner.style.display = 'block';
+
+            // Prompt default yang secara langsung meminta kesimpulan apakah gambar diedit atau tidak.
+            // Prompt ini tidak akan dapat diubah oleh pengguna.
+            const prompt = "Analisis gambar ini secara mendalam untuk mendeteksi tanda-tanda pengeditan atau manipulasi digital. Berikan kesimpulan langsung dalam Bahasa Indonesia: 'Gambar ini terlihat diedit.' atau 'Gambar ini tidak terlihat diedit.' Jika ada, berikan alasan singkat.";
+
+            try {
+                const file = imageUpload.files[0];
+                const mimeType = file ? file.type : 'image/png';
+
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: mimeType,
+                                        data: selectedImageBase64
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                };
+
+                // KUNCI API ANDA - Ini telah ditambahkan
+                const apiKey = "AIzaSyAdPjhdNyOMLu5euc5NkJ5r0610Czf2kCE"; // Masukkan Kunci API Gemini Anda di sini
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let text = result.candidates[0].content.parts[0].text;
+                    // Menghilangkan semua tanda bintang dari teks hasil
+                    text = text.replace(/\*/g, '');
+                    analysisResult.classList.remove('hidden');
+                    resultText.textContent = text;
+                } else {
+                    displayError("Gagal mendapatkan hasil analisis dari AI. Struktur respons tidak terduga.");
+                    console.error("Unexpected API response structure:", result);
+                }
+
+            } catch (error) {
+                console.error("Error during image analysis:", error);
+                displayError("Terjadi kesalahan saat menganalisis gambar: " + error.message);
+            } finally {
+                analyzeButton.disabled = false;
+                buttonText.classList.remove('hidden');
+                loadingSpinner.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+
