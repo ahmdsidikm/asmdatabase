@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemindai Kendaraan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f7fa; /* Light cyan background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 25px; /* Increased padding */
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px; /* More rounded corners */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18); /* Stronger, softer shadow */
+            padding: 35px; /* Increased padding */
+            max-width: 580px; /* Slightly wider */
+            width: 100%;
+            text-align: center;
+            border: 1px solid #cfd8dc; /* Subtle border */
+        }
+        video, #captured-image {
+            width: 100%;
+            max-width: 520px; /* Adjusted max width */
+            height: auto;
+            border-radius: 15px; /* More rounded image/video */
+            background-color: #263238; /* Darker background for visual contrast */
+            margin-bottom: 30px; /* Increased margin */
+            display: block;
+            object-fit: contain;
+            aspect-ratio: 16 / 9;
+            border: 2px solid #b0bec5; /* More pronounced border */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Shadow for media elements */
+        }
+        #captured-image {
+            display: none;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Increased gap */
+            margin-bottom: 30px; /* Increased margin */
+        }
+        button {
+            background-image: linear-gradient(to right, #4a148c 0%, #1a237e 100%); /* Deeper, richer gradient */
+            color: white;
+            padding: 16px 32px; /* Larger padding */
+            border-radius: 9999px;
+            font-weight: 700; /* Bolder font */
+            font-size: 1.2rem; /* Slightly larger font */
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* More prominent shadow */
+            border: none;
+            width: 100%;
+            max-width: 350px; /* Wider buttons */
+            margin: 0 auto;
+            letter-spacing: 0.05em; /* Slight letter spacing */
+        }
+        button:hover {
+            transform: translateY(-4px) scale(1.02); /* More pronounced hover effect */
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            background-image: linear-gradient(to right, #9e9e9e 0%, #757575 100%); /* Grey out disabled buttons */
+        }
+        #loading-indicator {
+            display: none;
+            margin-top: 30px;
+            color: #424242; /* Darker grey */
+            font-style: italic;
+            font-size: 1.05rem;
+            animation: pulse 1.5s infinite ease-in-out; /* Added pulse animation */
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #results {
+            margin-top: 30px;
+            padding: 25px; /* Larger padding */
+            background-color: #e3f2fd; /* Lighter blue background */
+            border-radius: 16px; /* More rounded corners */
+            border: 2px solid #90caf9; /* Clearer blue border */
+            min-height: 100px; /* Increased min-height */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            font-size: 1.05rem; /* Slightly larger font */
+            color: #1976d2; /* Deeper blue text */
+            font-weight: 500;
+            word-wrap: break-word;
+            text-align: left;
+            line-height: 1.6; /* Increased line height for readability */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Subtle shadow for results */
+        }
+        #results p {
+            margin-bottom: 8px; /* More space between detail lines */
+        }
+        #results p:last-child {
+            margin-bottom: 0;
+        }
+        #hidden-canvas, #gallery-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-6">Pemindai Kendaraan Cerdas</h1>
+        <p class="text-gray-700 mb-10 text-lg">Pindai dari kamera atau pilih gambar dari galeri untuk mendapatkan detail kendaraan secara instan.</p>
+
+        <video id="video-feed" autoplay playsinline></video>
+        <img id="captured-image" alt="Gambar Kendaraan yang Dipindai">
+        <canvas id="hidden-canvas"></canvas>
+
+        <div class="button-group">
+            <button id="scan-camera-button">Pindai dari Kamera</button>
+            <button id="take-photo-button" style="display: none;">Ambil Foto</button>
+            <input type="file" id="gallery-input" accept="image/*">
+            <button id="select-gallery-button">Pilih dari Galeri</button>
+        </div>
+
+        <div id="loading-indicator" class="flex items-center justify-center space-x-3">
+            <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Memindai... Mohon tunggu.</span>
+        </div>
+
+        <div id="results" class="text-gray-700">
+            Hasil akan muncul di sini.
+        </div>
+    </div>
+
+    <script>
+        const videoFeed = document.getElementById('video-feed');
+        const capturedImage = document.getElementById('captured-image');
+        const hiddenCanvas = document.getElementById('hidden-canvas');
+        const scanCameraButton = document.getElementById('scan-camera-button');
+        const takePhotoButton = document.getElementById('take-photo-button');
+        const galleryInput = document.getElementById('gallery-input');
+        const selectGalleryButton = document.getElementById('select-gallery-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const resultsDiv = document.getElementById('results');
+        const context = hiddenCanvas.getContext('2d');
+
+        const licensePlateRegions = {
+            'A': 'Banten', 'B': 'DKI Jakarta, Bekasi, Tangerang', 'D': 'Bandung, Cimahi',
+            'E': 'Cirebon, Indramayu, Majalengka, Kuningan', 'F': 'Bogor, Sukabumi, Cianjur',
+            'G': 'Pekalongan, Tegal, Brebes, Batang', 'H': 'Semarang, Salatiga, Kendal, Demak',
+            'K': 'Pati, Kudus, Jepara, Rembang, Blora', 'L': 'Surabaya', 'M': 'Madura',
+            'N': 'Malang, Pasuruan, Probolinggo, Lumajang', 'P': 'Banyuwangi, Jember, Bondowoso, Situbondo',
+            'R': 'Banyumas, Cilacap, Purbalingga, Banjarnegara', 'S': 'Lamongan, Tuban, Bojonegoro, Mojokerto, Jombang',
+            'T': 'Karawang, Purwakarta, Subang', 'AA': 'Kedu (Magelang, Purworejo, Temanggung, Wonosobo, Kebumen)',
+            'AB': 'Yogyakarta', 'AD': 'Surakarta (Solo, Sukoharjo, Klaten, Boyolali, Sragen, Karanganyar, Wonogiri)',
+            'AE': 'Madiun, Ngawi, Pacitan, Ponorogo, Magetan', 'AG': 'Kediri, Blitar, Tulungagung, Trenggalek, Nganjuk',
+            'BA': 'Sumatera Barat', 'BB': 'Sumatera Utara Bagian Barat (Sibolga, Tapanuli)', 'BD': 'Bengkulu',
+            'BE': 'Lampung', 'BG': 'Sumatera Selatan', 'BH': 'Jambi', 'BK': 'Sumatera Utara Bagian Timur (Medan, Deli Serdang)',
+            'BL': 'Aceh', 'BM': 'Riau', 'BN': 'Bangka Belitung', 'BP': 'Kepulauan Riau',
+            'DA': 'Kalimantan Selatan', 'DB': 'Sulawesi Utara', 'DC': 'Sulawesi Barat', 'DD': 'Sulawesi Selatan',
+            'DE': 'Maluku', 'DG': 'Maluku Utara', 'DH': 'Nusa Tenggara Timur', 'DR': 'Nusa Tenggara Barat (Lombok)',
+            'DT': 'Sulawesi Tenggara', 'DU': 'Gorontalo', 'DW': 'Sulawesi Utara (Manado)',
+            'EA': 'Nusa Tenggara Barat (Sumbawa)', 'KB': 'Kalimantan Barat', 'KT': 'Kalimantan Timur',
+            'KU': 'Kalimantan Utara', 'KH': 'Kalimantan Tengah', 'PA': 'Papua', 'PB': 'Papua Barat'
+        };
+
+        async function startCameraStream() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { exact: "environment" }
+                    }
+                });
+                videoFeed.srcObject = stream;
+                videoFeed.style.display = 'block';
+                capturedImage.style.display = 'none';
+
+                return new Promise((resolve) => {
+                    videoFeed.onloadedmetadata = () => {
+                        hiddenCanvas.width = videoFeed.videoWidth;
+                        hiddenCanvas.height = videoFeed.videoHeight;
+                        capturedImage.width = videoFeed.videoWidth;
+                        capturedImage.height = videoFeed.videoHeight;
+                        videoFeed.play().then(() => {
+                            resolve();
+                        }).catch(err => {
+                            console.error("Error playing video:", err);
+                            resultsDiv.innerHTML = '<p class="text-red-500">Gagal memutar video kamera.</p>';
+                            scanCameraButton.disabled = true;
+                            resolve();
+                        });
+                    };
+                });
+
+            } catch (error) {
+                console.error('Gagal mengakses kamera:', error);
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    videoFeed.srcObject = stream;
+                    videoFeed.style.display = 'block';
+                    capturedImage.style.display = 'none';
+
+                    return new Promise((resolve) => {
+                        videoFeed.onloadedmetadata = () => {
+                            hiddenCanvas.width = videoFeed.videoWidth;
+                            hiddenCanvas.height = videoFeed.videoHeight;
+                            capturedImage.width = videoFeed.videoWidth;
+                            capturedImage.height = videoFeed.videoHeight;
+                            videoFeed.play().then(() => {
+                                resultsDiv.innerHTML = '<p class="text-yellow-600">Kamera belakang tidak ditemukan atau tidak dapat diakses. Menggunakan kamera default.</p>';
+                                resolve();
+                            }).catch(err => {
+                                console.error("Error playing fallback video:", err);
+                                resultsDiv.innerHTML = '<p class="text-red-500">Gagal memutar video kamera default.</p>';
+                                scanCameraButton.disabled = true;
+                                resolve();
+                            });
+                        };
+                    });
+                } catch (defaultCameraError) {
+                    console.error('Gagal mengakses kamera apapun:', defaultCameraError);
+                    resultsDiv.innerHTML = '<p class="text-red-500">Gagal mengakses kamera. Pastikan Anda memberikan izin.</p>';
+                    scanCameraButton.disabled = true;
+                    return Promise.reject("No camera access");
+                }
+            }
+        }
+
+        function stopCameraStream() {
+            if (videoFeed.srcObject) {
+                const tracks = videoFeed.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                videoFeed.srcObject = null;
+            }
+            videoFeed.style.display = 'none';
+        }
+
+        async function sendImageToGemini(base64ImageData) {
+            loadingIndicator.style.display = 'flex';
+            resultsDiv.textContent = '';
+            scanCameraButton.disabled = true;
+            selectGalleryButton.disabled = true;
+            takePhotoButton.style.display = 'none';
+
+            try {
+                const prompt = `Identifikasi kendaraan dalam gambar. Berikan detail berikut dalam format JSON. Untuk 'tahun_pembuatan', estimasi tahun pembuatan secara akurat berdasarkan jenis, merek, dan model kendaraan yang terlihat dalam gambar, serta ciri khas visual yang mungkin mengindikasikan rentang tahun produksi. Jika tidak ada petunjuk visual yang cukup kuat untuk estimasi, gunakan 'Tidak tersedia'. Untuk 'harga_baru', estimasi harga baru kendaraan tersebut dalam Rupiah (misal: Rp 250.000.000) berdasarkan jenis, merek, model, dan tahun pembuatan yang diidentifikasi. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'jenis_bahan_bakar', identifikasi jenis bahan bakar kendaraan (misal: Bensin, Diesel, Listrik, Hibrida). Jika tidak dapat diidentifikasi, gunakan 'Tidak tersedia'. Untuk 'konsumsi_bahan_bakar_per_km', estimasi konsumsi bahan bakar dalam km/liter (untuk bensin/diesel) atau km/kWh (untuk listrik) (misal: 15 km/liter, 5 km/kWh) berdasarkan jenis, merek, model, tahun pembuatan, jenis bahan bakar, dan kapasitas mesin. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'akselerasi_0_100_kmh', estimasi waktu akselerasi dari 0-100 km/jam dalam detik (misal: 8.5 detik) berdasarkan jenis, merek, model, tahun pembuatan, jenis bahan bakar, dan kapasitas mesin. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'keterangan_tambahan', berikan ringkasan singkat mengenai kelebihan (positif) dan kekurangan (negatif) umum dari kendaraan tersebut berdasarkan identifikasi. Jika tidak ada informasi yang relevan, gunakan 'Tidak tersedia'.
+                {
+                    "jenis_kendaraan": "jenis kendaraan (misal: mobil, sepeda motor, truk)",
+                    "merek": "merek kendaraan (misal: Toyota, Honda)",
+                    "model": "model kendaraan (misal: Camry, Civic)",
+                    "tahun_pembuatan": "cari di berbagai sumber tahun pembuatannya, estimasikan berdasarkan jenis, merek, dan model kendaraan yang terlihat, atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "kapasitas_mesin": "kapasitas mesin (misal: 1500cc)",
+                    "jenis_bahan_bakar": "jenis bahan bakar kendaraan (misal: Bensin, Diesel, Listrik, Hibrida), atau 'Tidak tersedia' jika tidak dapat diidentifikasi",
+                    "konsumsi_bahan_bakar_per_km": "estimasi konsumsi bahan bakar dalam km/liter (untuk bensin/diesel) atau km/kWh (untuk listrik) (misal: 15 km/liter, 5 km/kWh), atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "akselerasi_0_100_kmh": "cari di berbagai sumber estimasi waktu akselerasi 0-100 km/jam dalam detik (misal: 8.5 detik), atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "plat_nomor": "teks plat nomor kendaraan (misal: B 1234 ABC), atau 'Tidak tersedia' jika tidak terlihat atau tidak dapat dibaca",
+                    "harga_baru": "estimasi harga baru dalam Rupiah (misal: Rp 250.000.000), atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "keterangan_tambahan": "ringkasan singkat kelebihan dan kekurangan kendaraan tersebut (misal: Positif: Irit bahan bakar, nyaman. Negatif: Harga suku cadang mahal, ruang kabin sempit.), atau 'Tidak tersedia' jika tidak ada informasi relevan"
+                }
+                Jika tidak ada kendaraan yang terlihat, berikan JSON: {"jenis_kendaraan": "Tidak ada kendaraan terdeteksi"}.
+                Jika suatu detail tidak dapat ditentukan, gunakan "Tidak tersedia" sebagai nilainya.`;
+
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: "image/png",
+                                        data: base64ImageData
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "jenis_kendaraan": { "type": "STRING" },
+                                "merek": { "type": "STRING" },
+                                "model": { "type": "STRING" },
+                                "tahun_pembuatan": { "type": "STRING" },
+                                "kapasitas_mesin": { "type": "STRING" },
+                                "jenis_bahan_bakar": { "type": "STRING" },
+                                "konsumsi_bahan_bakar_per_km": { "type": "STRING" },
+                                "akselerasi_0_100_kmh": { "type": "STRING" },
+                                "plat_nomor": { "type": "STRING" },
+                                "harga_baru": { "type": "STRING" },
+                                "keterangan_tambahan": { "type": "STRING" }
+                            },
+                            propertyOrdering: [
+                                "jenis_kendaraan", "merek", "model", "tahun_pembuatan",
+                                "kapasitas_mesin", "jenis_bahan_bakar", "konsumsi_bahan_bakar_per_km",
+                                "akselerasi_0_100_kmh", "plat_nomor", "harga_baru", "keterangan_tambahan"
+                            ]
+                        }
+                    }
+                };
+
+                const apiKey = "AIzaSyAdPjhdNyOMLu5euc5NkJ5r0610Czf2kCE";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    const vehicleDetails = JSON.parse(jsonString);
+
+                    let detailsHtml = '';
+                    if (vehicleDetails.jenis_kendaraan === "Tidak ada kendaraan terdeteksi") {
+                        detailsHtml = `<p class="text-red-500">${vehicleDetails.jenis_kendaraan}</p>`;
+                    } else {
+                        detailsHtml += `<p><strong>Jenis Kendaraan:</strong> ${vehicleDetails.jenis_kendaraan || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Merek:</strong> ${vehicleDetails.merek || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Model:</strong> ${vehicleDetails.model || 'Tidak tersedia'}</p>`;
+                        
+                        if (vehicleDetails.tahun_pembuatan && vehicleDetails.tahun_pembuatan !== 'Tidak tersedia') {
+                            detailsHtml += `<p><strong>Tahun Pembuatan:</strong> ${vehicleDetails.tahun_pembuatan}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Tahun Pembuatan:</strong> Tidak tersedia. (AI mencoba mengestimasi berdasarkan visual, namun tidak ada petunjuk kuat.)</p>`;
+                        }
+
+                        detailsHtml += `<p><strong>Kapasitas Mesin:</strong> ${vehicleDetails.kapasitas_mesin || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Jenis Bahan Bakar:</strong> ${vehicleDetails.jenis_bahan_bakar || 'Tidak tersedia'}</p>`;
+                        
+                        if (vehicleDetails.konsumsi_bahan_bakar_per_km && vehicleDetails.konsumsi_bahan_bakar_per_km !== 'Tidak tersedia') {
+                            detailsHtml += `<p><strong>Konsumsi Bahan Bakar (Estimasi):</strong> ${vehicleDetails.konsumsi_bahan_bakar_per_km}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Konsumsi Bahan Bakar (Estimasi):</strong> Tidak tersedia. (AI mencoba mengestimasi, namun tidak ada data yang cukup atau spesifik.)</p>`;
+                        }
+
+                        if (vehicleDetails.akselerasi_0_100_kmh && vehicleDetails.akselerasi_0_100_kmh !== 'Tidak tersedia') {
+                            detailsHtml += `<p><strong>Akselerasi 0-100 km/jam (Estimasi):</strong> ${vehicleDetails.akselerasi_0_100_kmh}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Akselerasi 0-100 km/jam (Estimasi):</strong> Tidak tersedia. (AI mencoba mengestimasi, namun tidak ada data yang cukup atau spesifik.)</p>`;
+                        }
+
+                        if (vehicleDetails.plat_nomor && vehicleDetails.plat_nomor !== 'Tidak tersedia') {
+                            const plateNumber = vehicleDetails.plat_nomor.toUpperCase().trim();
+                            let regionPrefix = '';
+                            const twoLetterMatch = plateNumber.match(/^([A-Z]{2})/);
+                            const oneLetterMatch = plateNumber.match(/^([A-Z]{1})/);
+
+                            if (twoLetterMatch && licensePlateRegions[twoLetterMatch[1]]) {
+                                regionPrefix = twoLetterMatch[1];
+                            } else if (oneLetterMatch && licensePlateRegions[oneLetterMatch[1]]) {
+                                regionPrefix = oneLetterMatch[1];
+                            }
+
+                            detailsHtml += `<p><strong>Plat Nomor:</strong> ${plateNumber}</p>`;
+                            if (regionPrefix) {
+                                detailsHtml += `<p><strong>Asal Daerah:</strong> ${licensePlateRegions[regionPrefix]}</p>`;
+                            } else {
+                                detailsHtml += `<p><strong>Asal Daerah:</strong> Tidak diketahui (awalan tidak dikenali)</p>`;
+                            }
+                        } else {
+                            detailsHtml += `<p><strong>Plat Nomor:</strong> Tidak tersedia</p>`;
+                            detailsHtml += `<p><strong>Asal Daerah:</strong> Tidak tersedia</p>`;
+                        }
+
+                        if (vehicleDetails.harga_baru && vehicleDetails.harga_baru !== 'Tidak tersedia') {
+                            detailsHtml += `<p><strong>Harga Baru (Estimasi):</strong> ${vehicleDetails.harga_baru}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Harga Baru (Estimasi):</strong> Tidak tersedia. (AI mencoba mengestimasi, namun tidak ada data yang cukup atau spesifik.)</p>`;
+                        }
+
+                        if (vehicleDetails.keterangan_tambahan && vehicleDetails.keterangan_tambahan !== "Tidak tersedia") {
+                            detailsHtml += `<p><strong>Keterangan Tambahan:</strong> ${vehicleDetails.keterangan_tambahan}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Keterangan Tambahan:</strong> Tidak tersedia. (AI mencoba memberikan ringkasan positif dan negatif, namun tidak ada informasi yang cukup.)</p>`;
+                        }
+                    }
+                    resultsDiv.innerHTML = detailsHtml;
+
+                } else {
+                    resultsDiv.textContent = 'Tidak dapat mengidentifikasi detail kendaraan.';
+                    console.error('Unexpected API response structure:', result);
+                }
+
+            } catch (error) {
+                console.error('Kesalahan saat memindai kendaraan:', error);
+                resultsDiv.innerHTML = '<p class="text-red-500">Terjadi kesalahan saat memindai. Silakan coba lagi.</p>';
+            } finally {
+                loadingIndicator.style.display = 'none';
+                scanCameraButton.disabled = false;
+                selectGalleryButton.disabled = false;
+                takePhotoButton.disabled = false; /* Re-enable take photo button */
+            }
+        }
+
+        scanCameraButton.addEventListener('click', async () => {
+            try {
+                await startCameraStream();
+                scanCameraButton.disabled = true;
+                selectGalleryButton.disabled = true;
+                takePhotoButton.style.display = 'block';
+                resultsDiv.textContent = '';
+            } catch (error) {
+                console.error("Error during camera scan initiation:", error);
+                loadingIndicator.style.display = 'none';
+                scanCameraButton.disabled = false;
+                selectGalleryButton.disabled = false;
+                videoFeed.style.display = 'none';
+                capturedImage.style.display = 'none';
+            }
+        });
+
+        takePhotoButton.addEventListener('click', () => {
+            takePhotoButton.disabled = true;
+            loadingIndicator.style.display = 'flex';
+            resultsDiv.textContent = '';
+
+            context.drawImage(videoFeed, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+            capturedImage.src = hiddenCanvas.toDataURL('image/png');
+
+            videoFeed.style.display = 'none';
+            capturedImage.style.display = 'block';
+
+            stopCameraStream();
+
+            sendImageToGemini(hiddenCanvas.toDataURL('image/png').split(',')[1]);
+        });
+
+        selectGalleryButton.addEventListener('click', () => {
+            stopCameraStream();
+            galleryInput.click();
+            scanCameraButton.disabled = true;
+            selectGalleryButton.disabled = true;
+            takePhotoButton.style.display = 'none';
+            resultsDiv.textContent = '';
+        });
+
+        galleryInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        hiddenCanvas.width = img.width;
+                        hiddenCanvas.height = img.height;
+                        context.drawImage(img, 0, 0, img.width, img.height);
+
+                        videoFeed.style.display = 'none';
+                        capturedImage.style.display = 'block';
+                        capturedImage.src = e.target.result;
+
+                        sendImageToGemini(hiddenCanvas.toDataURL('image/png').split(',')[1]);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        window.onload = () => {
+            videoFeed.style.display = 'none';
+            capturedImage.style.display = 'none';
+            takePhotoButton.style.display = 'none';
+        };
+    </script>
+</body>
+</html>
