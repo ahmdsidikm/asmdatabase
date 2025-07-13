@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pemindai Kendaraan</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -39,31 +41,42 @@
             aspect-ratio: 16 / 9;
             border: 2px solid #b0bec5; /* More pronounced border */
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Shadow for media elements */
+            margin-left: auto; /* Pusatkan gambar/video secara horizontal */
+            margin-right: auto; /* Pusatkan gambar/video secara horizontal */
         }
         #captured-image {
             display: none;
         }
         .button-group {
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* Mengubah arah menjadi horizontal */
+            justify-content: center; /* Pusatkan tombol secara horizontal */
+            align-items: center; /* Pusatkan tombol secara vertikal */
+            flex-wrap: wrap; /* Izinkan tombol untuk melipat ke baris berikutnya pada layar kecil */
             gap: 20px; /* Increased gap */
             margin-bottom: 30px; /* Increased margin */
         }
         button {
-            background-image: linear-gradient(to right, #4a148c 0%, #1a237e 100%); /* Deeper, richer gradient */
+            /* Mengubah gradien warna tombol */
+            background-image: linear-gradient(to right, #20B2AA 0%, #4682B4 100%); /* Teal to SteelBlue gradient */
             color: white;
-            padding: 16px 32px; /* Larger padding */
-            border-radius: 9999px;
+            width: 80px; /* Fixed width for circular shape */
+            height: 80px; /* Fixed height for circular shape */
+            border-radius: 50%; /* Make it perfectly circular */
             font-weight: 700; /* Bolder font */
-            font-size: 1.2rem; /* Slightly larger font */
+            font-size: 0; /* Hide any potential text, only icon will show */
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3); /* More prominent shadow */
             border: none;
-            width: 100%;
-            max-width: 350px; /* Wider buttons */
-            margin: 0 auto;
-            letter-spacing: 0.05em; /* Slight letter spacing */
+            /* margin: 0 auto; /* Dihapus karena flexbox justify-content sudah menangani pemusatan */
+            display: flex; /* Menggunakan flexbox untuk ikon */
+            align-items: center; /* Pusatkan ikon secara vertikal */
+            justify-content: center; /* Pusatkan ikon secara horizontal */
+        }
+        button i {
+            font-size: 2.5rem; /* Ukuran ikon lebih besar agar terlihat jelas di tombol bulat */
+            margin-right: 0; /* Hapus spasi karena tidak ada teks */
         }
         button:hover {
             transform: translateY(-4px) scale(1.02); /* More pronounced hover effect */
@@ -129,10 +142,10 @@
         <canvas id="hidden-canvas"></canvas>
 
         <div class="button-group">
-            <button id="scan-camera-button">Pindai dari Kamera</button>
-            <button id="take-photo-button" style="display: none;">Ambil Foto</button>
+            <button id="scan-camera-button"><i class="fas fa-camera"></i></button>
+            <button id="take-photo-button" style="display: none;"><i class="fas fa-camera-retro"></i></button>
             <input type="file" id="gallery-input" accept="image/*">
-            <button id="select-gallery-button">Pilih dari Galeri</button>
+            <button id="select-gallery-button"><i class="fas fa-image"></i></button>
         </div>
 
         <div id="loading-indicator" class="flex items-center justify-center space-x-3">
@@ -259,7 +272,7 @@
             takePhotoButton.style.display = 'none';
 
             try {
-                const prompt = `Identifikasi kendaraan dalam gambar. Berikan detail berikut dalam format JSON. Untuk 'tahun_pembuatan', estimasi tahun pembuatan secara akurat berdasarkan jenis, merek, dan model kendaraan yang terlihat dalam gambar, serta ciri khas visual yang mungkin mengindikasikan rentang tahun produksi. Jika tidak ada petunjuk visual yang cukup kuat untuk estimasi, gunakan 'Tidak tersedia'. Untuk 'harga_baru', estimasi harga baru kendaraan tersebut dalam Rupiah (misal: Rp 250.000.000) berdasarkan jenis, merek, model, dan tahun pembuatan yang diidentifikasi. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'jenis_bahan_bakar', identifikasi jenis bahan bakar kendaraan (misal: Bensin, Diesel, Listrik, Hibrida). Jika tidak dapat diidentifikasi, gunakan 'Tidak tersedia'. Untuk 'konsumsi_bahan_bakar_per_km', estimasi konsumsi bahan bakar dalam km/liter (untuk bensin/diesel) atau km/kWh (untuk listrik) (misal: 15 km/liter, 5 km/kWh) berdasarkan jenis, merek, model, tahun pembuatan, jenis bahan bakar, dan kapasitas mesin. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'akselerasi_0_100_kmh', estimasi waktu akselerasi dari 0-100 km/jam dalam detik (misal: 8.5 detik) berdasarkan jenis, merek, model, tahun pembuatan, jenis bahan bakar, dan kapasitas mesin. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'keterangan_tambahan', berikan ringkasan singkat mengenai kelebihan (positif) dan kekurangan (negatif) umum dari kendaraan tersebut berdasarkan identifikasi. Jika tidak ada informasi yang relevan, gunakan 'Tidak tersedia'.
+                const prompt = `Identifikasi kendaraan dalam gambar. Berikan detail berikut dalam format JSON. Untuk 'tahun_pembuatan', estimasi tahun pembuatan secara akurat berdasarkan jenis, merek, dan model kendaraan yang terlihat dalam gambar, serta ciri khas visual yang mungkin mengindikasikan rentang tahun produksi. Jika tidak ada petunjuk visual yang cukup kuat untuk estimasi, gunakan 'Tidak tersedia'. Untuk 'harga_baru', estimasi harga baru kendaraan tersebut dalam Rupiah (misal: Rp 250.000.000) berdasarkan jenis, merek, model, dan tahun pembuatan yang diidentifikasi. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'jenis_bahan_bakar', identifikasi jenis bahan bakar kendaraan (misal: Bensin, Diesel, Listrik, Hibrida). Jika tidak dapat diidentifikasi, gunakan 'Tidak tersedia'. Untuk 'konsumsi_bahan_bakar_per_km', estimasi konsumsi bahan bakar dalam km/liter (untuk bensin/diesel) atau km/kWh (untuk listrik) (misal: 15 km/liter, 5 km/kWh) berdasarkan jenis, merek, model, tahun pembuatan, jenis bahan bakar, dan kapasitas mesin. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'akselerasi_0_100_kmh', estimasi waktu akselerasi dari 0-100 km/jam dalam detik (misal: 8.5 detik) berdasarkan jenis, merek, model, tahun pembuatan, jenis bahan bakar, dan kapasitas mesin. Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'warna_kendaraan', identifikasi warna dominan kendaraan (misal: Merah, Biru, Hitam, Putih). Jika tidak dapat diidentifikasi, gunakan 'Tidak tersedia'. Untuk 'tenaga_maksimal', estimasi tenaga maksimal kendaraan dalam HP atau PS (misal: 150 HP, 180 PS). Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'torsi_maksimal', estimasi torsi maksimal kendaraan dalam Nm (misal: 250 Nm). Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'dimensi_pxlxt', estimasi dimensi kendaraan dalam format panjang x lebar x tinggi (misal: 4.5m x 1.8m x 1.5m). Jika tidak dapat diestimasi, gunakan 'Tidak tersedia'. Untuk 'tipe_mesin', identifikasi tipe mesin kendaraan (misal: 4 silinder segaris, V6, Elektrik). Jika tidak dapat diidentifikasi, gunakan 'Tidak tersedia'. Untuk 'keterangan_tambahan', berikan ringkasan singkat mengenai kelebihan (positif) dan kekurangan (negatif) umum dari kendaraan tersebut berdasarkan identifikasi. Jika tidak ada informasi yang relevan, gunakan 'Tidak tersedia'.
                 {
                     "jenis_kendaraan": "jenis kendaraan (misal: mobil, sepeda motor, truk)",
                     "merek": "merek kendaraan (misal: Toyota, Honda)",
@@ -270,6 +283,11 @@
                     "konsumsi_bahan_bakar_per_km": "estimasi konsumsi bahan bakar dalam km/liter (untuk bensin/diesel) atau km/kWh (untuk listrik) (misal: 15 km/liter, 5 km/kWh), atau 'Tidak tersedia' jika tidak dapat diestimasi",
                     "akselerasi_0_100_kmh": "cari di berbagai sumber estimasi waktu akselerasi 0-100 km/jam dalam detik (misal: 8.5 detik), atau 'Tidak tersedia' jika tidak dapat diestimasi",
                     "plat_nomor": "teks plat nomor kendaraan (misal: B 1234 ABC), atau 'Tidak tersedia' jika tidak terlihat atau tidak dapat dibaca",
+                    "warna_kendaraan": "warna dominan kendaraan (misal: Merah, Biru, Hitam, Putih), atau 'Tidak tersedia' jika tidak dapat diidentifikasi",
+                    "tenaga_maksimal": "estimasi tenaga maksimal kendaraan dalam HP atau PS (misal: 150 HP, 180 PS), atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "torsi_maksimal": "estimasi torsi maksimal kendaraan dalam Nm (misal: 250 Nm), atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "dimensi_pxlxt": "estimasi dimensi kendaraan dalam format panjang x lebar x tinggi (misal: 4.5m x 1.8m x 1.5m), atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "tipe_mesin": "identifikasi tipe mesin kendaraan (misal: 4 silinder segaris, V6, Elektrik), atau 'Tidak tersedia' jika tidak dapat diidentifikasi",
                     "harga_baru": "estimasi harga baru dalam Rupiah (misal: Rp 250.000.000), atau 'Tidak tersedia' jika tidak dapat diestimasi",
                     "keterangan_tambahan": "ringkasan singkat kelebihan dan kekurangan kendaraan tersebut (misal: Positif: Irit bahan bakar, nyaman. Negatif: Harga suku cadang mahal, ruang kabin sempit.), atau 'Tidak tersedia' jika tidak ada informasi relevan"
                 }
@@ -305,19 +323,26 @@
                                 "konsumsi_bahan_bakar_per_km": { "type": "STRING" },
                                 "akselerasi_0_100_kmh": { "type": "STRING" },
                                 "plat_nomor": { "type": "STRING" },
+                                "warna_kendaraan": { "type": "STRING" },
+                                "tenaga_maksimal": { "type": "STRING" },
+                                "torsi_maksimal": { "type": "STRING" },
+                                "dimensi_pxlxt": { "type": "STRING" },
+                                "tipe_mesin": { "type": "STRING" },
                                 "harga_baru": { "type": "STRING" },
                                 "keterangan_tambahan": { "type": "STRING" }
                             },
                             propertyOrdering: [
                                 "jenis_kendaraan", "merek", "model", "tahun_pembuatan",
                                 "kapasitas_mesin", "jenis_bahan_bakar", "konsumsi_bahan_bakar_per_km",
-                                "akselerasi_0_100_kmh", "plat_nomor", "harga_baru", "keterangan_tambahan"
+                                "akselerasi_0_100_kmh", "plat_nomor", "warna_kendaraan",
+                                "tenaga_maksimal", "torsi_maksimal", "dimensi_pxlxt", "tipe_mesin",
+                                "harga_baru", "keterangan_tambahan"
                             ]
                         }
                     }
                 };
 
-                const apiKey = "AIzaSyAdPjhdNyOMLu5euc5NkJ5r0610Czf2kCE";
+                const apiKey = "AIzaSyAdPjhdNyOMLu5euc5NkJ5r0610Czf2kCE"; // Perhatikan: API key ini mungkin perlu diganti dengan API key Anda
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -345,7 +370,7 @@
                         if (vehicleDetails.tahun_pembuatan && vehicleDetails.tahun_pembuatan !== 'Tidak tersedia') {
                             detailsHtml += `<p><strong>Tahun Pembuatan:</strong> ${vehicleDetails.tahun_pembuatan}</p>`;
                         } else {
-                            detailsHtml += `<p><strong>Tahun Pembuatan:</strong> Tidak tersedia. (AI mencoba mengestimasi berdasarkan visual, namun tidak ada petunjuk kuat.)</p>`;
+                            detailsHtml += `<p><strong>Tahun Pembuatan:</strong> Tidak tersedia.</p>`;
                         }
 
                         detailsHtml += `<p><strong>Kapasitas Mesin:</strong> ${vehicleDetails.kapasitas_mesin || 'Tidak tersedia'}</p>`;
@@ -354,13 +379,13 @@
                         if (vehicleDetails.konsumsi_bahan_bakar_per_km && vehicleDetails.konsumsi_bahan_bakar_per_km !== 'Tidak tersedia') {
                             detailsHtml += `<p><strong>Konsumsi Bahan Bakar (Estimasi):</strong> ${vehicleDetails.konsumsi_bahan_bakar_per_km}</p>`;
                         } else {
-                            detailsHtml += `<p><strong>Konsumsi Bahan Bakar (Estimasi):</strong> Tidak tersedia. (AI mencoba mengestimasi, namun tidak ada data yang cukup atau spesifik.)</p>`;
+                            detailsHtml += `<p><strong>Konsumsi Bahan Bakar (Estimasi):</strong> Tidak tersedia.</p>`;
                         }
 
                         if (vehicleDetails.akselerasi_0_100_kmh && vehicleDetails.akselerasi_0_100_kmh !== 'Tidak tersedia') {
                             detailsHtml += `<p><strong>Akselerasi 0-100 km/jam (Estimasi):</strong> ${vehicleDetails.akselerasi_0_100_kmh}</p>`;
                         } else {
-                            detailsHtml += `<p><strong>Akselerasi 0-100 km/jam (Estimasi):</strong> Tidak tersedia. (AI mencoba mengestimasi, namun tidak ada data yang cukup atau spesifik.)</p>`;
+                            detailsHtml += `<p><strong>Akselerasi 0-100 km/jam (Estimasi):</strong> Tidak tersedia.</p>`;
                         }
 
                         if (vehicleDetails.plat_nomor && vehicleDetails.plat_nomor !== 'Tidak tersedia') {
@@ -385,6 +410,15 @@
                             detailsHtml += `<p><strong>Plat Nomor:</strong> Tidak tersedia</p>`;
                             detailsHtml += `<p><strong>Asal Daerah:</strong> Tidak tersedia</p>`;
                         }
+
+                        detailsHtml += `<p><strong>Warna Kendaraan:</strong> ${vehicleDetails.warna_kendaraan || 'Tidak tersedia'}</p>`;
+
+                        // New fields
+                        detailsHtml += `<p><strong>Tenaga Maksimal:</strong> ${vehicleDetails.tenaga_maksimal || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Torsi Maksimal:</strong> ${vehicleDetails.torsi_maksimal || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Dimensi (P x L x T):</strong> ${vehicleDetails.dimensi_pxlxt || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Tipe Mesin:</strong> ${vehicleDetails.tipe_mesin || 'Tidak tersedia'}</p>`;
+
 
                         if (vehicleDetails.harga_baru && vehicleDetails.harga_baru !== 'Tidak tersedia') {
                             detailsHtml += `<p><strong>Harga Baru (Estimasi):</strong> ${vehicleDetails.harga_baru}</p>`;
