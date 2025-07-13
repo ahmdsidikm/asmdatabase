@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penerjemah</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .output-container {
+            position: relative;
+        }
+        .summary-button {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 10; /* Ensure it's above other elements if needed */
+        }
+        .summary-button:hover {
+            background-color: #45a049;
+        }
+        .summary-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            z-index: 1000;
+            max-width: 80%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .summary-popup h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .summary-popup p {
+            color: #555;
+        }
+        .summary-popup button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .summary-popup button:hover {
+            background-color: #d32f2f;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .action-button {
+            background-color: #60a5fa; /* Blue-400 */
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px; /* Slightly larger for icon */
+            height: 36px;
+            font-size: 18px; /* For icon */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .action-button:hover {
+            background-color: #3b82f6; /* Blue-500 */
+        }
+        .camera-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            z-index: 1001;
+            max-width: 90%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .camera-popup video {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 8px;
+            background-color: #000;
+        }
+        .camera-popup canvas {
+            display: none; /* Hidden, used for capturing image */
+        }
+        .camera-controls {
+            display: flex;
+            gap: 15px;
+        }
+        .camera-controls button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .camera-controls .take-photo-button {
+            background-color: #28a745;
+            color: white;
+        }
+        .camera-controls .take-photo-button:hover {
+            background-color: #218838;
+        }
+        .camera-controls .close-camera-button {
+            background-color: #dc3545;
+            color: white;
+        }
+        .camera-controls .close-camera-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">Penerjemah</h1>
+
+        <div>
+            <label for="inputText" class="block text-gray-700 text-lg font-medium mb-2">Teks untuk Diterjemahkan:</label>
+            <textarea
+                id="inputText"
+                class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out text-justify"
+                placeholder="Masukkan teks di sini..."
+            ></textarea>
+        </div>
+
+        <!-- Action Buttons (Gallery, Camera, and Reverse) -->
+        <div class="flex justify-end gap-3 mt-2">
+            <!-- Hidden File Input for Gallery -->
+            <input type="file" id="imageInput" accept="image/*" class="hidden">
+            <button
+                id="galleryButton"
+                class="action-button"
+                title="Pindai Teks dari Galeri"
+            >
+                <!-- SVG Icon for Image/Gallery -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image">
+                    <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+                    <circle cx="9" cy="9" r="2"/>
+                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+                </svg>
+            </button>
+
+            <!-- Camera Button -->
+            <button
+                id="cameraButton"
+                class="action-button"
+                title="Pindai Teks dari Kamera"
+            >
+                <!-- SVG Icon for Camera -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-camera">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5Z"/>
+                    <circle cx="12" cy="13" r="3"/>
+                </svg>
+            </button>
+
+            <!-- Reverse Button -->
+            <button
+                id="reverseButton"
+                class="action-button"
+                title="Balikkan Teks"
+            >
+                <!-- SVG Icon for Reverse/Swap -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw">
+                    <path d="M21 12a9 9 0 0 0-9-9c-7.22 0-11 4.77-11 9 0 1.83.5 3.5 1.43 4.9"/><path d="M16 12V3"/><path d="M21 12h-9"/><path d="M17.65 6.35 12 12 6.35 17.65"/>
+                </svg>
+            </button>
+        </div>
+
+        <div>
+            <label for="targetLanguage" class="block text-gray-700 text-lg font-medium mb-2">Terjemahkan ke Bahasa:</label>
+            <select
+                id="targetLanguage"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out"
+            >
+                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                <option value="English">English</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Korean">Korean</option>
+                <option value="Mandarin">Mandarin</option>
+                <option value="French">French</option>
+                <option value="German">German</option>
+                <option value="Spanish">Spanish</option>
+            </select>
+        </div>
+
+        <button
+            id="translateButton"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out"
+        >
+            <span id="buttonText">Terjemahkan ke Bahasa Indonesia</span>
+            <div id="loadingSpinner" class="loading-spinner ml-2"></div>
+        </button>
+
+        <div>
+            <label for="outputText" class="block text-gray-700 text-lg font-medium mb-2">Hasil Terjemahan:</label>
+            <div
+                id="outputContainer"
+                class="output-container w-full p-4 bg-gray-100 border border-gray-300 rounded-lg min-h-[150px] text-gray-800 relative text-justify"
+            >
+                <div id="outputText">
+                    </div>
+                <button id="translationMeaningButton" class="summary-button hidden">!</button>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="text-red-600 text-center hidden">
+            Terjadi kesalahan saat menerjemahkan. Silakan coba lagi.
+        </div>
+
+        <!-- Translation Meaning Popup (formerly Alternative Words Popup) -->
+        <div id="translationMeaningPopup" class="summary-popup hidden">
+            <h2>Maksud Terjemahan</h2>
+            <p id="translationMeaningText"></p>
+            <button id="closeTranslationMeaning">Tutup</button>
+        </div>
+
+        <!-- Camera Popup -->
+        <div id="cameraPopup" class="camera-popup hidden">
+            <h2>Ambil Foto Teks</h2>
+            <video id="cameraFeed" autoplay playsinline></video>
+            <canvas id="cameraCanvas" class="hidden"></canvas>
+            <div class="camera-controls">
+                <button id="takePhotoButton" class="take-photo-button">Ambil Foto</button>
+                <button id="closeCameraButton" class="close-camera-button">Tutup</button>
+            </div>
+        </div>
+
+        <!-- Overlay for both popups -->
+        <div id="overlay" class="overlay hidden"></div>
+    </div>
+
+    <script type="module">
+        const inputText = document.getElementById('inputText');
+        const targetLanguageSelect = document.getElementById('targetLanguage');
+        const translateButton = document.getElementById('translateButton');
+        const outputText = document.getElementById('outputText');
+        const outputContainer = document.getElementById('outputContainer');
+        const translationMeaningButton = document.getElementById('translationMeaningButton'); // Changed ID
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const buttonText = document.getElementById('buttonText');
+        const errorMessage = document.getElementById('errorMessage');
+        const translationMeaningPopup = document.getElementById('translationMeaningPopup'); // Changed ID
+        const translationMeaningText = document.getElementById('translationMeaningText'); // Changed ID
+        const closeTranslationMeaning = document.getElementById('closeTranslationMeaning'); // Changed ID
+        const overlay = document.getElementById('overlay');
+
+        const galleryButton = document.getElementById('galleryButton');
+        const imageInput = document.getElementById('imageInput');
+
+        const cameraButton = document.getElementById('cameraButton');
+        const cameraPopup = document.getElementById('cameraPopup');
+        const cameraFeed = document.getElementById('cameraFeed');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const takePhotoButton = document.getElementById('takePhotoButton');
+        const closeCameraButton = document.getElementById('closeCameraButton');
+        let mediaStream = null;
+
+        const reverseButton = document.getElementById('reverseButton');
+
+        const API_KEY = "AIzaSyAdPjhdNyOMLu5euc5NkJ5r0610Czf2kCE";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+        let typingTimer; // Timer for debounce
+        const doneTypingInterval = 700; // Time in ms (0.7 seconds)
+
+        // Function to manage loading state
+        function setLoadingState(isLoading, message = '') {
+            if (isLoading) {
+                buttonText.textContent = message;
+                loadingSpinner.style.display = 'block';
+                translateButton.disabled = true; // Still disable manual translate during AI processing
+                galleryButton.disabled = true;
+                cameraButton.disabled = true;
+                reverseButton.disabled = true;
+                translationMeaningButton.disabled = true; // Changed button reference
+                errorMessage.classList.add('hidden');
+            } else {
+                updateButtonText();
+                loadingSpinner.style.display = 'none';
+                translateButton.disabled = false; // Re-enable manual translate button
+                galleryButton.disabled = false;
+                cameraButton.disabled = false;
+                reverseButton.disabled = false;
+                if (outputText.textContent.trim()) {
+                    translationMeaningButton.disabled = false; // Changed button reference
+                } else {
+                    translationMeaningButton.disabled = true; // Changed button reference
+                }
+            }
+        }
+
+        function updateButtonText() {
+            const selectedLanguageName = targetLanguageSelect.options[targetLanguageSelect.selectedIndex].text;
+            buttonText.textContent = `Terjemahkan ke ${selectedLanguageName}`;
+        }
+
+        updateButtonText();
+        targetLanguageSelect.addEventListener('change', () => {
+            updateButtonText();
+            performTranslation();
+        });
+
+        // Changed function name and prompt
+        async function getTranslationMeaning(text, targetLang) {
+            setLoadingState(true, 'Mencari Maksud Terjemahan...');
+            try {
+                const meaningPrompt = `Jelaskan maksud atau inti dari teks berikut dalam bahasa ${targetLang} agar mudah dipahami, tanpa kata atau frasa pengantar atau penutup: "${text}"`;
+                const payload = {
+                    contents: [{ parts: [{ text: meaningPrompt }] }]
+                };
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error (Meaning):', errorData);
+                    throw new Error(`API request failed with status ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let meaningText = result.candidates[0].content.parts[0].text;
+                    // Clean up any common AI conversational intros/outros for meaning
+                    meaningText = meaningText.replace(/^Maksudnya adalah:\s*/i, '').trim();
+                    meaningText = meaningText.replace(/^Inti dari teks ini adalah:\s*/i, '').trim();
+                    meaningText = meaningText.replace(/^Berikut maksud terjemahannya:\s*/i, '').trim();
+                    return meaningText;
+                } else {
+                    console.error("Unexpected API response structure (Meaning):", result);
+                    return "Gagal menemukan maksud terjemahan.";
+                }
+
+            } catch (error) {
+                console.error('Error during meaning generation:', error);
+                errorMessage.classList.remove('hidden');
+                return "Terjadi kesalahan saat menemukan maksud terjemahan.";
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        async function scanImageForText(base64ImageData) {
+            setLoadingState(true, 'Memindai Gambar...');
+            try {
+                const scanPrompt = "Ekstrak semua teks dari gambar ini dan berikan hanya teks yang diekstrak, tanpa tambahan kata atau frasa lain.";
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: scanPrompt },
+                                {
+                                    inlineData: {
+                                        mimeType: "image/png",
+                                        data: base64ImageData
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                };
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error (Image Scan):', errorData);
+                    throw new Error(`API request failed with status ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    console.error("Unexpected API response structure (Image Scan):", result);
+                    return "Tidak dapat mengekstrak teks dari gambar.";
+                }
+
+            } catch (error) {
+                console.error('Error during image scanning:', error);
+                errorMessage.classList.remove('hidden');
+                return "Terjadi kesalahan saat memindai gambar.";
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        async function performTranslation() {
+            const textToTranslate = inputText.value.trim();
+            const selectedLanguageName = targetLanguageSelect.options[targetLanguageSelect.selectedIndex].text;
+
+            if (!textToTranslate) {
+                outputText.textContent = "Silakan masukkan teks untuk diterjemahkan.";
+                errorMessage.classList.add('hidden');
+                translationMeaningButton.classList.add('hidden'); // Changed button reference
+                return;
+            }
+
+            setLoadingState(true, 'Menerjemahkan Otomatis...');
+            outputText.textContent = "";
+            translationMeaningButton.classList.add('hidden'); // Changed button reference
+
+            try {
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: `Terjemahkan teks berikut ke dalam bahasa ${selectedLanguageName}. Pastikan untuk mempertahankan semua baris baru dan pemformatan paragraf persis seperti teks asli. Berikan hanya hasil terjemahan, tanpa kata atau frasa pengantar atau penutup tambahan: "${textToTranslate}"` }] });
+
+                const payload = { contents: chatHistory };
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('API Error (Translation):', errorData);
+                    throw new Error(`API request failed with status ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    let translatedText = result.candidates[0].content.parts[0].text;
+
+                    translatedText = translatedText.replace(/\*/g, '');
+                    translatedText = translatedText.replace('Berikut terjemahan ke dalam Bahasa Indonesia:', '').trim();
+                    translatedText = translatedText.replace('Berikut terjemahan dari teks tersebut ke dalam Bahasa Indonesia:', '').trim();
+                    translatedText = translatedText.replace(/opsi terjemahan/gi, '').replace(/opsi/gi, '').trim();
+                    translatedText = translatedText.replace(/^Di sini terjemahannya:\s*/i, '').trim();
+                    translatedText = translatedText.replace(/^Terjemahan:\s*/i, '').trim();
+                    translatedText = translatedText.replace(/^Hasil terjemahan:\s*/i, '').trim();
+                    translatedText = translatedText.replace(/^Berikut adalah terjemahannya:\s*/i, '').trim();
+
+                    outputText.innerHTML = translatedText;
+                    translationMeaningButton.classList.remove('hidden'); // Changed button reference
+                    translationMeaningButton.disabled = false; // Changed button reference
+
+                    translationMeaningButton.onclick = async () => { // Changed button reference
+                        const currentTranslatedText = outputText.textContent;
+                        const selectedLang = targetLanguageSelect.options[targetLanguageSelect.selectedIndex].text;
+                        const meaning = await getTranslationMeaning(currentTranslatedText, selectedLang); // Changed function call
+                        translationMeaningText.textContent = meaning; // Changed text element reference
+                        translationMeaningPopup.classList.remove('hidden'); // Changed popup reference
+                        overlay.classList.remove('hidden');
+                    };
+
+                } else {
+                    outputText.textContent = "Tidak dapat menerjemahkan teks. Respon API tidak terduga.";
+                    console.error("Unexpected API response structure (Translation):", result);
+                    translationMeaningButton.classList.add('hidden'); // Changed button reference
+                }
+
+            } catch (error) {
+                console.error('Error during translation:', error);
+                errorMessage.classList.remove('hidden');
+                outputText.textContent = "Terjadi kesalahan saat menerjemahkan. Silakan coba lagi.";
+                translationMeaningButton.classList.add('hidden'); // Changed button reference
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        inputText.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            if (inputText.value.trim()) {
+                typingTimer = setTimeout(performTranslation, doneTypingInterval);
+            } else {
+                outputText.textContent = "";
+                translationMeaningButton.classList.add('hidden'); // Changed button reference
+                errorMessage.classList.add('hidden');
+                setLoadingState(false);
+            }
+        });
+
+        translateButton.addEventListener('click', performTranslation);
+
+        galleryButton.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64Data = reader.result.split(',')[1];
+                    const extractedText = await scanImageForText(base64Data);
+                    inputText.value = extractedText;
+                    imageInput.value = '';
+                    if (extractedText.trim()) {
+                        performTranslation();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        cameraButton.addEventListener('click', async () => {
+            cameraPopup.classList.remove('hidden');
+            overlay.classList.remove('hidden');
+
+            try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraFeed.srcObject = mediaStream;
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                errorMessage.textContent = "Tidak dapat mengakses kamera. Pastikan Anda memberikan izin.";
+                errorMessage.classList.remove('hidden');
+                cameraPopup.classList.add('hidden');
+                overlay.classList.add('hidden');
+            }
+        });
+
+        takePhotoButton.addEventListener('click', async () => {
+            if (mediaStream) {
+                cameraCanvas.width = cameraFeed.videoWidth;
+                cameraCanvas.height = cameraFeed.videoHeight;
+                const context = cameraCanvas.getContext('2d');
+                context.drawImage(cameraFeed, 0, 0, cameraCanvas.width, cameraCanvas.height);
+
+                const imageData = cameraCanvas.toDataURL('image/png');
+                const base64Data = imageData.split(',')[1];
+
+                const extractedText = await scanImageForText(base64Data);
+                inputText.value = extractedText;
+
+                mediaStream.getTracks().forEach(track => track.stop());
+                cameraFeed.srcObject = null;
+                cameraPopup.classList.add('hidden');
+                overlay.classList.add('hidden');
+                if (extractedText.trim()) {
+                    performTranslation();
+                }
+            }
+        });
+
+        closeCameraButton.addEventListener('click', () => {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                cameraFeed.srcObject = null;
+            }
+            cameraPopup.classList.add('hidden');
+            overlay.classList.add('hidden');
+        });
+
+        reverseButton.addEventListener('click', () => {
+            const currentInputText = inputText.value;
+            const currentOutputText = outputText.textContent;
+
+            inputText.value = currentOutputText;
+            outputText.innerHTML = currentInputText;
+
+            if (inputText.value.trim()) {
+                performTranslation();
+            } else {
+                outputText.textContent = "";
+                translationMeaningButton.classList.add('hidden'); // Changed button reference
+                errorMessage.classList.add('hidden');
+            }
+        });
+
+        closeTranslationMeaning.addEventListener('click', () => { // Changed button reference
+            translationMeaningPopup.classList.add('hidden'); // Changed popup reference
+            overlay.classList.add('hidden');
+        });
+
+        overlay.addEventListener('click', () => {
+            if (translationMeaningPopup.classList.contains('hidden') && cameraPopup.classList.contains('hidden')) { // Changed popup reference
+                overlay.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
