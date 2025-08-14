@@ -102,16 +102,18 @@ button, input[type="file"] {
 #resultModal .modal-content video {
     max-width: 100%;
 }
-#downloadBtn {
-    display: none;
+#downloadBtn, #downloadQRBtn {
+    display: block;
     margin-top: 10px;
     padding: 10px;
     font-size: 1.1em;
     border: 2px solid #777;
     background: #333;
+    color: #d8d8d8;
     cursor: pointer;
+    font-family: 'VT323', monospace;
 }
-#downloadBtn:hover { background: #555; }
+#downloadBtn:hover, #downloadQRBtn:hover { background: #555; }
 </style>
 </head>
 <body>
@@ -135,6 +137,7 @@ button, input[type="file"] {
         <h2>Buat QR Code</h2>
         <input type="text" id="qrText" placeholder="Masukkan teks/link..." style="width:90%; padding:10px; font-family: 'VT323'; font-size:1em;">
         <canvas id="qrCanvas"></canvas>
+        <button id="downloadQRBtn">Download QR</button>
     </div>
 </div>
 
@@ -159,6 +162,7 @@ const qrModal = document.getElementById('qrModal');
 const closeQRModal = document.getElementById('closeQRModal');
 const qrText = document.getElementById('qrText');
 const qrCanvas = document.getElementById('qrCanvas');
+const downloadQRBtn = document.getElementById('downloadQRBtn');
 
 const resultModal = document.getElementById('resultModal');
 const closeResultModal = document.getElementById('closeResultModal');
@@ -265,7 +269,6 @@ function scanQRCode() {
 
     function tick() {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            // Perbesar canvas 2x untuk QR kecil
             canvas.width = video.videoWidth * 2;
             canvas.height = video.videoHeight * 2;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -322,12 +325,19 @@ fileInput.addEventListener('change', e => {
 startCameraButton.addEventListener('click', startCamera);
 
 // --- QR Generator ---
-createQRBtn.addEventListener('click',()=>{
-    qrModal.style.display='block';
+createQRBtn.addEventListener('click', () => {
+    qrModal.style.display = 'block';
     generateQRFromInput();
 });
-closeQRModal.addEventListener('click',()=>{ qrModal.style.display='none'; qrCanvas.getContext('2d').clearRect(0,0,qrCanvas.width,qrCanvas.height); qrText.value=''; });
+
+closeQRModal.addEventListener('click', () => {
+    qrModal.style.display = 'none';
+    qrCanvas.getContext('2d').clearRect(0,0,qrCanvas.width,qrCanvas.height);
+    qrText.value = '';
+});
+
 qrText.addEventListener('input', generateQRFromInput);
+
 function generateQRFromInput() {
     const text = qrText.value.trim() || " ";
     new QRious({
@@ -335,16 +345,28 @@ function generateQRFromInput() {
         value: text,
         size: 300,
         level: 'H',
-        background: '#1a1a1a',
-        foreground: '#00ff00'
+        background: '#ffffff', // putih
+        foreground: '#000000'  // hitam
     });
 }
 
+// --- Download QR Button ---
+downloadQRBtn.addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = qrCanvas.toDataURL("image/png");
+    a.download = 'qr_code.png';
+    a.click();
+});
+
 // --- Close result modal ---
-closeResultModal.addEventListener('click',()=>{ resultModal.style.display='none'; resultContainer.innerHTML=''; downloadBtn.style.display='none'; });
+closeResultModal.addEventListener('click', () => {
+    resultModal.style.display='none';
+    resultContainer.innerHTML='';
+    downloadBtn.style.display='none';
+});
 
 // Tutup modal klik di luar
-window.addEventListener('click',(e)=>{
+window.addEventListener('click', (e) => {
     if(e.target===qrModal) qrModal.style.display='none';
     if(e.target===resultModal) resultModal.style.display='none';
 });
