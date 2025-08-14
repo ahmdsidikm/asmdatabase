@@ -60,12 +60,11 @@ button, input[type="file"] {
     color: #00ff00;
     text-shadow: 0 0 5px #00ff00;
     min-height: 50px;
-
-    white-space: pre-wrap;      /* biar text wrap otomatis */
-    word-wrap: break-word;      /* pecah kata panjang agar tidak nembus */
-    overflow-wrap: break-word;  /* cadangan untuk browser lain */
-    max-height: 200px;          /* maksimal tinggi kotak */
-    overflow-y: auto;           /* scroll jika terlalu panjang */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 /* Popup Modal QR Generator */
@@ -82,11 +81,11 @@ button, input[type="file"] {
 }
 .modal-content {
     background-color: #1a1a1a;
-    margin: 10% auto;
+    margin: 5% auto;
     padding: 20px;
     border: 2px solid #777;
-    width: 90%;
-    max-width: 400px;
+    width: 95%;
+    max-width: 600px; /* diperbesar popup */
     text-align: center;
     border-radius: 8px;
 }
@@ -107,9 +106,10 @@ button, input[type="file"] {
 /* Popup Hasil QR Gambar/Video */
 #resultModal .modal-content img,
 #resultModal .modal-content video {
-    max-width: 100%;
+    max-width: 90%; /* lebih lebar */
+    height: auto;
 }
-#downloadBtn, #downloadQRBtn {
+#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn {
     display: block;
     margin-top: 10px;
     padding: 10px;
@@ -120,14 +120,19 @@ button, input[type="file"] {
     cursor: pointer;
     font-family: 'VT323', monospace;
 }
-#downloadBtn:hover, #downloadQRBtn:hover { background: #555; }
+#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover { background: #555; }
 
 /* --- SCROLL UNTUK HASIL DECODE PANJANG --- */
 #resultContainer {
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
     word-wrap: break-word;
     overflow-wrap: break-word;
+}
+
+/* Tombol buka link dan copy teks */
+#openLinkBtn, #copyTextBtn {
+    display: none;
 }
 </style>
 </head>
@@ -143,6 +148,8 @@ button, input[type="file"] {
         <button id="createQRBtn">Buat QR</button>
     </div>
     <div id="output">STATUS: READY</div>
+    <button id="openLinkBtn">Buka Link</button>
+    <button id="copyTextBtn">Copy Teks</button>
 </div>
 
 <!-- Modal QR Generator -->
@@ -184,8 +191,13 @@ const closeResultModal = document.getElementById('closeResultModal');
 const resultContainer = document.getElementById('resultContainer');
 const downloadBtn = document.getElementById('downloadBtn');
 
+const openLinkBtn = document.getElementById('openLinkBtn');
+const copyTextBtn = document.getElementById('copyTextBtn');
+
 let stream = null, animationFrameId = null;
 let lastDecodedData = null;
+let lastDecodedDataLink = null;
+let lastDecodedText = null;
 
 // --- Fungsi beep ---
 function playBeep() {
@@ -221,6 +233,10 @@ function showDecodedBase64(data) {
     resultContainer.innerHTML = '';
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
+    openLinkBtn.style.display = 'none';
+    copyTextBtn.style.display = 'none';
+    lastDecodedDataLink = null;
+    lastDecodedText = null;
 
     if (data.startsWith('data:image/')) {
         let img = document.createElement('img');
@@ -237,10 +253,28 @@ function showDecodedBase64(data) {
         vid.autoplay = true;
         resultContainer.appendChild(vid);
         resultModal.style.display = 'block';
+    } else if (data.startsWith("http://") || data.startsWith("https://")) {
+        output.textContent = "QR Content (Link): " + data;
+        lastDecodedDataLink = data;
+        openLinkBtn.style.display = "block";
     } else {
         output.textContent = data;
+        lastDecodedText = data;
+        copyTextBtn.style.display = "block";
     }
 }
+
+// --- Tombol buka link ---
+openLinkBtn.addEventListener('click', () => {
+    if(lastDecodedDataLink) window.open(lastDecodedDataLink, "_blank");
+});
+
+// --- Tombol copy teks ---
+copyTextBtn.addEventListener('click', () => {
+    if(lastDecodedText) {
+        navigator.clipboard.writeText(lastDecodedText).then(()=> alert("Teks berhasil dicopy!"));
+    }
+});
 
 // --- Download image ---
 downloadBtn.addEventListener('click', () => {
@@ -308,9 +342,23 @@ function scanQRCode() {
 function processQRData(data) {
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
+    openLinkBtn.style.display = 'none';
+    copyTextBtn.style.display = 'none';
+    lastDecodedDataLink = null;
+    lastDecodedText = null;
+
     let parts = data.split("||").map(p => p.trim());
-    if (parts.length===2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) fetchAndDecrypt(parts[0], parseInt(parts[1]));
-    else { output.textContent="QR Content: "+data; downloadBtn.style.display='none'; }
+    if (parts.length===2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) {
+        fetchAndDecrypt(parts[0], parseInt(parts[1]));
+    } else if (data.startsWith("http://") || data.startsWith("https://")) {
+        output.textContent = "QR Content (Link): " + data;
+        lastDecodedDataLink = data;
+        openLinkBtn.style.display = "block";
+    } else {
+        output.textContent = "QR Content: " + data;
+        lastDecodedText = data;
+        copyTextBtn.style.display = "block";
+    }
 }
 
 // --- Upload file ---
@@ -330,7 +378,7 @@ fileInput.addEventListener('change', e => {
             const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
             const code = jsQR(imageData.data,imageData.width,imageData.height);
             if(code){ playBeep(); output.textContent="QR FOUND: "+code.data; processQRData(code.data); }
-            else { output.textContent="No QR found in image"; downloadBtn.style.display='none'; }
+            else { output.textContent="No QR found in image"; downloadBtn.style.display='none'; openLinkBtn.style.display='none'; copyTextBtn.style.display='none'; }
         };
         img.src = ev.target.result;
     };
@@ -360,8 +408,8 @@ function generateQRFromInput() {
         value: text,
         size: 300,
         level: 'H',
-        background: '#ffffff', // putih
-        foreground: '#000000'  // hitam
+        background: '#ffffff', 
+        foreground: '#000000'  
     });
 }
 
