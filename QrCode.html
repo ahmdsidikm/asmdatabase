@@ -6,11 +6,12 @@
 <title>Retro Gray QR Scanner + Caesar Decoder</title>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 <style>
 body {
     font-family: 'VT323', monospace;
-    background: #282c34;
-    color: #d8d8d8;
+    background: #d3d3d3; /* Light gray background */
+    color: #333; /* Dark text color */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -20,44 +21,62 @@ body {
     padding: 20px;
 }
 .container {
-    background: #1a1a1a;
-    border: 3px solid #666;
+    background: #e0e0e0; /* Slightly darker container background */
+    border: 3px solid #808080; /* Dark gray border */
     padding: 20px;
-    box-shadow: 0 0 15px #d8d8d8, inset 0 0 10px #000;
+    box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.75); /* Retro drop shadow */
     max-width: 500px;
     width: 90%;
     text-align: center;
-    border-radius: 8px;
+    border-radius: 0; /* Sharp corners */
+}
+h1 {
+    text-shadow: none; /* Remove any text shadows */
+    color: #333; /* Ensure header text is dark */
 }
 #video {
     width: 100%;
     max-width: 400px;
     border: 2px solid #555;
     background: #000;
-    margin-bottom: 15px;
+    margin: 0 auto 15px auto; /* Centered horizontally with margin */
+    /* Keep the grayscale filter for a monochrome CRT effect */
     filter: grayscale(100%) brightness(120%) contrast(150%);
+    display: none; /* Video is hidden on initial load */
 }
 #snapshot { display:none; }
 .controls { display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
 button, input[type="file"] {
     padding: 12px;
     font-size: 1.2em;
-    border: 2px solid #777;
-    background: #444;
-    color: #d8d8d8;
+    border: 2px solid #808080;
+    background: #c0c0c0; /* Gray button background */
+    color: #333;
     cursor: pointer;
     font-family: 'VT323', monospace;
     text-align: center;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75); /* Physical button shadow */
+    transition: all 0.1s ease;
 }
-
+button:hover, input[type="file"]:hover {
+    background: #a0a0a0;
+    box-shadow: 1px 1px 0px 0px rgba(0,0,0,0.75); /* Button press effect */
+    transform: translate(1px, 1px);
+}
+button:active {
+    background: #909090;
+    box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+    transform: translate(2px, 2px);
+}
 /* --- OUTPUT STATUS --- */
 #output {
-    background: #1a1a1a;
+    background: #000000; /* Darker background for the output screen */
     padding: 15px;
-    border: 2px solid #777;
+    border: 2px solid #808080;
     margin-top: 15px;
     font-size: 1.2em;
-    color: #00ff00;
+    color: #00ff00; /* Classic green terminal text */
     text-shadow: 0 0 5px #00ff00;
     min-height: 50px;
     white-space: pre-wrap;
@@ -66,7 +85,6 @@ button, input[type="file"] {
     max-height: 200px;
     overflow-y: auto;
 }
-
 /* Popup Modal QR Generator */
 .modal {
     display: none;
@@ -80,14 +98,13 @@ button, input[type="file"] {
     background-color: rgba(0,0,0,0.8);
 }
 .modal-content {
-    background-color: #1a1a1a;
-    margin: 5% auto;
+    background-color: #e0e0e0;
+    margin: 5% auto; /* Adjusted for better vertical centering and more space */
     padding: 20px;
-    border: 2px solid #777;
-    width: 95%;
-    max-width: 600px; /* diperbesar popup */
+    border: 2px solid #808080;
     text-align: center;
-    border-radius: 8px;
+    border-radius: 0;
+    box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.75);
 }
 #qrCanvas {
     margin-top: 15px;
@@ -95,44 +112,65 @@ button, input[type="file"] {
     border: 2px solid #555;
 }
 .closeBtn {
-    color: #d8d8d8;
+    color: #333;
     float: right;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
 }
-.closeBtn:hover { color: #ff5555; }
-
+.closeBtn:hover { color: #ff0000; }
 /* Popup Hasil QR Gambar/Video */
+#resultModal .modal-content {
+    /* Menyesuaikan ukuran pop-up agar sesuai dengan gambar/video */
+    width: fit-content;
+    max-width: 95vw;
+    max-height: 95vh;
+    padding: 10px;
+    overflow-y: auto;
+}
 #resultModal .modal-content img,
 #resultModal .modal-content video {
-    max-width: 90%; /* lebih lebar */
+    max-width: 100%; /* Lebar maksimal 100% dari parent modal-content */
+    max-height: 80vh; /* Tinggi maksimal 80% dari viewport */
     height: auto;
+    width: auto;
+    border: 2px solid #555; /* Tambahkan border untuk konsistensi */
 }
-#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn {
+.link-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #copyLinkBtn {
     display: block;
     margin-top: 10px;
     padding: 10px;
     font-size: 1.1em;
-    border: 2px solid #777;
-    background: #333;
-    color: #d8d8d8;
+    border: 2px solid #808080;
+    background: #c0c0c0;
+    color: #333;
     cursor: pointer;
     font-family: 'VT323', monospace;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75);
+    transition: all 0.1s ease;
 }
-#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover { background: #555; }
-
+#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #copyLinkBtn:hover {
+    background: #a0a0a0;
+    box-shadow: 1px 1px 0px 0px rgba(0,0,0,0.75);
+    transform: translate(1px, 1px);
+}
+#downloadBtn:active, #downloadQRBtn:active, #copyTextBtn:active, #openLinkBtn:active, #copyLinkBtn:active {
+    background: #909090;
+    box-shadow: 0px 0px 0px 0px rgba(0,0,0,0.75);
+    transform: translate(2px, 2px);
+}
 /* --- SCROLL UNTUK HASIL DECODE PANJANG --- */
 #resultContainer {
     max-height: 400px;
     overflow-y: auto;
     word-wrap: break-word;
     overflow-wrap: break-word;
-}
-
-/* Tombol buka link dan copy teks */
-#openLinkBtn, #copyTextBtn {
-    display: none;
 }
 </style>
 </head>
@@ -144,11 +182,14 @@ button, input[type="file"] {
     <canvas id="snapshot"></canvas>
     <div class="controls">
         <button id="startCameraButton">Start Camera</button>
-        <input type="file" id="fileInput" accept="image/*">
+        <input type="file" id="fileInput" accept="image/*" style="text-align: center;">
         <button id="createQRBtn">Buat QR</button>
     </div>
     <div id="output">STATUS: READY</div>
-    <button id="openLinkBtn">Buka Link</button>
+    <div id="linkButtonsWrapper" class="link-buttons" style="display: none;">
+        <button id="openLinkBtn">Buka Link</button>
+        <button id="copyLinkBtn">Copy Link</button>
+    </div>
     <button id="copyTextBtn">Copy Teks</button>
 </div>
 
@@ -157,7 +198,7 @@ button, input[type="file"] {
     <div class="modal-content">
         <span class="closeBtn" id="closeQRModal">&times;</span>
         <h2>Buat QR Code</h2>
-        <input type="text" id="qrText" placeholder="Masukkan teks/link..." style="width:90%; padding:10px; font-family: 'VT323'; font-size:1em;">
+        <input type="text" id="qrText" placeholder="Masukkan teks/link..." style="width:90%; padding:10px; font-family: 'VT323'; font-size:1em; border: 2px solid #808080; background: #c0c0c0; color: #333; box-shadow: inset 2px 2px 0px 0px rgba(0,0,0,0.75);">
         <canvas id="qrCanvas"></canvas>
         <button id="downloadQRBtn">Download QR</button>
     </div>
@@ -191,8 +232,10 @@ const closeResultModal = document.getElementById('closeResultModal');
 const resultContainer = document.getElementById('resultContainer');
 const downloadBtn = document.getElementById('downloadBtn');
 
+const linkButtonsWrapper = document.getElementById('linkButtonsWrapper');
 const openLinkBtn = document.getElementById('openLinkBtn');
 const copyTextBtn = document.getElementById('copyTextBtn');
+const copyLinkBtn = document.getElementById('copyLinkBtn');
 
 let stream = null, animationFrameId = null;
 let lastDecodedData = null;
@@ -233,7 +276,7 @@ function showDecodedBase64(data) {
     resultContainer.innerHTML = '';
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
-    openLinkBtn.style.display = 'none';
+    linkButtonsWrapper.style.display = 'none';
     copyTextBtn.style.display = 'none';
     lastDecodedDataLink = null;
     lastDecodedText = null;
@@ -254,11 +297,11 @@ function showDecodedBase64(data) {
         resultContainer.appendChild(vid);
         resultModal.style.display = 'block';
     } else if (data.startsWith("http://") || data.startsWith("https://")) {
-        output.textContent = "QR Content (Link): " + data;
+        output.textContent = "" + data;
         lastDecodedDataLink = data;
-        openLinkBtn.style.display = "block";
+        linkButtonsWrapper.style.display = 'flex';
     } else {
-        output.textContent = data;
+        output.textContent = "" + data;
         lastDecodedText = data;
         copyTextBtn.style.display = "block";
     }
@@ -272,7 +315,24 @@ openLinkBtn.addEventListener('click', () => {
 // --- Tombol copy teks ---
 copyTextBtn.addEventListener('click', () => {
     if(lastDecodedText) {
-        navigator.clipboard.writeText(lastDecodedText).then(()=> alert("Teks berhasil dicopy!"));
+        document.execCommand('copy');
+        try {
+            navigator.clipboard.writeText(lastDecodedText).then(()=> alert("Teks berhasil dicopy!"));
+        } catch (e) {
+            alert("Could not copy text automatically. Please copy manually: " + lastDecodedText);
+        }
+    }
+});
+
+// --- Tombol copy link ---
+copyLinkBtn.addEventListener('click', () => {
+    if(lastDecodedDataLink) {
+        document.execCommand('copy');
+        try {
+            navigator.clipboard.writeText(lastDecodedDataLink).then(()=> alert("Link berhasil dicopy!"));
+        } catch (e) {
+            alert("Could not copy link automatically. Please copy manually: " + lastDecodedDataLink);
+        }
     }
 });
 
@@ -300,15 +360,29 @@ async function fetchAndDecrypt(link, shift) {
 function stopCamera() {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    video.style.display = 'none'; // Hide the video
 }
+
 async function startCamera() {
     stopCamera();
     try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }});
         video.srcObject = stream;
+        video.style.display = 'block'; // Show video when camera is started
         video.play();
         scanQRCode();
     } catch (err) { output.textContent = "ERROR: " + err; }
+}
+
+// --- Fungsi toggle kamera ---
+function toggleCamera() {
+    if (stream) {
+        stopCamera();
+        startCameraButton.textContent = 'Start Camera';
+    } else {
+        startCamera();
+        startCameraButton.textContent = 'Stop Camera';
+    }
 }
 
 // --- Scan QR ---
@@ -327,6 +401,7 @@ function scanQRCode() {
 
             if (code) {
                 stopCamera();
+                startCameraButton.textContent = 'Start Camera'; // Reset button text after scan
                 playBeep();
                 output.textContent = "QR FOUND: " + code.data;
                 processQRData(code.data);
@@ -342,7 +417,7 @@ function scanQRCode() {
 function processQRData(data) {
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
-    openLinkBtn.style.display = 'none';
+    linkButtonsWrapper.style.display = 'none';
     copyTextBtn.style.display = 'none';
     lastDecodedDataLink = null;
     lastDecodedText = null;
@@ -351,11 +426,11 @@ function processQRData(data) {
     if (parts.length===2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) {
         fetchAndDecrypt(parts[0], parseInt(parts[1]));
     } else if (data.startsWith("http://") || data.startsWith("https://")) {
-        output.textContent = "QR Content (Link): " + data;
+        output.textContent = "" + data;
         lastDecodedDataLink = data;
-        openLinkBtn.style.display = "block";
+        linkButtonsWrapper.style.display = 'flex';
     } else {
-        output.textContent = "QR Content: " + data;
+        output.textContent = "" + data;
         lastDecodedText = data;
         copyTextBtn.style.display = "block";
     }
@@ -366,6 +441,7 @@ fileInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
     stopCamera();
+    startCameraButton.textContent = 'Start Camera'; // Reset button text
     const reader = new FileReader();
     reader.onload = ev => {
         const img = new Image();
@@ -378,14 +454,14 @@ fileInput.addEventListener('change', e => {
             const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
             const code = jsQR(imageData.data,imageData.width,imageData.height);
             if(code){ playBeep(); output.textContent="QR FOUND: "+code.data; processQRData(code.data); }
-            else { output.textContent="No QR found in image"; downloadBtn.style.display='none'; openLinkBtn.style.display='none'; copyTextBtn.style.display='none'; }
+            else { output.textContent="No QR found in image"; downloadBtn.style.display='none'; linkButtonsWrapper.style.display='none'; copyTextBtn.style.display='none'; }
         };
         img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
 });
 
-startCameraButton.addEventListener('click', startCamera);
+startCameraButton.addEventListener('click', toggleCamera);
 
 // --- QR Generator ---
 createQRBtn.addEventListener('click', () => {
@@ -408,8 +484,8 @@ function generateQRFromInput() {
         value: text,
         size: 300,
         level: 'H',
-        background: '#ffffff', 
-        foreground: '#000000'  
+        background: '#e0e0e0', /* QR background matches new theme */
+        foreground: '#333333' /* QR foreground matches new theme */
     });
 }
 
