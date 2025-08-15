@@ -48,7 +48,7 @@
 <div class="container">
     <div class="mb-4 text-center">
         <h1>Advanced HTML Runner</h1>
-        <p>Editor dengan preview real-time dan penyimpanan ke Supabase</p>
+        <p>Editor dengan preview real-time, Supabase, dan buka tab baru</p>
     </div>
 
     <ul class="nav nav-tabs" id="editorTab" role="tablist">
@@ -68,9 +68,9 @@
         <button class="btn btn-success flex-fill" onclick="downloadCode()">Download Kode</button>
         <button class="btn btn-secondary flex-fill" onclick="resetCode()">Reset Editor</button>
         <button class="btn btn-warning flex-fill" onclick="clearAutosave()">Hapus Autosave</button>
-        <!-- Tombol Supabase -->
         <button class="btn btn-success flex-fill" onclick="saveToSupabase()">Simpan ke Supabase</button>
         <button class="btn btn-primary flex-fill" onclick="loadFromSupabase()">Load dari Supabase</button>
+        <button class="btn btn-dark flex-fill" onclick="openMenuInNewTab()">Buka di Tab Baru</button>
     </div>
 
     <div class="mt-4">
@@ -190,6 +190,18 @@
             runCode();
             showToast("Kode berhasil dimuat dari Supabase", "success");
         }
+    }
+
+    // ====== Buka di Tab Baru ======
+    function openMenuInNewTab() {
+        const htmlContent = htmlEditor.getValue();
+        const cssContent = "<style>" + cssEditor.getValue() + "</style>";
+        const jsContent = "<script>" + jsEditor.getValue() + "<\/script>";
+        const combinedCode = htmlContent + cssContent + jsContent;
+        const newTab = window.open();
+        newTab.document.open();
+        newTab.document.write(combinedCode);
+        newTab.document.close();
     }
 
     window.addEventListener("load", loadAutosave);
