@@ -10,48 +10,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/eclipse.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css">
-    <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #f8f9fa;
-            padding-top: 20px;
-        }
-        .CodeMirror {
-            height: 300px;
-        }
-        .nav-tabs .nav-link {
-            font-weight: bold;
-        }
-        #preview {
-            border: 1px solid #ced4da;
-            border-radius: 0.25rem;
-            width: 100%;
-            height: 400px;
-            background-color: white;
-        }
-        #loading {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 5px;
-            font-size: 20px;
-            z-index: 1000;
-        }
+        body { background-color: #f8f9fa; padding-top: 20px; }
+        .CodeMirror { height: 300px; }
+        .nav-tabs .nav-link { font-weight: bold; }
+        #preview { border: 1px solid #ced4da; border-radius: 0.25rem; width: 100%; height: 400px; background-color: white; }
+        #loading { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: rgba(255,255,255,0.8); border-radius: 5px; font-size: 20px; z-index: 1000; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="mb-4 text-center">
         <h1>Advanced HTML Runner</h1>
-        <p>Editor dengan preview real-time, Supabase, dan buka tab baru</p>
+        <p>Editor dengan preview real-time, Supabase, buka tab baru, dan impor kode</p>
     </div>
 
-    <ul class="nav nav-tabs" id="editorTab" role="tablist">
+    <ul class="nav nav-tabs" id="editorTab">
         <li class="nav-item"><button class="nav-link active" id="html-tab" data-bs-toggle="tab" data-bs-target="#html">HTML</button></li>
         <li class="nav-item"><button class="nav-link" id="css-tab" data-bs-toggle="tab" data-bs-target="#css">CSS</button></li>
         <li class="nav-item"><button class="nav-link" id="js-tab" data-bs-toggle="tab" data-bs-target="#js">JavaScript</button></li>
@@ -71,6 +46,11 @@
         <button class="btn btn-success flex-fill" onclick="saveToSupabase()">Simpan ke Supabase</button>
         <button class="btn btn-primary flex-fill" onclick="loadFromSupabase()">Load dari Supabase</button>
         <button class="btn btn-dark flex-fill" onclick="openMenuInNewTab()">Buka di Tab Baru</button>
+        <!-- Tombol Impor Kode -->
+        <label class="btn btn-info flex-fill mb-0">
+            Impor Kode
+            <input type="file" id="importCodeFile" accept=".txt,.html" style="display:none" onchange="importCodeFromFile(event)">
+        </label>
     </div>
 
     <div class="mt-4">
@@ -89,7 +69,6 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js"></script>
 <script>
-    // Editor
     var htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlEditor"), {mode: "htmlmixed", theme: "material-darker", lineNumbers: true});
     var cssEditor = CodeMirror.fromTextArea(document.getElementById("cssEditor"), {mode: "css", theme: "material-darker", lineNumbers: true});
     var jsEditor = CodeMirror.fromTextArea(document.getElementById("jsEditor"), {mode: "javascript", theme: "material-darker", lineNumbers: true});
@@ -105,10 +84,7 @@
     }
 
     function downloadCode() {
-        var htmlContent = htmlEditor.getValue();
-        var cssContent = "<style>" + cssEditor.getValue() + "</style>";
-        var jsContent = "<script>" + jsEditor.getValue() + "<\/script>";
-        var blob = new Blob([htmlContent + cssContent + jsContent], { type: 'text/html' });
+        var blob = new Blob([htmlEditor.getValue() + "<style>" + cssEditor.getValue() + "</style>" + "<script>" + jsEditor.getValue() + "<\/script>"], { type: 'text/html' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'kode.html';
@@ -117,13 +93,8 @@
     }
 
     function resetCode() {
-        Swal.fire({
-            title: 'Reset Editor?',
-            text: "Semua kode akan dihapus.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Reset!'
-        }).then((result) => {
+        Swal.fire({title: 'Reset Editor?', text: "Semua kode akan dihapus.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Reset!'})
+        .then((result) => {
             if (result.isConfirmed) {
                 htmlEditor.setValue("");
                 cssEditor.setValue("");
@@ -136,8 +107,7 @@
     }
 
     function autosaveCode() {
-        const codeData = { html: htmlEditor.getValue(), css: cssEditor.getValue(), js: jsEditor.getValue() };
-        localStorage.setItem("advancedHtmlRunnerCode", JSON.stringify(codeData));
+        localStorage.setItem("advancedHtmlRunnerCode", JSON.stringify({ html: htmlEditor.getValue(), css: cssEditor.getValue(), js: jsEditor.getValue() }));
     }
 
     function loadAutosave() {
@@ -163,7 +133,6 @@
     function showLoading() { document.getElementById('loading').style.display = 'block'; }
     function hideLoading() { document.getElementById('loading').style.display = 'none'; }
 
-    // ====== Supabase ======
     const SUPABASE_URL = "https://vlrglwotjlfamnpzaeir.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZscmdsd290amxmYW1ucHphZWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNjYzMzYsImV4cCI6MjA3MDg0MjMzNn0.cwHu4vQlulKZQwNHD7ENT2zN_rZG4LkEQxJTjlIT12Q";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -171,8 +140,7 @@
 
     async function saveToSupabase() {
         showLoading();
-        const codeData = { id: 1, html: htmlEditor.getValue(), css: cssEditor.getValue(), js: jsEditor.getValue() };
-        const { error } = await supabase.from(TABLE_NAME).upsert([codeData], { onConflict: ['id'] });
+        const { error } = await supabase.from(TABLE_NAME).upsert([{ id: 1, html: htmlEditor.getValue(), css: cssEditor.getValue(), js: jsEditor.getValue() }], { onConflict: ['id'] });
         hideLoading();
         if (error) { showToast("Gagal menyimpan ke Supabase", "error"); console.error(error); }
         else { showToast("Kode berhasil disimpan ke Supabase", "success"); }
@@ -192,16 +160,24 @@
         }
     }
 
-    // ====== Buka di Tab Baru ======
     function openMenuInNewTab() {
-        const htmlContent = htmlEditor.getValue();
-        const cssContent = "<style>" + cssEditor.getValue() + "</style>";
-        const jsContent = "<script>" + jsEditor.getValue() + "<\/script>";
-        const combinedCode = htmlContent + cssContent + jsContent;
+        const combinedCode = htmlEditor.getValue() + "<style>" + cssEditor.getValue() + "</style>" + "<script>" + jsEditor.getValue() + "<\/script>";
         const newTab = window.open();
         newTab.document.open();
         newTab.document.write(combinedCode);
         newTab.document.close();
+    }
+
+    function importCodeFromFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            htmlEditor.setValue(e.target.result);
+            runCode();
+            showToast("Kode berhasil diimpor!", "success");
+        };
+        reader.readAsText(file);
     }
 
     window.addEventListener("load", loadAutosave);
