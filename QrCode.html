@@ -46,16 +46,17 @@ h1 { color: #333; }
     filter: grayscale(100%) brightness(120%) contrast(150%);
     display: none;
 }
-#snapshot { display:none; }
-.controls { display:flex; flex-direction:column; gap:10px; margin-bottom:20px;}
-button, input[type="file"] {
+#snapshot { display: none; }
+.controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+button, #fileInputBtn {
     padding: 12px; font-size: 1.2em; border: 2px solid #808080;
     background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace;
     text-transform: uppercase; box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75);
     transition: all 0.1s ease;
 }
-button:hover, input[type="file"]:hover { background: #a0a0a0; transform: translate(1px, 1px); }
-button:active { background: #909090; transform: translate(2px, 2px); }
+button:hover, #fileInputBtn:hover { background: #a0a0a0; transform: translate(1px, 1px); }
+button:active, #fileInputBtn:active { background: #909090; transform: translate(2px, 2px); }
+input[type="file"] { display: none; }
 
 /* --- OUTPUT STATUS --- */
 #output {
@@ -66,14 +67,63 @@ button:active { background: #909090; transform: translate(2px, 2px); }
 }
 
 /* Modal and result styling */
-.modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
-.modal-content { background-color: #e0e0e0; margin: 5% auto; padding: 20px; border: 2px solid #808080; text-align: center; border-radius: 0; box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.75); }
+.modal { 
+    display: none; 
+    position: fixed; 
+    z-index: 10; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.8); 
+}
+.modal-content { 
+    background-color: #e0e0e0; 
+    margin: 0; 
+    padding: 20px; 
+    border: 2px solid #808080; 
+    text-align: center; 
+    border-radius: 0; 
+    box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.75); 
+    width: 100vw; 
+    height: 100vh; 
+    box-sizing: border-box; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+}
 #qrCanvas { margin-top: 15px; max-width: 100%; border: 2px solid #555; }
-.closeBtn { color: #333; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+.closeBtn { 
+    color: #333; 
+    position: absolute; 
+    top: 10px; 
+    right: 20px; 
+    font-size: 28px; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
 .closeBtn:hover { color: #ff0000; }
 
-#resultModal .modal-content { width: fit-content; max-width: 95vw; max-height: 95vh; padding: 10px; overflow-y: auto; }
-#resultModal .modal-content img, #resultModal .modal-content video { max-width: 100%; max-height: 80vh; height: auto; width: auto; border: 2px solid #555; }
+#resultModal .modal-content { 
+    width: 100vw; 
+    height: 100vh; 
+    padding: 20px; 
+    overflow-y: auto; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    align-items: center; 
+}
+#resultModal .modal-content img, #resultModal .modal-content video { 
+    max-width: 90vw; 
+    max-height: 80vh; 
+    width: auto; 
+    height: auto; 
+    border: 2px solid #555; 
+    object-fit: contain; 
+}
 
 .link-buttons { display: flex; justify-content: center; gap: 10px; }
 #downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #copyLinkBtn, #searchGoogleBtn { 
@@ -84,7 +134,16 @@ button:active { background: #909090; transform: translate(2px, 2px); }
 #downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #copyLinkBtn:hover, #searchGoogleBtn:hover { 
     background: #a0a0a0; transform: translate(1px,1px); 
 }
-#resultContainer { max-height: 400px; overflow-y: auto; word-wrap: break-word; overflow-wrap: break-word; }
+#resultContainer { 
+    max-height: 80vh; 
+    overflow-y: auto; 
+    word-wrap: break-word; 
+    overflow-wrap: break-word; 
+    flex-grow: 1; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+}
 </style>
 </head>
 <body>
@@ -95,7 +154,8 @@ button:active { background: #909090; transform: translate(2px, 2px); }
     <canvas id="snapshot"></canvas>
     <div class="controls">
         <button id="startCameraButton">Start Camera</button>
-        <input type="file" id="fileInput" accept="image/*" style="text-align: center;">
+        <button id="fileInputBtn">Pilih Gambar</button>
+        <input type="file" id="fileInput" accept="image/*">
         <button id="createQRBtn">Buat QR</button>
     </div>
     <div id="output">STATUS: READY</div>
@@ -135,6 +195,7 @@ const video = document.getElementById('video');
 const snapshot = document.getElementById('snapshot');
 const output = document.getElementById('output');
 const fileInput = document.getElementById('fileInput');
+const fileInputBtn = document.getElementById('fileInputBtn');
 const startCameraButton = document.getElementById('startCameraButton');
 const createQRBtn = document.getElementById('createQRBtn');
 
@@ -260,6 +321,11 @@ downloadBtn.addEventListener('click', () => {
     a.href = lastDecodedData;
     a.download = 'decoded_image.png';
     a.click();
+});
+
+/* === Tombol pilih file === */
+fileInputBtn.addEventListener('click', () => {
+    fileInput.click();
 });
 
 /* === Fetch raw & decrypt === */
