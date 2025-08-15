@@ -75,7 +75,7 @@ input[type="file"] { display: none; }
     top: 0; 
     width: 100%; 
     height: 100%; 
-    overflow: hidden; 
+    overflow: auto; 
     background-color: rgba(0,0,0,0.8); 
 }
 .modal-content { 
@@ -93,14 +93,8 @@ input[type="file"] { display: none; }
     flex-direction: column; 
     justify-content: center; 
     align-items: center; 
-    transition: all 0.3s ease; 
 }
-#qrModal .modal-content {
-    width: fit-content;
-    height: fit-content;
-    max-width: 95vw;
-    max-height: 95vh;
-}
+#qrCanvas { margin-top: 15px; max-width: 100%; border: 2px solid #555; }
 .closeBtn { 
     color: #333; 
     position: absolute; 
@@ -109,71 +103,46 @@ input[type="file"] { display: none; }
     font-size: 28px; 
     font-weight: bold; 
     cursor: pointer; 
-    transition: transform 0.2s ease, color 0.2s ease; 
 }
-.closeBtn:hover { 
-    color: #ff0000; 
-    transform: scale(1.2) rotate(90deg); 
-}
-#qrCanvas { margin-top: 15px; max-width: 100%; border: 2px solid #555; }
+.closeBtn:hover { color: #ff0000; }
 
 #resultModal .modal-content { 
     width: 100vw; 
     height: 100vh; 
     padding: 20px; 
-    overflow: hidden; 
+    overflow-y: auto; 
     display: flex; 
     flex-direction: column; 
     justify-content: center; 
     align-items: center; 
 }
-#resultModal .modal-content.small { 
-    width: 80vw; 
-    height: 80vh; 
-    max-width: 800px; 
-    max-height: 600px; 
-    margin: 10vh auto; 
-}
 #resultModal .modal-content img, #resultModal .modal-content video { 
     max-width: 90vw; 
-    max-height: 70vh; 
+    max-height: 80vh; 
     width: auto; 
     height: auto; 
     border: 2px solid #555; 
     object-fit: contain; 
-    transform-origin: center; 
-    cursor: grab; 
-}
-#resultModal .modal-content img:active, #resultModal .modal-content video:active { 
-    cursor: grabbing; 
 }
 
 .link-buttons { display: flex; justify-content: center; gap: 10px; }
-#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #copyLinkBtn, #searchGoogleBtn, #zoomInBtn, #zoomOutBtn, #rotateLeftBtn, #rotateRightBtn, #toggleFullScreenBtn { 
+#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #copyLinkBtn, #searchGoogleBtn { 
     display: block; margin-top: 10px; padding: 10px; font-size: 1.1em; border: 2px solid #808080; 
     background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace; 
     text-transform: uppercase; box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75); transition: all 0.1s ease; 
 }
-#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #copyLinkBtn:hover, #searchGoogleBtn:hover, #zoomInBtn:hover, #zoomOutBtn:hover, #rotateLeftBtn:hover, #rotateRightBtn:hover, #toggleFullScreenBtn:hover { 
+#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #copyLinkBtn:hover, #searchGoogleBtn:hover { 
     background: #a0a0a0; transform: translate(1px,1px); 
 }
 #resultContainer { 
-    max-height: 70vh; 
-    overflow: hidden; 
+    max-height: 80vh; 
+    overflow-y: auto; 
     word-wrap: break-word; 
     overflow-wrap: break-word; 
     flex-grow: 1; 
     display: flex; 
     justify-content: center; 
     align-items: center; 
-    position: relative; 
-    width: 90vw; 
-}
-.control-buttons { 
-    display: flex; 
-    justify-content: center; 
-    gap: 10px; 
-    margin-top: 10px; 
 }
 </style>
 </head>
@@ -216,14 +185,7 @@ input[type="file"] { display: none; }
     <div class="modal-content">
         <span class="closeBtn" id="closeResultModal">&times;</span>
         <div id="resultContainer"></div>
-        <div class="control-buttons">
-            <button id="zoomInBtn">Zoom In</button>
-            <button id="zoomOutBtn">Zoom Out</button>
-            <button id="rotateLeftBtn">Putar Kiri</button>
-            <button id="rotateRightBtn">Putar Kanan</button>
-            <button id="toggleFullScreenBtn">Kecilkan</button>
-            <button id="downloadBtn">Download Image</button>
-        </div>
+        <button id="downloadBtn">Download Image</button>
     </div>
 </div>
 
@@ -247,11 +209,6 @@ const resultModal = document.getElementById('resultModal');
 const closeResultModal = document.getElementById('closeResultModal');
 const resultContainer = document.getElementById('resultContainer');
 const downloadBtn = document.getElementById('downloadBtn');
-const zoomInBtn = document.getElementById('zoomInBtn');
-const zoomOutBtn = document.getElementById('zoomOutBtn');
-const rotateLeftBtn = document.getElementById('rotateLeftBtn');
-const rotateRightBtn = document.getElementById('rotateRightBtn');
-const toggleFullScreenBtn = document.getElementById('toggleFullScreenBtn');
 
 const linkButtonsWrapper = document.getElementById('linkButtonsWrapper');
 const openLinkBtn = document.getElementById('openLinkBtn');
@@ -264,10 +221,6 @@ let stream = null, animationFrameId = null;
 let lastDecodedData = null;
 let lastDecodedDataLink = null;
 let lastDecodedText = null;
-let zoomLevel = 1;
-let rotation = 0;
-let isDragging = false;
-let startX, startY, translateX = 0, translateY = 0;
 
 /* === Fungsi beep (notifikasi suara) === */
 function playBeep() {
@@ -307,10 +260,6 @@ function showDecodedBase64(data) {
     textButtonsWrapper.style.display = 'none';
     lastDecodedDataLink = null;
     lastDecodedText = null;
-    zoomLevel = 1;
-    rotation = 0;
-    translateX = 0;
-    translateY = 0;
 
     if (data.startsWith('data:image/')) {
         let img = document.createElement('img');
@@ -319,7 +268,6 @@ function showDecodedBase64(data) {
         lastDecodedData = data;
         downloadBtn.style.display = 'block';
         resultModal.style.display = 'block';
-        applyTransform(img);
     } else if (data.startsWith('data:video/')) {
         let vid = document.createElement('video');
         vid.src = data;
@@ -327,10 +275,7 @@ function showDecodedBase64(data) {
         vid.loop = true;
         vid.autoplay = true;
         resultContainer.appendChild(vid);
-        lastDecodedData = data;
-        downloadBtn.style.display = 'block';
         resultModal.style.display = 'block';
-        applyTransform(vid);
     } else if (data.startsWith("http://") || data.startsWith("https://")) {
         output.textContent = "" + data;
         lastDecodedDataLink = data;
@@ -342,81 +287,7 @@ function showDecodedBase64(data) {
     }
 }
 
-/* === Transformasi gambar/video === */
-function applyTransform(element) {
-    element.style.transform = `scale(${zoomLevel}) rotate(${rotation}deg) translate(${translateX}px, ${translateY}px)`;
-}
-
-/* === Zoom dan Pan === */
-function handleZoom(direction) {
-    zoomLevel = direction === 'in' ? zoomLevel * 1.2 : zoomLevel / 1.2;
-    zoomLevel = Math.max(0.5, Math.min(zoomLevel, 5)); // Batas zoom: 0.5x - 5x
-    const element = resultContainer.querySelector('img, video');
-    if (element) applyTransform(element);
-}
-
-function handleRotate(direction) {
-    rotation += direction === 'left' ? -90 : 90;
-    const element = resultContainer.querySelector('img, video');
-    if (element) applyTransform(element);
-}
-
-function handleDragStart(e) {
-    isDragging = true;
-    startX = e.clientX - translateX;
-    startY = e.clientY - translateY;
-    const element = resultContainer.querySelector('img, video');
-    if (element) element.style.cursor = 'grabbing';
-}
-
-function handleDragMove(e) {
-    if (!isDragging) return;
-    translateX = e.clientX - startX;
-    translateY = e.clientY - startY;
-    const element = resultContainer.querySelector('img, video');
-    if (element) applyTransform(element);
-}
-
-function handleDragEnd() {
-    isDragging = false;
-    const element = resultContainer.querySelector('img, video');
-    if (element) element.style.cursor = 'grab';
-}
-
-/* === Event listener untuk zoom, rotasi, dan drag === */
-zoomInBtn.addEventListener('click', () => handleZoom('in'));
-zoomOutBtn.addEventListener('click', () => handleZoom('out'));
-rotateLeftBtn.addEventListener('click', () => handleRotate('left'));
-rotateRightBtn.addEventListener('click', () => handleRotate('right'));
-
-resultContainer.addEventListener('mousedown', handleDragStart);
-document.addEventListener('mousemove', handleDragMove);
-document.addEventListener('mouseup', handleDragEnd);
-
-// Touch support untuk mobile
-resultContainer.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    handleDragStart({ clientX: touch.clientX, clientY: touch.clientY });
-});
-document.addEventListener('touchmove', (e) => {
-    const touch = e.touches[0];
-    handleDragMove({ clientX: touch.clientX, clientY: touch.clientY });
-});
-document.addEventListener('touchend', handleDragEnd);
-
-/* === Toggle full-screen === */
-toggleFullScreenBtn.addEventListener('click', () => {
-    const modalContent = resultModal.querySelector('.modal-content');
-    if (modalContent.classList.contains('small')) {
-        modalContent.classList.remove('small');
-        toggleFullScreenBtn.textContent = 'Kecilkan';
-    } else {
-        modalContent.classList.add('small');
-        toggleFullScreenBtn.textContent = 'Perbesar';
-    }
-});
-
-/* === Tombol lainnya === */
+/* tombol buka link, copy teks, copy link, cari di google, download gambar */
 openLinkBtn.addEventListener('click', () => { 
     if(lastDecodedDataLink) window.open(lastDecodedDataLink, "_blank"); 
 });
@@ -693,23 +564,11 @@ closeResultModal.addEventListener('click', () => {
     resultModal.style.display='none';
     resultContainer.innerHTML='';
     downloadBtn.style.display='none';
-    zoomLevel = 1;
-    rotation = 0;
-    translateX = 0;
-    translateY = 0;
 });
 
 window.addEventListener('click', (e) => {
     if(e.target===qrModal) qrModal.style.display='none';
-    if(e.target===resultModal) {
-        resultModal.style.display='none';
-        resultContainer.innerHTML='';
-        downloadBtn.style.display='none';
-        zoomLevel = 1;
-        rotation = 0;
-        translateX = 0;
-        translateY = 0;
-    }
+    if(e.target===resultModal) resultModal.style.display='none';
 });
 </script>
 </body>
