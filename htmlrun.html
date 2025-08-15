@@ -23,7 +23,7 @@
 <div class="container">
     <div class="mb-4 text-center">
         <h1>Advanced HTML Runner</h1>
-        <p></p>
+        <p>Editor dengan preview real-time, Supabase, dan impor kode</p>
     </div>
 
     <ul class="nav nav-tabs" id="editorTab">
@@ -39,14 +39,12 @@
     </div>
 
     <div class="mt-3 d-flex flex-wrap gap-2">
-        <button class="btn btn-primary flex-fill" onclick="runCode()">Jalankan Kode</button>
         <button class="btn btn-success flex-fill" onclick="downloadCode()">Download Kode</button>
         <button class="btn btn-secondary flex-fill" onclick="resetCode()">Reset Editor</button>
         <button class="btn btn-warning flex-fill" onclick="clearAutosave()">Hapus Autosave</button>
         <button class="btn btn-success flex-fill" onclick="saveToSupabase()">Simpan ke Supabase</button>
         <button class="btn btn-primary flex-fill" onclick="loadFromSupabase()">Load dari Supabase</button>
-        <button class="btn btn-dark flex-fill" onclick="openMenuInNewTab()">Buka di Tab Baru</button>
-        <!-- Tombol Impor Kode -->
+        <!-- Impor Kode -->
         <label class="btn btn-info flex-fill mb-0">
             Impor Kode
             <input type="file" id="importCodeFile" accept=".txt,.html" style="display:none" onchange="importCodeFromFile(event)">
@@ -56,6 +54,11 @@
     <div class="mt-4">
         <h4>Preview</h4>
         <iframe id="preview" title="Preview Output"></iframe>
+    </div>
+
+    <!-- Tombol Buka Tab Baru di paling bawah -->
+    <div class="mt-3">
+        <button class="btn btn-dark w-100" onclick="openMenuInNewTab()">Buka di Tab Baru</button>
     </div>
 </div>
 
@@ -69,23 +72,39 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js"></script>
 <script>
+    // Inisialisasi editor
     var htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlEditor"), {mode: "htmlmixed", theme: "material-darker", lineNumbers: true});
     var cssEditor = CodeMirror.fromTextArea(document.getElementById("cssEditor"), {mode: "css", theme: "material-darker", lineNumbers: true});
     var jsEditor = CodeMirror.fromTextArea(document.getElementById("jsEditor"), {mode: "javascript", theme: "material-darker", lineNumbers: true});
 
+    // Fungsi debounce agar tidak double run
+    function debounce(func, delay) {
+        let timer;
+        return function(...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+
+    // Jalankan otomatis setiap ada perubahan di editor (1 listener saja)
+    const autoRun = debounce(() => runCode(), 500);
+    htmlEditor.on("change", autoRun);
+    cssEditor.on("change", autoRun);
+    jsEditor.on("change", autoRun);
+
     function runCode() {
         showLoading();
-        var htmlContent = htmlEditor.getValue();
-        var cssContent = "<style>" + cssEditor.getValue() + "</style>";
-        var jsContent = "<script>" + jsEditor.getValue() + "<\/script>";
+        const htmlContent = htmlEditor.getValue();
+        const cssContent = "<style>" + cssEditor.getValue() + "</style>";
+        const jsContent = "<script>" + jsEditor.getValue() + "<\/script>";
         document.getElementById("preview").srcdoc = htmlContent + cssContent + jsContent;
         autosaveCode();
-        setTimeout(hideLoading, 200);
+        hideLoading();
     }
 
     function downloadCode() {
-        var blob = new Blob([htmlEditor.getValue() + "<style>" + cssEditor.getValue() + "</style>" + "<script>" + jsEditor.getValue() + "<\/script>"], { type: 'text/html' });
-        var a = document.createElement('a');
+        const blob = new Blob([htmlEditor.getValue() + "<style>" + cssEditor.getValue() + "</style>" + "<script>" + jsEditor.getValue() + "<\/script>"], { type: 'text/html' });
+        const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'kode.html';
         a.click();
@@ -184,3 +203,10 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
