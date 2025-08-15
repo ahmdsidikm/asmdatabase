@@ -65,7 +65,7 @@ button:active { background: #909090; transform: translate(2px, 2px); }
     max-height: 200px; overflow-y: auto;
 }
 
-/* Modal and result styling (sama seperti sebelumnya) */
+/* Modal and result styling */
 .modal { display: none; position: fixed; z-index: 10; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
 .modal-content { background-color: #e0e0e0; margin: 5% auto; padding: 20px; border: 2px solid #808080; text-align: center; border-radius: 0; box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.75); }
 #qrCanvas { margin-top: 15px; max-width: 100%; border: 2px solid #555; }
@@ -76,8 +76,14 @@ button:active { background: #909090; transform: translate(2px, 2px); }
 #resultModal .modal-content img, #resultModal .modal-content video { max-width: 100%; max-height: 80vh; height: auto; width: auto; border: 2px solid #555; }
 
 .link-buttons { display: flex; justify-content: center; gap: 10px; }
-#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #copyLinkBtn { display: block; margin-top: 10px; padding: 10px; font-size: 1.1em; border: 2px solid #808080; background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace; text-transform: uppercase; box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75); transition: all 0.1s ease; }
-#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #copyLinkBtn:hover { background: #a0a0a0; transform: translate(1px,1px); }
+#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #copyLinkBtn, #searchGoogleBtn { 
+    display: block; margin-top: 10px; padding: 10px; font-size: 1.1em; border: 2px solid #808080; 
+    background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace; 
+    text-transform: uppercase; box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75); transition: all 0.1s ease; 
+}
+#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #copyLinkBtn:hover, #searchGoogleBtn:hover { 
+    background: #a0a0a0; transform: translate(1px,1px); 
+}
 #resultContainer { max-height: 400px; overflow-y: auto; word-wrap: break-word; overflow-wrap: break-word; }
 </style>
 </head>
@@ -97,7 +103,10 @@ button:active { background: #909090; transform: translate(2px, 2px); }
         <button id="openLinkBtn">Buka Link</button>
         <button id="copyLinkBtn">Copy Link</button>
     </div>
-    <button id="copyTextBtn">Copy Teks</button>
+    <div id="textButtonsWrapper" class="link-buttons" style="display: none;">
+        <button id="copyTextBtn">Copy Teks</button>
+        <button id="searchGoogleBtn">Cari di Google</button>
+    </div>
 </div>
 
 <!-- Modal QR Generator -->
@@ -144,6 +153,8 @@ const linkButtonsWrapper = document.getElementById('linkButtonsWrapper');
 const openLinkBtn = document.getElementById('openLinkBtn');
 const copyTextBtn = document.getElementById('copyTextBtn');
 const copyLinkBtn = document.getElementById('copyLinkBtn');
+const textButtonsWrapper = document.getElementById('textButtonsWrapper');
+const searchGoogleBtn = document.getElementById('searchGoogleBtn');
 
 let stream = null, animationFrameId = null;
 let lastDecodedData = null;
@@ -166,7 +177,7 @@ function playBeep() {
     } catch (err) { console.error("Audio error:", err); }
 }
 
-/* === Caesar Cipher mundur (sebagaimana sebelumnya) === */
+/* === Caesar Cipher mundur === */
 function caesarDecipher(str, shift) {
     let result = '';
     for (let i = 0; i < str.length; i++) {
@@ -178,14 +189,14 @@ function caesarDecipher(str, shift) {
     return result;
 }
 
-/* === Tampilkan hasil decode (sama seperti sebelumnya) === */
+/* === Tampilkan hasil decode === */
 function showDecodedBase64(data) {
     output.textContent = '';
     resultContainer.innerHTML = '';
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
     linkButtonsWrapper.style.display = 'none';
-    copyTextBtn.style.display = 'none';
+    textButtonsWrapper.style.display = 'none';
     lastDecodedDataLink = null;
     lastDecodedText = null;
 
@@ -211,22 +222,36 @@ function showDecodedBase64(data) {
     } else {
         output.textContent = "" + data;
         lastDecodedText = data;
-        copyTextBtn.style.display = "block";
+        textButtonsWrapper.style.display = 'flex';
     }
 }
 
-/* tombol buka link, copy teks dan link, download gambar */
-openLinkBtn.addEventListener('click', () => { if(lastDecodedDataLink) window.open(lastDecodedDataLink, "_blank"); });
+/* tombol buka link, copy teks, copy link, cari di google, download gambar */
+openLinkBtn.addEventListener('click', () => { 
+    if(lastDecodedDataLink) window.open(lastDecodedDataLink, "_blank"); 
+});
 copyTextBtn.addEventListener('click', () => {
     if(lastDecodedText) {
-        try { navigator.clipboard.writeText(lastDecodedText).then(()=> alert("Teks berhasil dicopy!")); }
-        catch (e) { alert("Tidak bisa copy otomatis. Salin manual: " + lastDecodedText); }
+        try { 
+            navigator.clipboard.writeText(lastDecodedText).then(() => alert("Teks berhasil dicopy!")); 
+        } catch (e) { 
+            alert("Tidak bisa copy otomatis. Salin manual: " + lastDecodedText); 
+        }
     }
 });
 copyLinkBtn.addEventListener('click', () => {
     if(lastDecodedDataLink) {
-        try { navigator.clipboard.writeText(lastDecodedDataLink).then(()=> alert("Link berhasil dicopy!")); }
-        catch (e) { alert("Tidak bisa copy otomatis. Salin manual: " + lastDecodedDataLink); }
+        try { 
+            navigator.clipboard.writeText(lastDecodedDataLink).then(() => alert("Link berhasil dicopy!")); 
+        } catch (e) { 
+            alert("Tidak bisa copy otomatis. Salin manual: " + lastDecodedDataLink); 
+        }
+    }
+});
+searchGoogleBtn.addEventListener('click', () => {
+    if(lastDecodedText) {
+        const searchQuery = encodeURIComponent(lastDecodedText);
+        window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank');
     }
 });
 downloadBtn.addEventListener('click', () => {
@@ -237,7 +262,7 @@ downloadBtn.addEventListener('click', () => {
     a.click();
 });
 
-/* === Fetch raw & decrypt (sama) === */
+/* === Fetch raw & decrypt === */
 async function fetchAndDecrypt(link, shift) {
     try {
         output.textContent = "STATUS: FETCHING RAW DATA...";
@@ -248,7 +273,7 @@ async function fetchAndDecrypt(link, shift) {
     } catch (err) { output.textContent = "ERROR: " + err; }
 }
 
-/* === Kamera start/stop (sama) === */
+/* === Kamera start/stop === */
 function stopCamera() {
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
@@ -276,21 +301,15 @@ function toggleCamera() {
     }
 }
 
-/* ======================
-   NEW: Barcode detection helper (promisified)
-   - Pertama coba BarcodeDetector API (modern browsers)
-   - Kalau tidak ada, fallback ke Quagga.decodeSingle
-   ====================== */
+/* === Barcode detection helper (promisified) === */
 function tryDecodeBarcodeFromCanvas(canvas) {
     return new Promise((resolve) => {
-        // 1) Jika browser punya BarcodeDetector API
         if ('BarcodeDetector' in window) {
             try {
                 const formats = ["code_128","code_39","code_93","ean_13","ean_8","upc_e","upc_a","itf","codabar"];
                 const detector = new BarcodeDetector({ formats });
                 detector.detect(canvas).then(results => {
                     if (results && results.length > 0) {
-                        // Ambil yang pertama
                         resolve(results[0].rawValue || null);
                     } else resolve(null);
                 }).catch(err => {
@@ -300,17 +319,15 @@ function tryDecodeBarcodeFromCanvas(canvas) {
                 return;
             } catch (err) {
                 console.warn("BarcodeDetector exception:", err);
-                // fallback ke Quagga di bawah
             }
         }
 
-        // 2) Fallback: Quagga.decodeSingle menggunakan dataURL dari canvas
         try {
             const src = canvas.toDataURL();
             if (window.Quagga && Quagga.decodeSingle) {
                 Quagga.decodeSingle({
                     src,
-                    numOfWorkers: 0, // single-thread (safest for decodeSingle)
+                    numOfWorkers: 0,
                     inputStream: { size: 800 },
                     locator: { patchSize: "medium", halfSample: true },
                     decoder: {
@@ -334,21 +351,19 @@ function tryDecodeBarcodeFromCanvas(canvas) {
     });
 }
 
-/* === Scan QR + barcode di kamera (modifikasi) === */
+/* === Scan QR + barcode di kamera === */
 function scanQRCode() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
     async function tick() {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            // buat ukuran canvas cukup besar untuk deteksi
-            canvas.width = video.videoWidth * 1;   // jangan terlalu besar agar performa lebih baik
+            canvas.width = video.videoWidth * 1;
             canvas.height = video.videoHeight * 1;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
             const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
 
-            // 1) Coba QR dulu (jsQR)
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code) {
                 stopCamera();
@@ -359,7 +374,6 @@ function scanQRCode() {
                 return;
             }
 
-            // 2) Kalau QR gak ada, coba decode barcode (BarcodeDetector atau Quagga)
             try {
                 const barcode = await tryDecodeBarcodeFromCanvas(canvas);
                 if (barcode) {
@@ -367,7 +381,7 @@ function scanQRCode() {
                     startCameraButton.textContent = 'Start Camera';
                     playBeep();
                     output.textContent = "BARCODE FOUND: " + barcode;
-                    processQRData(barcode); // pakai fungsi yang sama untuk memproses
+                    processQRData(barcode);
                     return;
                 }
             } catch (err) {
@@ -379,12 +393,12 @@ function scanQRCode() {
     tick();
 }
 
-/* === Proses hasil decode (sama nama, supaya kompatibel) === */
+/* === Proses hasil decode === */
 function processQRData(data) {
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
     linkButtonsWrapper.style.display = 'none';
-    copyTextBtn.style.display = 'none';
+    textButtonsWrapper.style.display = 'none';
     lastDecodedDataLink = null;
     lastDecodedText = null;
 
@@ -398,11 +412,11 @@ function processQRData(data) {
     } else {
         output.textContent = "" + data;
         lastDecodedText = data;
-        copyTextBtn.style.display = "block";
+        textButtonsWrapper.style.display = 'flex';
     }
 }
 
-/* === Upload file handling: setelah jsQR gagal, coba barcode (baru) === */
+/* === Upload file handling === */
 fileInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
@@ -426,7 +440,6 @@ fileInput.addEventListener('change', e => {
                 return;
             }
 
-            // QR tidak ditemukan -> coba barcode
             output.textContent = "Mencoba deteksi barcode pada gambar...";
             try {
                 const barcode = await tryDecodeBarcodeFromCanvas(canvas);
@@ -438,7 +451,7 @@ fileInput.addEventListener('change', e => {
                     output.textContent = "No QR or barcode found in image";
                     downloadBtn.style.display='none';
                     linkButtonsWrapper.style.display='none';
-                    copyTextBtn.style.display='none';
+                    textButtonsWrapper.style.display='none';
                 }
             } catch(err) {
                 output.textContent = "Error saat deteksi barcode: " + err;
@@ -451,7 +464,7 @@ fileInput.addEventListener('change', e => {
 
 startCameraButton.addEventListener('click', toggleCamera);
 
-/* === QR Generator (sama) === */
+/* === QR Generator === */
 createQRBtn.addEventListener('click', () => {
     qrModal.style.display = 'block';
     generateQRFromInput();
@@ -480,14 +493,13 @@ downloadQRBtn.addEventListener('click', () => {
     a.click();
 });
 
-/* Tutup result modal */
+/* Tutup modal */
 closeResultModal.addEventListener('click', () => {
     resultModal.style.display='none';
     resultContainer.innerHTML='';
     downloadBtn.style.display='none';
 });
 
-/* Tutup modal klik di luar */
 window.addEventListener('click', (e) => {
     if(e.target===qrModal) qrModal.style.display='none';
     if(e.target===resultModal) resultModal.style.display='none';
