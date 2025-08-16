@@ -62,7 +62,7 @@ input[type="file"] { display: none; }
 #output {
     background: #000000; padding: 15px; border: 2px solid #808080; margin-top: 15px;
     font-size: 1.2em; color: #00ff00; text-shadow: 0 0 5px #00ff00; min-height: 50px;
-    white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;
+    white-space: pre-wrap; word-wrap: break-word, overflow-wrap: break-word;
     max-height: 200px; overflow-y: auto;
 }
 
@@ -94,7 +94,6 @@ input[type="file"] { display: none; }
     justify-content: center; 
     align-items: center; 
 }
-#qrCanvas { margin-top: 15px; max-width: 100%; border: 2px solid #555; }
 .closeBtn { 
     color: #333; 
     position: absolute; 
@@ -115,13 +114,28 @@ input[type="file"] { display: none; }
     object-fit: contain; 
 }
 
-.link-buttons { display: flex; justify-content: center; gap: 10px; }
-#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #copyLinkBtn, #searchGoogleBtn { 
-    display: block; margin-top: 10px; padding: 10px; font-size: 1.1em; border: 2px solid #808080; 
+/* Action buttons wrapper: dua tombol sejajar, kiri & kanan */
+.action-buttons { 
+    display: flex; 
+    justify-content: space-between; 
+    gap: 10px; 
+    width: 100%; 
+    max-width: 360px; 
+    margin: 12px auto 0 auto;
+}
+.action-buttons button { 
+    flex: 1 1 48%; 
+    display: inline-block; 
+    margin: 0; 
+}
+
+/* Keep existing buttons style on hover */
+#downloadBtn, #downloadQRBtn, #copyTextBtn, #openLinkBtn, #searchGoogleBtn { 
+    padding: 10px; font-size: 1.1em; border: 2px solid #808080; 
     background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace; 
     text-transform: uppercase; box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75); transition: all 0.1s ease; 
 }
-#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #copyLinkBtn:hover, #searchGoogleBtn:hover { 
+#downloadBtn:hover, #downloadQRBtn:hover, #copyTextBtn:hover, #openLinkBtn:hover, #searchGoogleBtn:hover { 
     background: #a0a0a0; transform: translate(1px,1px); 
 }
 #resultContainer { 
@@ -134,7 +148,82 @@ input[type="file"] { display: none; }
     justify-content: center; 
     align-items: center; 
 }
-.checkbox-wrapper { margin-top: 10px; font-size: 1.1em; display:flex; justify-content:center; align-items:center; gap:8px; }
+
+/* === STYLE CHECKBOX: desain klasik ===
+   - Kita sembunyikan checkbox default dan gunakan label:before/after
+   - Tetap kompatibel dengan HTML input + label yang ada
+*/
+.checkbox-wrapper {
+    margin-top: 10px;
+    font-size: 1.1em;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:8px;
+    position: relative;
+}
+
+/* sembunyikan checkbox browser default tapi tetap aksesibel */
+.checkbox-wrapper input[type="checkbox"] {
+    position: absolute; /* tetap dalam flow untuk aksesibilitas */
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    left: -9999px;
+}
+
+/* style label untuk menjadi kotak klasik + teks */
+.checkbox-wrapper label {
+    position: relative;
+    padding-left: 34px; /* ruang untuk kotak */
+    cursor: pointer;
+    user-select: none;
+    color: #333;
+    display: inline-block;
+    line-height: 20px;
+    font-size: 1.05em;
+}
+
+/* kotak putih dengan border tegas (classic look) */
+.checkbox-wrapper label::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    border: 2px solid #555;
+    background: #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02);
+    border-radius: 3px;
+}
+
+/* tanda centang: dibuat dengan pseudo-element, hitam klasik */
+.checkbox-wrapper label::after {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-60%) rotate(45deg);
+    width: 6px;
+    height: 12px;
+    border: solid #000;
+    border-width: 0 2px 2px 0;
+    opacity: 0;
+    transition: opacity 0.08s ease;
+}
+
+/* tampilkan centang saat checkbox dicentang */
+.checkbox-wrapper input[type="checkbox"]:checked + label::after {
+    opacity: 1;
+}
+
+/* hover pada label: sedikit gelap pada border kotak */
+.checkbox-wrapper label:hover::before {
+    border-color: #333;
+}
 </style>
 </head>
 <body>
@@ -158,13 +247,10 @@ input[type="file"] { display: none; }
 
     <div id="output">STATUS: READY</div>
 
-    <div id="linkButtonsWrapper" class="link-buttons" style="display: none;">
-        <button id="openLinkBtn">Buka Link</button>
-        <button id="copyLinkBtn">Copy Link</button>
-    </div>
-    <div id="textButtonsWrapper" class="link-buttons" style="display: none;">
+    <!-- action-buttons: kiri = Copy Teks, kanan = Buka Link OR Cari di Google -->
+    <div id="actionButtons" class="action-buttons" style="display: none;">
         <button id="copyTextBtn">Copy Teks</button>
-        <button id="searchGoogleBtn">Cari di Google</button>
+        <button id="rightActionBtn">Aksi</button>
     </div>
 </div>
 
@@ -209,12 +295,9 @@ const closeResultModal = document.getElementById('closeResultModal');
 const resultContainer = document.getElementById('resultContainer');
 const downloadBtn = document.getElementById('downloadBtn');
 
-const linkButtonsWrapper = document.getElementById('linkButtonsWrapper');
-const openLinkBtn = document.getElementById('openLinkBtn');
+const actionButtons = document.getElementById('actionButtons');
 const copyTextBtn = document.getElementById('copyTextBtn');
-const copyLinkBtn = document.getElementById('copyLinkBtn');
-const textButtonsWrapper = document.getElementById('textButtonsWrapper');
-const searchGoogleBtn = document.getElementById('searchGoogleBtn');
+const rightActionBtn = document.getElementById('rightActionBtn');
 
 const luckyCheck = document.getElementById('luckyCheck');
 
@@ -257,8 +340,7 @@ function showDecodedBase64(data) {
     resultContainer.innerHTML = '';
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
-    linkButtonsWrapper.style.display = 'none';
-    textButtonsWrapper.style.display = 'none';
+    actionButtons.style.display = 'none';
     lastDecodedDataLink = null;
     lastDecodedText = null;
 
@@ -277,43 +359,31 @@ function showDecodedBase64(data) {
         vid.autoplay = true;
         resultContainer.appendChild(vid);
         resultModal.style.display = 'block';
-    } else if (data.startsWith("http://") || data.startsWith("https://")) {
-        output.textContent = "" + data;
-        lastDecodedDataLink = data;
-        linkButtonsWrapper.style.display = 'flex';
     } else {
-        output.textContent = "" + data;
-        lastDecodedText = data;
-        textButtonsWrapper.style.display = 'flex';
+        // untuk teks atau link, delegasikan ke processQRData agar tombol muncul sesuai aturan
+        processQRData(data);
     }
 }
 
-/* tombol buka link, copy teks, copy link, cari di google, download gambar */
-openLinkBtn.addEventListener('click', () => { 
-    if(lastDecodedDataLink) window.open(lastDecodedDataLink, "_blank"); 
-});
+/* tombol aksi */
 copyTextBtn.addEventListener('click', () => {
     if(lastDecodedText) {
         try { 
-            navigator.clipboard.writeText(lastDecodedText).then(() => alert("Teks berhasil dicopy!")); 
+            navigator.clipboard.writeText(lastDecodedText).then(() => {
+                console.log("Teks dicopy:", lastDecodedText);
+                if (!navigator.clipboard) alert("Teks berhasil dicopy!");
+            }); 
         } catch (e) { 
             alert("Tidak bisa copy otomatis. Salin manual: " + lastDecodedText); 
         }
     }
 });
-copyLinkBtn.addEventListener('click', () => {
-    if(lastDecodedDataLink) {
-        try { 
-            navigator.clipboard.writeText(lastDecodedDataLink).then(() => alert("Link berhasil dicopy!")); 
-        } catch (e) { 
-            alert("Tidak bisa copy otomatis. Salin manual: " + lastDecodedDataLink); 
-        }
-    }
-});
-searchGoogleBtn.addEventListener('click', () => {
-    if(lastDecodedText) {
-        const searchQuery = encodeURIComponent(lastDecodedText);
-        window.open(`https://www.google.com/search?q=${searchQuery}`, '_blank');
+rightActionBtn.addEventListener('click', () => {
+    if (lastDecodedDataLink) {
+        window.open(lastDecodedDataLink, "_blank");
+    } else if (lastDecodedText) {
+        const q = encodeURIComponent(lastDecodedText);
+        window.open(`https://www.google.com/search?q=${q}`, '_blank');
     }
 });
 downloadBtn.addEventListener('click', () => {
@@ -463,12 +533,13 @@ function scanQRCode() {
 
 /* === Proses hasil decode === */
 function processQRData(data) {
+    // reset
     lastDecodedData = null;
     downloadBtn.style.display = 'none';
-    linkButtonsWrapper.style.display = 'none';
-    textButtonsWrapper.style.display = 'none';
+    actionButtons.style.display = 'none';
     lastDecodedDataLink = null;
     lastDecodedText = null;
+    output.textContent = '';
 
     // Pisah dengan delimiter ||
     let parts = data.split("||").map(p => p.trim());
@@ -480,20 +551,33 @@ function processQRData(data) {
             return;
         }
         // jika bukan format raw||angka, fallback normal (tampilkan link/teks)
-        if (data.startsWith("http://") || data.startsWith("https://")) {
-            output.textContent = "" + data;
-            lastDecodedDataLink = data;
-            linkButtonsWrapper.style.display = 'flex';
-        } else {
-            output.textContent = "" + data;
-            lastDecodedText = data;
-            textButtonsWrapper.style.display = 'flex';
-        }
+    }
+
+    // MODE NORMAL atau fallback dari lucky: tampilkan mentah dan siapkan tombol
+    output.textContent = "" + data;
+    lastDecodedText = data; // selalu tersedia untuk copy teks
+
+    // Jika hasil adalah link -> set lastDecodedDataLink dan ubah tombol kanan jadi "Buka Link"
+    if (data.startsWith("http://") || data.startsWith("https://")) {
+        lastDecodedDataLink = data;
+
+        actionButtons.style.display = 'flex';
+        copyTextBtn.style.display = 'inline-block';
+        rightActionBtn.style.display = 'inline-block';
+        rightActionBtn.textContent = 'Buka Link';
+
+        // optional: tambahkan tooltip (title)
+        copyTextBtn.title = 'Copy hasil (link)';
+        rightActionBtn.title = 'Buka link di tab baru';
     } else {
-        // MODE NORMAL (tidak diceklis) -> tidak ada fetch/decrypt, tampilkan mentah
-        output.textContent = "" + data;
-        lastDecodedText = data;
-        textButtonsWrapper.style.display = 'flex';
+        // teks biasa -> tombol kanan = Cari di Google
+        actionButtons.style.display = 'flex';
+        copyTextBtn.style.display = 'inline-block';
+        rightActionBtn.style.display = 'inline-block';
+        rightActionBtn.textContent = 'Cari di Google';
+
+        copyTextBtn.title = 'Copy teks';
+        rightActionBtn.title = 'Cari teks di Google';
     }
 }
 
@@ -531,8 +615,7 @@ fileInput.addEventListener('change', e => {
                 } else {
                     output.textContent = "No QR or barcode found in image";
                     downloadBtn.style.display='none';
-                    linkButtonsWrapper.style.display='none';
-                    textButtonsWrapper.style.display='none';
+                    actionButtons.style.display='none';
                 }
             } catch(err) {
                 output.textContent = "Error saat deteksi barcode: " + err;
