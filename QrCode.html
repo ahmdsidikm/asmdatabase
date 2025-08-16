@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>QR Scanner</title>
+<title>Retro Gray QR + Barcode Scanner + Caesar Decoder</title>
 
 <!-- Library for QR (jsQR) and QR generator (qrious) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -37,6 +37,16 @@ body {
     border-radius: 0;
 }
 h1 { color: #333; }
+
+/* Wrap video so overlay can be positioned relative to it */
+.video-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Video itself (kept as original) */
 #video {
     width: 100%;
     max-width: 400px;
@@ -47,6 +57,29 @@ h1 { color: #333; }
     display: none;
 }
 #snapshot { display: none; }
+
+/* --- OVERLAY SCAN AREA (kotak hijau) --- */
+/* Initially hidden */
+#scan-area {
+    display: none;         /* HIDE di awal */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50%;            /* 50% of video-wrapper width */
+    height: 50%;           /* 50% of video-wrapper height */
+    max-width: 320px;      /* optional max size */
+    max-height: 320px;
+    border: 3px solid limegreen;
+    border-radius: 6px;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    pointer-events: none;  /* don't block clicks/touches */
+    /* Slight translucent inner overlay to emphasize area (optional) */
+    background: rgba(0,255,0,0.02);
+    box-shadow: 0 0 12px rgba(50,205,50,0.25);
+}
+
+/* Controls */
 .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 
 /* Control buttons group */
@@ -263,7 +296,13 @@ input[type="file"] { display: none; }
 
 <div class="container">
     <h1>QR & Barcode Decoder v3.0</h1>
-    <video id="video" autoplay></video>
+
+    <!-- video wrapper untuk overlay kotak hijau -->
+    <div class="video-wrapper">
+        <video id="video" autoplay></video>
+        <div id="scan-area" aria-hidden="true"></div>
+    </div>
+
     <canvas id="snapshot"></canvas>
 
     <div class="controls">
@@ -337,6 +376,9 @@ const copyTextBtn = document.getElementById('copyTextBtn');
 const rightActionBtn = document.getElementById('rightActionBtn');
 
 const luckyCheck = document.getElementById('luckyCheck');
+
+/* NEW: scan area element (overlay) */
+const scanArea = document.getElementById('scan-area');
 
 let stream = null, animationFrameId = null;
 let lastDecodedData = null;
@@ -466,6 +508,8 @@ function stopCamera() {
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     video.style.display = 'none';
     flashButton.style.display = 'none'; // Hide flash button
+    // HIDE scan area saat kamera mati
+    if (scanArea) scanArea.style.display = 'none';
 }
 
 async function startCamera() {
@@ -487,10 +531,15 @@ async function startCamera() {
         flashButton.textContent = 'Turn on Flash';
         flashButton.classList.remove('on');
 
+        // SHOW scan area saat kamera aktif
+        if (scanArea) scanArea.style.display = 'block';
+
         scanQRCode();
     } catch (err) { 
         output.textContent = "ERROR: " + err; 
         flashButton.style.display = 'none'; // Hide flash button on error
+        // Pastikan scan area tetap tersembunyi pada error
+        if (scanArea) scanArea.style.display = 'none';
     }
 }
 
