@@ -58,12 +58,32 @@ button:hover, #fileInputBtn:hover { background: #a0a0a0; transform: translate(1p
 button:active, #fileInputBtn:active { background: #909090; transform: translate(2px, 2px); }
 input[type="file"] { display: none; }
 
-/* --- OUTPUT STATUS --- */
+/* --- OUTPUT STATUS (DIUBAH: agar teks wrap ke bawah, tidak melebar ke samping) --- */
 #output {
-    background: #000000; padding: 15px; border: 2px solid #808080; margin-top: 15px;
-    font-size: 1.2em; color: #00ff00; text-shadow: 0 0 5px #00ff00; min-height: 50px;
-    white-space: pre-wrap; word-wrap: break-word, overflow-wrap: break-word;
-    max-height: 200px; overflow-y: auto;
+    background: #000000;
+    padding: 15px;
+    border: 2px solid #808080;
+    margin-top: 15px;
+    font-size: 1.2em;
+    color: #00ff00;
+    text-shadow: 0 0 5px #00ff00;
+    min-height: 50px;
+
+    /* penting: biarkan teks membungkus dan pindah ke baris baru */
+    white-space: pre-wrap;       /* mempertahankan newline jika ada, tapi tetap wrap */
+    word-wrap: break-word;       /* pecah kata panjang bila perlu */
+    overflow-wrap: anywhere;     /* break anywhere untuk kata super panjang */
+    word-break: break-word;      /* fallback untuk beberapa browser */
+
+    max-width: 100%;
+    box-sizing: border-box;
+
+    /* jangan biarkan scroll horizontal muncul */
+    overflow-x: hidden;
+
+    /* jika hasil sangat panjang, scroll vertikal diperbolehkan */
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 /* Modal and result styling */
@@ -165,7 +185,7 @@ input[type="file"] { display: none; }
 
 /* sembunyikan checkbox browser default tapi tetap aksesibel */
 .checkbox-wrapper input[type="checkbox"] {
-    position: absolute; /* tetap dalam flow untuk aksesibilitas */
+    position: absolute;
     opacity: 0;
     width: 0;
     height: 0;
