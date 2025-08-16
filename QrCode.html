@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Retro Gray QR + Barcode Scanner + Caesar Decoder</title>
+<title>QR Scanner</title>
 
-<!-- Library untuk QR (jsQR) dan QR generator (qrious) -->
+<!-- Library for QR (jsQR) and QR generator (qrious) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 
-<!-- Quagga untuk fallback decoding barcode 1D -->
+<!-- Quagga for 1D barcode decoding fallback -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -48,6 +48,15 @@ h1 { color: #333; }
 }
 #snapshot { display: none; }
 .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+
+/* Control buttons group */
+.camera-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
 button, #fileInputBtn {
     padding: 12px; font-size: 1.2em; border: 2px solid #808080;
     background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace;
@@ -58,7 +67,20 @@ button:hover, #fileInputBtn:hover { background: #a0a0a0; transform: translate(1p
 button:active, #fileInputBtn:active { background: #909090; transform: translate(2px, 2px); }
 input[type="file"] { display: none; }
 
-/* --- OUTPUT STATUS (DIUBAH: agar teks wrap ke bawah, tidak melebar ke samping) --- */
+/* Styles for the flashlight button */
+#flashButton {
+    background: #d4e7f5;
+    color: #1a4f80;
+    font-size: 1.1em;
+    padding: 10px;
+    display: none; /* Hide by default */
+}
+#flashButton.on {
+    background: #ffcc00;
+    color: #8c7300;
+}
+
+/* --- OUTPUT STATUS (CHANGED: to wrap text, not stretch to the side) --- */
 #output {
     background: #000000;
     padding: 15px;
@@ -69,19 +91,19 @@ input[type="file"] { display: none; }
     text-shadow: 0 0 5px #00ff00;
     min-height: 50px;
 
-    /* penting: biarkan teks membungkus dan pindah ke baris baru */
-    white-space: pre-wrap;       /* mempertahankan newline jika ada, tapi tetap wrap */
-    word-wrap: break-word;       /* pecah kata panjang bila perlu */
-    overflow-wrap: anywhere;     /* break anywhere untuk kata super panjang */
-    word-break: break-word;      /* fallback untuk beberapa browser */
+    /* important: let text wrap and move to new lines */
+    white-space: pre-wrap;       /* preserve newlines if any, but still wrap */
+    word-wrap: break-word;       /* break long words when necessary */
+    overflow-wrap: anywhere;     /* break anywhere for super long words */
+    word-break: break-word;      /* fallback for some browsers */
 
     max-width: 100%;
     box-sizing: border-box;
 
-    /* jangan biarkan scroll horizontal muncul */
+    /* prevent horizontal scrollbar from appearing */
     overflow-x: hidden;
 
-    /* jika hasil sangat panjang, scroll vertikal diperbolehkan */
+    /* if the result is very long, vertical scroll is allowed */
     max-height: 200px;
     overflow-y: auto;
 }
@@ -134,7 +156,7 @@ input[type="file"] { display: none; }
     object-fit: contain; 
 }
 
-/* Action buttons wrapper: dua tombol sejajar, kiri & kanan */
+/* Action buttons wrapper: two side-by-side buttons, left & right */
 .action-buttons { 
     display: flex; 
     justify-content: space-between; 
@@ -169,10 +191,7 @@ input[type="file"] { display: none; }
     align-items: center; 
 }
 
-/* === STYLE CHECKBOX: desain klasik ===
-   - Kita sembunyikan checkbox default dan gunakan label:before/after
-   - Tetap kompatibel dengan HTML input + label yang ada
-*/
+/* === CHECKBOX STYLE: classic design === */
 .checkbox-wrapper {
     margin-top: 10px;
     font-size: 1.1em;
@@ -183,7 +202,6 @@ input[type="file"] { display: none; }
     position: relative;
 }
 
-/* sembunyikan checkbox browser default tapi tetap aksesibel */
 .checkbox-wrapper input[type="checkbox"] {
     position: absolute;
     opacity: 0;
@@ -193,10 +211,9 @@ input[type="file"] { display: none; }
     left: -9999px;
 }
 
-/* style label untuk menjadi kotak klasik + teks */
 .checkbox-wrapper label {
     position: relative;
-    padding-left: 34px; /* ruang untuk kotak */
+    padding-left: 34px; /* space for the box */
     cursor: pointer;
     user-select: none;
     color: #333;
@@ -205,7 +222,6 @@ input[type="file"] { display: none; }
     font-size: 1.05em;
 }
 
-/* kotak putih dengan border tegas (classic look) */
 .checkbox-wrapper label::before {
     content: "";
     position: absolute;
@@ -220,7 +236,6 @@ input[type="file"] { display: none; }
     border-radius: 3px;
 }
 
-/* tanda centang: dibuat dengan pseudo-element, hitam klasik */
 .checkbox-wrapper label::after {
     content: "";
     position: absolute;
@@ -235,12 +250,10 @@ input[type="file"] { display: none; }
     transition: opacity 0.08s ease;
 }
 
-/* tampilkan centang saat checkbox dicentang */
 .checkbox-wrapper input[type="checkbox"]:checked + label::after {
     opacity: 1;
 }
 
-/* hover pada label: sedikit gelap pada border kotak */
 .checkbox-wrapper label:hover::before {
     border-color: #333;
 }
@@ -254,7 +267,10 @@ input[type="file"] { display: none; }
     <canvas id="snapshot"></canvas>
 
     <div class="controls">
-        <button id="startCameraButton">Start Camera</button>
+        <div class="camera-controls">
+            <button id="startCameraButton">Start Camera</button>
+            <button id="flashButton" style="display:none;">Turn on Flash</button>
+        </div>
         <button id="fileInputBtn">Pilih Gambar</button>
         <input type="file" id="fileInput" accept="image/*">
         <button id="createQRBtn">Buat QR</button>
@@ -267,7 +283,7 @@ input[type="file"] { display: none; }
 
     <div id="output">STATUS: READY</div>
 
-    <!-- action-buttons: kiri = Copy Teks, kanan = Buka Link OR Cari di Google -->
+    <!-- action-buttons: left = Copy Text, right = Open Link OR Search on Google -->
     <div id="actionButtons" class="action-buttons" style="display: none;">
         <button id="copyTextBtn">Copy Teks</button>
         <button id="rightActionBtn">Aksi</button>
@@ -295,13 +311,14 @@ input[type="file"] { display: none; }
 </div>
 
 <script>
-/* === Elemen DOM === */
+/* === DOM Elements === */
 const video = document.getElementById('video');
 const snapshot = document.getElementById('snapshot');
 const output = document.getElementById('output');
 const fileInput = document.getElementById('fileInput');
 const fileInputBtn = document.getElementById('fileInputBtn');
 const startCameraButton = document.getElementById('startCameraButton');
+const flashButton = document.getElementById('flashButton'); // New Flashlight button
 const createQRBtn = document.getElementById('createQRBtn');
 
 const qrModal = document.getElementById('qrModal');
@@ -325,8 +342,9 @@ let stream = null, animationFrameId = null;
 let lastDecodedData = null;
 let lastDecodedDataLink = null;
 let lastDecodedText = null;
+let flashlightOn = false;
 
-/* === Fungsi beep (notifikasi suara) === */
+/* === Beep function (sound notification) === */
 function playBeep() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -342,7 +360,7 @@ function playBeep() {
     } catch (err) { console.error("Audio error:", err); }
 }
 
-/* === Caesar Cipher mundur === */
+/* === Caesar Cipher backward === */
 function caesarDecipher(str, shift) {
     let result = '';
     for (let i = 0; i < str.length; i++) {
@@ -354,7 +372,7 @@ function caesarDecipher(str, shift) {
     return result;
 }
 
-/* === Tampilkan hasil decode (base64 / link / teks) === */
+/* === Show decoded result (base64 / link / text) === */
 function showDecodedBase64(data) {
     output.textContent = '';
     resultContainer.innerHTML = '';
@@ -380,21 +398,29 @@ function showDecodedBase64(data) {
         resultContainer.appendChild(vid);
         resultModal.style.display = 'block';
     } else {
-        // untuk teks atau link, delegasikan ke processQRData agar tombol muncul sesuai aturan
+        // for text or link, delegate to processQRData so buttons appear according to rules
         processQRData(data);
     }
 }
 
-/* tombol aksi */
+/* action buttons */
 copyTextBtn.addEventListener('click', () => {
     if(lastDecodedText) {
         try { 
-            navigator.clipboard.writeText(lastDecodedText).then(() => {
-                console.log("Teks dicopy:", lastDecodedText);
-                if (!navigator.clipboard) alert("Teks berhasil dicopy!");
-            }); 
+            document.execCommand('copy', false, lastDecodedText);
+            // Fallback for document.execCommand
+            if (!document.execCommand('copy')) {
+                // If the command fails, use a message box instead of alert.
+                const tempEl = document.createElement('textarea');
+                tempEl.value = lastDecodedText;
+                document.body.appendChild(tempEl);
+                tempEl.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempEl);
+                output.textContent = "Teks berhasil disalin!";
+            }
         } catch (e) { 
-            alert("Tidak bisa copy otomatis. Salin manual: " + lastDecodedText); 
+            output.textContent = "Tidak bisa copy otomatis. Salin manual: " + lastDecodedText; 
         }
     }
 });
@@ -414,7 +440,7 @@ downloadBtn.addEventListener('click', () => {
     a.click();
 });
 
-/* === Tombol pilih file === */
+/* === File selection button === */
 fileInputBtn.addEventListener('click', () => {
     fileInput.click();
 });
@@ -431,22 +457,41 @@ async function fetchAndDecrypt(link, shift) {
     } catch (err) { output.textContent = "ERROR: " + err; }
 }
 
-/* === Kamera start/stop === */
+/* === Camera start/stop === */
 function stopCamera() {
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    if (stream) { 
+        stream.getTracks().forEach(t => t.stop()); 
+        stream = null; 
+    }
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     video.style.display = 'none';
+    flashButton.style.display = 'none'; // Hide flash button
 }
 
 async function startCamera() {
     stopCamera();
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }});
+        // Request video stream with torch capability, but with torch off by default
+        stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: 'environment',
+                advanced: [{ torch: false }]
+            }
+        });
         video.srcObject = stream;
         video.style.display = 'block';
         video.play();
+        flashButton.style.display = 'inline-block'; // Show flash button
+        // Reset flash button state
+        flashlightOn = false;
+        flashButton.textContent = 'Turn on Flash';
+        flashButton.classList.remove('on');
+
         scanQRCode();
-    } catch (err) { output.textContent = "ERROR: " + err; }
+    } catch (err) { 
+        output.textContent = "ERROR: " + err; 
+        flashButton.style.display = 'none'; // Hide flash button on error
+    }
 }
 
 function toggleCamera() {
@@ -458,6 +503,27 @@ function toggleCamera() {
         startCameraButton.textContent = 'Stop Camera';
     }
 }
+
+/* === Toggle Flashlight === */
+flashButton.addEventListener('click', async () => {
+    if (!stream) {
+        output.textContent = "Camera is not active. Please start the camera first.";
+        return;
+    }
+    const track = stream.getVideoTracks()[0];
+    if (track) {
+        try {
+            await track.applyConstraints({
+                advanced: [{ torch: !flashlightOn }]
+            });
+            flashlightOn = !flashlightOn;
+            flashButton.textContent = flashlightOn ? 'Turn off Flash' : 'Turn on Flash';
+            flashButton.classList.toggle('on', flashlightOn);
+        } catch (err) {
+            output.textContent = "Failed to toggle flashlight: " + err.message;
+        }
+    }
+});
 
 /* === Barcode detection helper (promisified) === */
 function tryDecodeBarcodeFromCanvas(canvas) {
@@ -509,7 +575,7 @@ function tryDecodeBarcodeFromCanvas(canvas) {
     });
 }
 
-/* === Scan QR + barcode di kamera === */
+/* === Scan QR + barcode on camera === */
 function scanQRCode() {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -551,7 +617,7 @@ function scanQRCode() {
     tick();
 }
 
-/* === Proses hasil decode === */
+/* === Process decoded data === */
 function processQRData(data) {
     // reset
     lastDecodedData = null;
@@ -561,23 +627,23 @@ function processQRData(data) {
     lastDecodedText = null;
     output.textContent = '';
 
-    // Pisah dengan delimiter ||
+    // Split with delimiter ||
     let parts = data.split("||").map(p => p.trim());
 
     if (luckyCheck.checked) {
-        // MODE "SAYA BERUNTUNG": jika format cocok -> fetch + decrypt
+        // "I'M FEELING LUCKY" MODE: if format matches -> fetch + decrypt
         if (parts.length === 2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) {
             fetchAndDecrypt(parts[0], parseInt(parts[1]));
             return;
         }
-        // jika bukan format raw||angka, fallback normal (tampilkan link/teks)
+        // if not raw||number format, normal fallback (show link/text)
     }
 
-    // MODE NORMAL atau fallback dari lucky: tampilkan mentah dan siapkan tombol
+    // NORMAL MODE or fallback from lucky: show raw and prepare buttons
     output.textContent = "" + data;
-    lastDecodedText = data; // selalu tersedia untuk copy teks
+    lastDecodedText = data; // always available for copy text
 
-    // Jika hasil adalah link -> set lastDecodedDataLink dan ubah tombol kanan jadi "Buka Link"
+    // If result is a link -> set lastDecodedDataLink and change right button to "Open Link"
     if (data.startsWith("http://") || data.startsWith("https://")) {
         lastDecodedDataLink = data;
 
@@ -586,18 +652,18 @@ function processQRData(data) {
         rightActionBtn.style.display = 'inline-block';
         rightActionBtn.textContent = 'Buka Link';
 
-        // optional: tambahkan tooltip (title)
-        copyTextBtn.title = 'Copy hasil (link)';
-        rightActionBtn.title = 'Buka link di tab baru';
+        // optional: add tooltip (title)
+        copyTextBtn.title = 'Copy result (link)';
+        rightActionBtn.title = 'Open link in a new tab';
     } else {
-        // teks biasa -> tombol kanan = Cari di Google
+        // normal text -> right button = Search on Google
         actionButtons.style.display = 'flex';
         copyTextBtn.style.display = 'inline-block';
         rightActionBtn.style.display = 'inline-block';
         rightActionBtn.textContent = 'Cari di Google';
 
-        copyTextBtn.title = 'Copy teks';
-        rightActionBtn.title = 'Cari teks di Google';
+        copyTextBtn.title = 'Copy text';
+        rightActionBtn.title = 'Search text on Google';
     }
 }
 
@@ -674,7 +740,7 @@ downloadQRBtn.addEventListener('click', () => {
     a.click();
 });
 
-/* Tutup modal saat klik area luar (tanpa reload) */
+/* Close modal on outside click (without reload) */
 window.addEventListener('click', (e) => {
     if(e.target===qrModal) qrModal.style.display='none';
     if(e.target===resultModal) resultModal.style.display='none';
