@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Retro Gray QR + Barcode Scannerr</title>
+<title>Retro Gray QR + Barcode Scanner</title>
 
 <!-- Library untuk QR (jsQR) dan QR generator (qrious) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -570,11 +570,17 @@ function detectEdges(imageData) {
 
             const magnitude = Math.sqrt(gx * gx + gy * gy);
             const outputIndex = (y * width + x) * 4;
-            // Tampilkan hanya tepi yang kuat dengan warna putih
-            const edgeValue = magnitude > 100 ? 255 : 0;
-            outputData[outputIndex] = edgeValue;
-            outputData[outputIndex + 1] = edgeValue;
-            outputData[outputIndex + 2] = edgeValue;
+            
+            // Perubahan: Tampilkan tepi yang kuat dengan warna hijau
+            if (magnitude > 100) {
+                outputData[outputIndex] = 0; // Merah
+                outputData[outputIndex + 1] = 255; // Hijau
+                outputData[outputIndex + 2] = 0; // Biru
+            } else {
+                outputData[outputIndex] = 0;
+                outputData[outputIndex + 1] = 0;
+                outputData[outputIndex + 2] = 0;
+            }
             outputData[outputIndex + 3] = 255; // Alpha
         }
     }
