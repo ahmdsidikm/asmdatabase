@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Retro Gray QR + Barcode Scanner + Caesar Decoder</title>
+<title>Retro Gray QR + Barcode Scannerr</title>
 
-<!-- Library for QR (jsQR) and QR generator (qrious) -->
+<!-- Library untuk QR (jsQR) dan QR generator (qrious) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 
-<!-- Quagga for 1D barcode decoding fallback -->
+<!-- Quagga untuk fallback decoding barcode 1D -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
@@ -37,16 +37,6 @@ body {
     border-radius: 0;
 }
 h1 { color: #333; }
-
-/* Wrap video so overlay can be positioned relative to it */
-.video-wrapper {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-    max-width: 400px;
-}
-
-/* Video itself (kept as original) */
 #video {
     width: 100%;
     max-width: 400px;
@@ -56,40 +46,21 @@ h1 { color: #333; }
     filter: grayscale(100%) brightness(120%) contrast(150%);
     display: none;
 }
+#video-stream-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto 15px auto;
+}
+#liveVideo, #contourCanvas {
+    width: 100%;
+    max-width: 400px;
+    border: 2px solid #555;
+    background: #000;
+    display: none;
+}
 #snapshot { display: none; }
-
-/* --- OVERLAY SCAN AREA (kotak hijau) --- */
-/* Initially hidden */
-#scan-area {
-    display: none;         /* HIDE di awal */
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 50%;            /* 50% of video-wrapper width */
-    height: 50%;           /* 50% of video-wrapper height */
-    max-width: 320px;      /* optional max size */
-    max-height: 320px;
-    border: 3px solid limegreen;
-    border-radius: 6px;
-    transform: translate(-50%, -50%);
-    box-sizing: border-box;
-    pointer-events: none;  /* don't block clicks/touches */
-    /* Slight translucent inner overlay to emphasize area (optional) */
-    background: rgba(0,255,0,0.02);
-    box-shadow: 0 0 12px rgba(50,205,50,0.25);
-}
-
-/* Controls */
 .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-
-/* Control buttons group */
-.camera-controls {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-
 button, #fileInputBtn {
     padding: 12px; font-size: 1.2em; border: 2px solid #808080;
     background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace;
@@ -100,20 +71,7 @@ button:hover, #fileInputBtn:hover { background: #a0a0a0; transform: translate(1p
 button:active, #fileInputBtn:active { background: #909090; transform: translate(2px, 2px); }
 input[type="file"] { display: none; }
 
-/* Styles for the flashlight button */
-#flashButton {
-    background: #d4e7f5;
-    color: #1a4f80;
-    font-size: 1.1em;
-    padding: 10px;
-    display: none; /* Hide by default */
-}
-#flashButton.on {
-    background: #ffcc00;
-    color: #8c7300;
-}
-
-/* --- OUTPUT STATUS (CHANGED: to wrap text, not stretch to the side) --- */
+/* --- OUTPUT STATUS (DIUBAH: agar teks wrap ke bawah, tidak melebar ke samping) --- */
 #output {
     background: #000000;
     padding: 15px;
@@ -124,19 +82,19 @@ input[type="file"] { display: none; }
     text-shadow: 0 0 5px #00ff00;
     min-height: 50px;
 
-    /* important: let text wrap and move to new lines */
-    white-space: pre-wrap;       /* preserve newlines if any, but still wrap */
-    word-wrap: break-word;       /* break long words when necessary */
-    overflow-wrap: anywhere;     /* break anywhere for super long words */
-    word-break: break-word;      /* fallback for some browsers */
+    /* penting: biarkan teks membungkus dan pindah ke baris baru */
+    white-space: pre-wrap;       /* mempertahankan newline jika ada, tapi tetap wrap */
+    word-wrap: break-word;       /* pecah kata panjang bila perlu */
+    overflow-wrap: anywhere;     /* break anywhere untuk kata super panjang */
+    word-break: break-word;      /* fallback untuk beberapa browser */
 
     max-width: 100%;
     box-sizing: border-box;
 
-    /* prevent horizontal scrollbar from appearing */
+    /* jangan biarkan scroll horizontal muncul */
     overflow-x: hidden;
 
-    /* if the result is very long, vertical scroll is allowed */
+    /* jika hasil sangat panjang, scroll vertikal diperbolehkan */
     max-height: 200px;
     overflow-y: auto;
 }
@@ -189,7 +147,7 @@ input[type="file"] { display: none; }
     object-fit: contain; 
 }
 
-/* Action buttons wrapper: two side-by-side buttons, left & right */
+/* Action buttons wrapper: dua tombol sejajar, kiri & kanan */
 .action-buttons { 
     display: flex; 
     justify-content: space-between; 
@@ -224,7 +182,10 @@ input[type="file"] { display: none; }
     align-items: center; 
 }
 
-/* === CHECKBOX STYLE: classic design === */
+/* === STYLE CHECKBOX: desain klasik ===
+    - Kita sembunyikan checkbox default dan gunakan label:before/after
+    - Tetap kompatibel dengan HTML input + label yang ada
+*/
 .checkbox-wrapper {
     margin-top: 10px;
     font-size: 1.1em;
@@ -235,6 +196,7 @@ input[type="file"] { display: none; }
     position: relative;
 }
 
+/* sembunyikan checkbox browser default tapi tetap aksesibel */
 .checkbox-wrapper input[type="checkbox"] {
     position: absolute;
     opacity: 0;
@@ -244,9 +206,10 @@ input[type="file"] { display: none; }
     left: -9999px;
 }
 
+/* style label untuk menjadi kotak klasik + teks */
 .checkbox-wrapper label {
     position: relative;
-    padding-left: 34px; /* space for the box */
+    padding-left: 34px; /* ruang untuk kotak */
     cursor: pointer;
     user-select: none;
     color: #333;
@@ -255,6 +218,7 @@ input[type="file"] { display: none; }
     font-size: 1.05em;
 }
 
+/* kotak putih dengan border tegas (classic look) */
 .checkbox-wrapper label::before {
     content: "";
     position: absolute;
@@ -269,6 +233,7 @@ input[type="file"] { display: none; }
     border-radius: 3px;
 }
 
+/* tanda centang: dibuat dengan pseudo-element, hitam klasik */
 .checkbox-wrapper label::after {
     content: "";
     position: absolute;
@@ -283,10 +248,12 @@ input[type="file"] { display: none; }
     transition: opacity 0.08s ease;
 }
 
+/* tampilkan centang saat checkbox dicentang */
 .checkbox-wrapper input[type="checkbox"]:checked + label::after {
     opacity: 1;
 }
 
+/* hover pada label: sedikit gelap pada border kotak */
 .checkbox-wrapper label:hover::before {
     border-color: #333;
 }
@@ -296,20 +263,20 @@ input[type="file"] { display: none; }
 
 <div class="container">
     <h1>QR & Barcode Decoder v3.0</h1>
-
-    <!-- video wrapper untuk overlay kotak hijau -->
-    <div class="video-wrapper">
-        <video id="video" autoplay></video>
-        <div id="scan-area" aria-hidden="true"></div>
+    <!-- Gunakan video terpisah untuk umpan langsung -->
+    <div id="video-stream-container">
+        <!-- Elemen video ini diperlukan untuk mengambil stream data kamera,
+             tetapi tidak ditampilkan kepada pengguna. -->
+        <video id="liveVideo" autoplay style="display: none;"></video> 
+        <!-- Canvas ini akan menampilkan video dengan filter kontur -->
+        <canvas id="contourCanvas"></canvas>
     </div>
 
+    <!-- Canvas tersembunyi untuk mengambil snapshot dan mendeteksi kode -->
     <canvas id="snapshot"></canvas>
 
     <div class="controls">
-        <div class="camera-controls">
-            <button id="startCameraButton">Start Camera</button>
-            <button id="flashButton" style="display:none;">Turn on Flash</button>
-        </div>
+        <button id="startCameraButton">Start Camera</button>
         <button id="fileInputBtn">Pilih Gambar</button>
         <input type="file" id="fileInput" accept="image/*">
         <button id="createQRBtn">Buat QR</button>
@@ -322,7 +289,7 @@ input[type="file"] { display: none; }
 
     <div id="output">STATUS: READY</div>
 
-    <!-- action-buttons: left = Copy Text, right = Open Link OR Search on Google -->
+    <!-- action-buttons: kiri = Copy Teks, kanan = Buka Link OR Cari di Google -->
     <div id="actionButtons" class="action-buttons" style="display: none;">
         <button id="copyTextBtn">Copy Teks</button>
         <button id="rightActionBtn">Aksi</button>
@@ -350,14 +317,14 @@ input[type="file"] { display: none; }
 </div>
 
 <script>
-/* === DOM Elements === */
-const video = document.getElementById('video');
+/* === Elemen DOM === */
+const liveVideo = document.getElementById('liveVideo');
+const contourCanvas = document.getElementById('contourCanvas');
 const snapshot = document.getElementById('snapshot');
 const output = document.getElementById('output');
 const fileInput = document.getElementById('fileInput');
 const fileInputBtn = document.getElementById('fileInputBtn');
 const startCameraButton = document.getElementById('startCameraButton');
-const flashButton = document.getElementById('flashButton'); // New Flashlight button
 const createQRBtn = document.getElementById('createQRBtn');
 
 const qrModal = document.getElementById('qrModal');
@@ -377,16 +344,12 @@ const rightActionBtn = document.getElementById('rightActionBtn');
 
 const luckyCheck = document.getElementById('luckyCheck');
 
-/* NEW: scan area element (overlay) */
-const scanArea = document.getElementById('scan-area');
-
 let stream = null, animationFrameId = null;
 let lastDecodedData = null;
 let lastDecodedDataLink = null;
 let lastDecodedText = null;
-let flashlightOn = false;
 
-/* === Beep function (sound notification) === */
+/* === Fungsi beep (notifikasi suara) === */
 function playBeep() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -402,7 +365,7 @@ function playBeep() {
     } catch (err) { console.error("Audio error:", err); }
 }
 
-/* === Caesar Cipher backward === */
+/* === Caesar Cipher mundur === */
 function caesarDecipher(str, shift) {
     let result = '';
     for (let i = 0; i < str.length; i++) {
@@ -414,7 +377,7 @@ function caesarDecipher(str, shift) {
     return result;
 }
 
-/* === Show decoded result (base64 / link / text) === */
+/* === Tampilkan hasil decode (base64 / link / teks) === */
 function showDecodedBase64(data) {
     output.textContent = '';
     resultContainer.innerHTML = '';
@@ -440,29 +403,21 @@ function showDecodedBase64(data) {
         resultContainer.appendChild(vid);
         resultModal.style.display = 'block';
     } else {
-        // for text or link, delegate to processQRData so buttons appear according to rules
+        // untuk teks atau link, delegasikan ke processQRData agar tombol muncul sesuai aturan
         processQRData(data);
     }
 }
 
-/* action buttons */
+/* tombol aksi */
 copyTextBtn.addEventListener('click', () => {
     if(lastDecodedText) {
         try { 
-            document.execCommand('copy', false, lastDecodedText);
-            // Fallback for document.execCommand
-            if (!document.execCommand('copy')) {
-                // If the command fails, use a message box instead of alert.
-                const tempEl = document.createElement('textarea');
-                tempEl.value = lastDecodedText;
-                document.body.appendChild(tempEl);
-                tempEl.select();
-                document.execCommand('copy');
-                document.body.removeChild(tempEl);
-                output.textContent = "Teks berhasil disalin!";
-            }
+            document.execCommand('copy');
+            // Ganti alert dengan pesan di output
+            output.textContent = "Teks berhasil disalin!";
+            setTimeout(() => { output.textContent = lastDecodedText; }, 1500);
         } catch (e) { 
-            output.textContent = "Tidak bisa copy otomatis. Salin manual: " + lastDecodedText; 
+            output.textContent = "Gagal menyalin. Silakan salin manual: " + lastDecodedText;
         }
     }
 });
@@ -482,7 +437,7 @@ downloadBtn.addEventListener('click', () => {
     a.click();
 });
 
-/* === File selection button === */
+/* === Tombol pilih file === */
 fileInputBtn.addEventListener('click', () => {
     fileInput.click();
 });
@@ -499,48 +454,24 @@ async function fetchAndDecrypt(link, shift) {
     } catch (err) { output.textContent = "ERROR: " + err; }
 }
 
-/* === Camera start/stop === */
+/* === Kamera start/stop === */
 function stopCamera() {
-    if (stream) { 
-        stream.getTracks().forEach(t => t.stop()); 
-        stream = null; 
-    }
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    video.style.display = 'none';
-    flashButton.style.display = 'none'; // Hide flash button
-    // HIDE scan area saat kamera mati
-    if (scanArea) scanArea.style.display = 'none';
+    // liveVideo.style.display = 'none'; // liveVideo memang sudah disembunyikan
+    contourCanvas.style.display = 'none';
 }
 
 async function startCamera() {
     stopCamera();
     try {
-        // Request video stream with torch capability, but with torch off by default
-        stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { 
-                facingMode: 'environment',
-                advanced: [{ torch: false }]
-            }
-        });
-        video.srcObject = stream;
-        video.style.display = 'block';
-        video.play();
-        flashButton.style.display = 'inline-block'; // Show flash button
-        // Reset flash button state
-        flashlightOn = false;
-        flashButton.textContent = 'Turn on Flash';
-        flashButton.classList.remove('on');
-
-        // SHOW scan area saat kamera aktif
-        if (scanArea) scanArea.style.display = 'block';
-
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }});
+        liveVideo.srcObject = stream;
+        // liveVideo tidak ditampilkan, hanya digunakan sebagai sumber data.
+        contourCanvas.style.display = 'block';
+        liveVideo.play();
         scanQRCode();
-    } catch (err) { 
-        output.textContent = "ERROR: " + err; 
-        flashButton.style.display = 'none'; // Hide flash button on error
-        // Pastikan scan area tetap tersembunyi pada error
-        if (scanArea) scanArea.style.display = 'none';
-    }
+    } catch (err) { output.textContent = "ERROR: " + err; }
 }
 
 function toggleCamera() {
@@ -552,27 +483,6 @@ function toggleCamera() {
         startCameraButton.textContent = 'Stop Camera';
     }
 }
-
-/* === Toggle Flashlight === */
-flashButton.addEventListener('click', async () => {
-    if (!stream) {
-        output.textContent = "Camera is not active. Please start the camera first.";
-        return;
-    }
-    const track = stream.getVideoTracks()[0];
-    if (track) {
-        try {
-            await track.applyConstraints({
-                advanced: [{ torch: !flashlightOn }]
-            });
-            flashlightOn = !flashlightOn;
-            flashButton.textContent = flashlightOn ? 'Turn off Flash' : 'Turn on Flash';
-            flashButton.classList.toggle('on', flashlightOn);
-        } catch (err) {
-            output.textContent = "Failed to toggle flashlight: " + err.message;
-        }
-    }
-});
 
 /* === Barcode detection helper (promisified) === */
 function tryDecodeBarcodeFromCanvas(canvas) {
@@ -624,19 +534,78 @@ function tryDecodeBarcodeFromCanvas(canvas) {
     });
 }
 
-/* === Scan QR + barcode on camera === */
+/* === Fungsi untuk deteksi tepi (Canny-like) === */
+function detectEdges(imageData) {
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const outputData = new Uint8ClampedArray(data.length);
+
+    // Konversi ke grayscale terlebih dahulu
+    for (let i = 0; i < data.length; i += 4) {
+        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        data[i] = avg;
+        data[i + 1] = avg;
+        data[i + 2] = avg;
+    }
+
+    // Kernel Sobel untuk deteksi tepi horizontal dan vertikal
+    const sobelX = [ -1, 0, 1, -2, 0, 2, -1, 0, 1 ];
+    const sobelY = [ -1, -2, -1, 0, 0, 0, 1, 2, 1 ];
+
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            let gx = 0;
+            let gy = 0;
+
+            for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                    const pixelIndex = ((y + ky) * width + (x + kx)) * 4;
+                    const kernelIndex = (ky + 1) * 3 + (kx + 1);
+                    const pixelValue = data[pixelIndex];
+                    gx += pixelValue * sobelX[kernelIndex];
+                    gy += pixelValue * sobelY[kernelIndex];
+                }
+            }
+
+            const magnitude = Math.sqrt(gx * gx + gy * gy);
+            const outputIndex = (y * width + x) * 4;
+            // Tampilkan hanya tepi yang kuat dengan warna putih
+            const edgeValue = magnitude > 100 ? 255 : 0;
+            outputData[outputIndex] = edgeValue;
+            outputData[outputIndex + 1] = edgeValue;
+            outputData[outputIndex + 2] = edgeValue;
+            outputData[outputIndex + 3] = 255; // Alpha
+        }
+    }
+    return new ImageData(outputData, width, height);
+}
+
+/* === Scan QR + barcode di kamera === */
 function scanQRCode() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = snapshot.getContext('2d');
+    const contourCtx = contourCanvas.getContext('2d');
 
     async function tick() {
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.width = video.videoWidth * 1;
-            canvas.height = video.videoHeight * 1;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        if (liveVideo.readyState === liveVideo.HAVE_ENOUGH_DATA) {
+            const w = liveVideo.videoWidth;
+            const h = liveVideo.videoHeight;
+            snapshot.width = w;
+            snapshot.height = h;
+            contourCanvas.width = w;
+            contourCanvas.height = h;
+            
+            // Gambar frame video ke canvas tersembunyi
+            ctx.drawImage(liveVideo, 0, 0, w, h);
 
-            const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+            // Ambil data gambar dari canvas tersembunyi
+            const imageData = ctx.getImageData(0, 0, w, h);
 
+            // Terapkan deteksi tepi dan gambar ke canvas yang terlihat
+            const edgeData = detectEdges(imageData);
+            contourCtx.putImageData(edgeData, 0, 0);
+
+            // Coba mendeteksi kode QR dari data gambar asli (bukan yang sudah diproses)
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code) {
                 stopCamera();
@@ -648,7 +617,7 @@ function scanQRCode() {
             }
 
             try {
-                const barcode = await tryDecodeBarcodeFromCanvas(canvas);
+                const barcode = await tryDecodeBarcodeFromCanvas(snapshot);
                 if (barcode) {
                     stopCamera();
                     startCameraButton.textContent = 'Start Camera';
@@ -666,7 +635,7 @@ function scanQRCode() {
     tick();
 }
 
-/* === Process decoded data === */
+/* === Proses hasil decode === */
 function processQRData(data) {
     // reset
     lastDecodedData = null;
@@ -676,23 +645,23 @@ function processQRData(data) {
     lastDecodedText = null;
     output.textContent = '';
 
-    // Split with delimiter ||
+    // Pisah dengan delimiter ||
     let parts = data.split("||").map(p => p.trim());
 
     if (luckyCheck.checked) {
-        // "I'M FEELING LUCKY" MODE: if format matches -> fetch + decrypt
+        // MODE "SAYA BERUNTUNG": jika format cocok -> fetch + decrypt
         if (parts.length === 2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) {
             fetchAndDecrypt(parts[0], parseInt(parts[1]));
             return;
         }
-        // if not raw||number format, normal fallback (show link/text)
+        // jika bukan format raw||angka, fallback normal (tampilkan link/teks)
     }
 
-    // NORMAL MODE or fallback from lucky: show raw and prepare buttons
+    // MODE NORMAL atau fallback dari lucky: tampilkan mentah dan siapkan tombol
     output.textContent = "" + data;
-    lastDecodedText = data; // always available for copy text
+    lastDecodedText = data; // selalu tersedia untuk copy teks
 
-    // If result is a link -> set lastDecodedDataLink and change right button to "Open Link"
+    // Jika hasil adalah link -> set lastDecodedDataLink dan ubah tombol kanan jadi "Buka Link"
     if (data.startsWith("http://") || data.startsWith("https://")) {
         lastDecodedDataLink = data;
 
@@ -701,18 +670,18 @@ function processQRData(data) {
         rightActionBtn.style.display = 'inline-block';
         rightActionBtn.textContent = 'Buka Link';
 
-        // optional: add tooltip (title)
-        copyTextBtn.title = 'Copy result (link)';
-        rightActionBtn.title = 'Open link in a new tab';
+        // optional: tambahkan tooltip (title)
+        copyTextBtn.title = 'Copy hasil (link)';
+        rightActionBtn.title = 'Buka link di tab baru';
     } else {
-        // normal text -> right button = Search on Google
+        // teks biasa -> tombol kanan = Cari di Google
         actionButtons.style.display = 'flex';
         copyTextBtn.style.display = 'inline-block';
         rightActionBtn.style.display = 'inline-block';
         rightActionBtn.textContent = 'Cari di Google';
 
-        copyTextBtn.title = 'Copy text';
-        rightActionBtn.title = 'Search text on Google';
+        copyTextBtn.title = 'Copy teks';
+        rightActionBtn.title = 'Cari teks di Google';
     }
 }
 
@@ -789,7 +758,7 @@ downloadQRBtn.addEventListener('click', () => {
     a.click();
 });
 
-/* Close modal on outside click (without reload) */
+/* Tutup modal saat klik area luar (tanpa reload) */
 window.addEventListener('click', (e) => {
     if(e.target===qrModal) qrModal.style.display='none';
     if(e.target===resultModal) resultModal.style.display='none';
