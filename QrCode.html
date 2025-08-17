@@ -324,8 +324,9 @@ function showDecodedBase64(data) {
         let vid = document.createElement('video');
         vid.src = data;
         vid.controls = true;
-        vid.loop = false;
-        vid.autoplay = false;
+        vid.loop = true;
+        vid.autoplay = true;
+         vid.muted = true;  
         vid.playsInline = true;
         vid.preload = "metadata";
         resultContainer.appendChild(vid);
