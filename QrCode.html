@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pemindai QR & Barcode</title>
+<title>Pemindai QR & Barcode (tanpa mode kontur)</title>
 
 <!-- Library untuk QR (jsQR) dan QR generator (qrious) -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -41,7 +41,7 @@ h1 { color: #333; margin: 0 0 12px 0; }
 
 /* video + canvas */
 #video-stream-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto 15px auto; }
-#liveVideo, #contourCanvas { width: 100%; max-width: 400px; border: 2px solid #555; background: #000; margin: 0 auto; display: none; object-fit: cover; }
+#liveVideo { width: 100%; max-width: 400px; border: 2px solid #555; background: #000; margin: 0 auto; display: none; object-fit: cover; }
 #snapshot { display: none; }
 
 /* controls */
@@ -173,7 +173,6 @@ input[type="file"] { display: none; }
     <h1>Pemindai QR & Barcode v3.1</h1>
     <div id="video-stream-container">
         <video id="liveVideo" autoplay playsinline></video>
-        <canvas id="contourCanvas"></canvas>
     </div>
 
     <canvas id="snapshot"></canvas>
@@ -181,7 +180,6 @@ input[type="file"] { display: none; }
     <div class="controls">
         <div class="row">
             <button id="startCameraButton">Nyalakan Kamera</button>
-            <button id="toggleModeBtn">Mode: Biasa</button>
             <button id="flashlightBtn" disabled>Senter Tidak Tersedia</button>
         </div>
         <div class="row">
@@ -232,7 +230,6 @@ input[type="file"] { display: none; }
 <script>
 /* === Elemen DOM === */
 const liveVideo = document.getElementById('liveVideo');
-const contourCanvas = document.getElementById('contourCanvas');
 const snapshot = document.getElementById('snapshot');
 const output = document.getElementById('output');
 const fileInput = document.getElementById('fileInput');
@@ -240,7 +237,6 @@ const fileInputBtn = document.getElementById('fileInputBtn');
 const startCameraButton = document.getElementById('startCameraButton');
 const createQRBtn = document.getElementById('createQRBtn');
 
-const toggleModeBtn = document.getElementById('toggleModeBtn');
 const flashlightBtn = document.getElementById('flashlightBtn');
 
 const qrModal = document.getElementById('qrModal');
@@ -252,7 +248,6 @@ const closeQRExitBtn = document.getElementById('closeQRExitBtn');
 if (closeQRExitBtn) closeQRExitBtn.addEventListener('click', () => { location.reload(); });
 
 const resultModal = document.getElementById('resultModal');
-const closeResultModal = document.getElementById('closeResultModal');
 const resultContainer = document.getElementById('resultContainer');
 const downloadBtn = document.getElementById('downloadBtn');
 const closePageBtn = document.getElementById('closePageBtn');
@@ -268,7 +263,6 @@ let lastDecodedData = null;
 let lastDecodedDataLink = null;
 let lastDecodedText = null;
 
-let mode = "biasa";
 let track = null;
 let torchOn = false;
 
@@ -354,7 +348,6 @@ function closeResultModalFunc() {
     closePageBtn.style.display = 'none';
     document.body.style.overflow = '';
 }
-if (closeResultModal) closeResultModal.addEventListener('click', closeResultModalFunc);
 resultModal.addEventListener('click', (e) => {
     if (e.target === resultModal) closeResultModalFunc();
 });
@@ -448,7 +441,7 @@ async function fetchAndDecrypt(link, shift) {
     } catch (err) { output.textContent = "GALAT: " + err; }
 }
 
-/* === Camera start/stop + mode + torch === */
+/* === Camera start/stop + torch === */
 function stopCamera() {
     if (stream) {
         if (torchOn && track) {
@@ -465,11 +458,9 @@ function stopCamera() {
     liveVideo.pause();
     liveVideo.srcObject = null;
     liveVideo.style.display = 'none';
-    contourCanvas.style.display = 'none';
     startCameraButton.textContent = 'Nyalakan Kamera';
     flashlightBtn.disabled = true;
     flashlightBtn.textContent = 'Senter Tidak Tersedia';
-    // status kamera dimatikan tidak akan menampilkan teks pada output (sesuai permintaan)
 }
 
 async function startCamera() {
@@ -479,13 +470,7 @@ async function startCamera() {
         liveVideo.srcObject = stream;
         track = stream.getVideoTracks()[0] || null;
 
-        if (mode === "biasa") {
-            liveVideo.style.display = 'block';
-            contourCanvas.style.display = 'none';
-        } else {
-            liveVideo.style.display = 'none';
-            contourCanvas.style.display = 'block';
-        }
+        liveVideo.style.display = 'block';
 
         // cek kemampuan torch
         try {
@@ -511,17 +496,6 @@ async function startCamera() {
     }
 }
 function toggleCamera() { if (stream) stopCamera(); else startCamera(); }
-
-/* Toggle mode */
-toggleModeBtn.addEventListener('click', () => {
-    if (mode === "biasa") {
-        mode = "kontur"; toggleModeBtn.textContent = "Mode: Kontur";
-        if (stream) { liveVideo.style.display = 'none'; contourCanvas.style.display = 'block'; }
-    } else {
-        mode = "biasa"; toggleModeBtn.textContent = "Mode: Biasa";
-        if (stream) { liveVideo.style.display = 'block'; contourCanvas.style.display = 'none'; }
-    }
-});
 
 /* Toggle flashlight */
 flashlightBtn.addEventListener('click', async () => {
@@ -580,55 +554,9 @@ function tryDecodeBarcodeFromCanvas(canvas) {
     });
 }
 
-/* === Edge detection (Sobel-like) === */
-function detectEdges(imageData) {
-    const data = imageData.data;
-    const width = imageData.width;
-    const height = imageData.height;
-    const outputData = new Uint8ClampedArray(data.length);
-
-    // grayscale
-    for (let i = 0; i < data.length; i += 4) {
-        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-        data[i] = avg; data[i+1]=avg; data[i+2]=avg;
-    }
-
-    const sobelX = [ -1, 0, 1, -2, 0, 2, -1, 0, 1 ];
-    const sobelY = [ -1, -2, -1, 0, 0, 0, 1, 2, 1 ];
-
-    for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
-            let gx = 0, gy = 0;
-            for (let ky = -1; ky <= 1; ky++) {
-                for (let kx = -1; kx <= 1; kx++) {
-                    const pixelIndex = ((y + ky) * width + (x + kx)) * 4;
-                    const kernelIndex = (ky + 1) * 3 + (kx + 1);
-                    const pixelValue = data[pixelIndex];
-                    gx += pixelValue * sobelX[kernelIndex];
-                    gy += pixelValue * sobelY[kernelIndex];
-                }
-            }
-            const magnitude = Math.sqrt(gx * gx + gy * gy);
-            const outputIndex = (y * width + x) * 4;
-            if (magnitude > 100) {
-                outputData[outputIndex] = 0;
-                outputData[outputIndex + 1] = 255;
-                outputData[outputIndex + 2] = 0;
-            } else {
-                outputData[outputIndex] = 0;
-                outputData[outputIndex + 1] = 0;
-                outputData[outputIndex + 2] = 0;
-            }
-            outputData[outputIndex + 3] = 255;
-        }
-    }
-    return new ImageData(outputData, width, height);
-}
-
 /* === Scan loop === */
 function scanQRCode() {
     const ctx = snapshot.getContext('2d');
-    const contourCtx = contourCanvas.getContext('2d');
 
     async function tick() {
         if (!stream) return;
@@ -638,13 +566,9 @@ function scanQRCode() {
             if (w === 0 || h === 0) { animationFrameId = requestAnimationFrame(tick); return; }
 
             snapshot.width = w; snapshot.height = h;
-            contourCanvas.width = w; contourCanvas.height = h;
 
             ctx.drawImage(liveVideo, 0, 0, w, h);
             const imageData = ctx.getImageData(0, 0, w, h);
-
-            const edgeData = detectEdges(imageData);
-            if (mode === "kontur") contourCtx.putImageData(edgeData, 0, 0);
 
             const code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code) {
