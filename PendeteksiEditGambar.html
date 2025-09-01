@@ -3,32 +3,38 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Upload Gambar/Video ke Supabase (Tanpa Popup Sukses)</title>
+  <title>Upload Gambar/Video ke Supabase (Responsif)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    /* Pastikan tabel tidak meluap di perangkat kecil */
+    .table-container { overflow-x: auto; }
   </style>
 </head>
-<body class="bg-gray-100 flex items-start justify-center min-h-screen p-6">
-  <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-4xl">
-    <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">Upload Gambar / Video ke Supabase</h1>
-    <p class="text-center text-gray-600 mb-6">Pilih gambar atau video — hasil Base64 tidak akan ditampilkan penuh agar tidak lag.</p>
+<body class="bg-gray-100 flex items-start justify-center min-h-screen p-4 sm:p-6">
+  <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-sm md:max-w-4xl">
+    <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2 sm:mb-4">Unggah Gambar / Video ke Supabase</h1>
+    <p class="text-center text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">Pilih gambar atau video — hasil Base64 tidak akan ditampilkan penuh agar tidak lag.</p>
 
     <!-- Upload area -->
     <div class="space-y-4">
-      <div class="flex gap-4 items-center">
-        <!-- accept both image and video -->
+      <!-- Flexbox yang akan menumpuk di perangkat mobile -->
+      <div class="flex flex-col sm:flex-row gap-4 items-center">
         <input id="fileInput" type="file" accept="image/*,video/*" class="flex-1 text-gray-700 bg-gray-50 border border-gray-300 rounded-md p-2 cursor-pointer focus:outline-none" />
-        <button id="uploadButton" disabled class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-md hover:bg-blue-700 transition duration-200 opacity-50 cursor-not-allowed">Upload ke Supabase</button>
+        <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-4 rounded-md shadow-md hover:bg-blue-700 transition duration-200 opacity-50 cursor-not-allowed">Unggah ke Supabase</button>
       </div>
 
-      <!-- Ringkasan file terpilih (thumbnail gambar atau preview video + nama + ukuran) -->
-      <div id="fileSummary" class="hidden items-center gap-4 p-3 border border-gray-200 rounded-md bg-white">
-        <img id="imgThumb" alt="thumbnail" class="w-28 h-28 object-cover rounded-md border hidden" />
-        <video id="videoThumb" controls class="w-48 h-28 rounded-md border hidden"></video>
-        <div>
-          <div id="summaryName" class="font-medium text-gray-800"></div>
+      <!-- Ringkasan file terpilih (responsif) -->
+      <div id="fileSummary" class="hidden flex-col sm:flex-row items-center gap-4 p-3 border border-gray-200 rounded-md bg-white">
+        <!-- Thumbnail dan video preview -->
+        <div class="flex-shrink-0">
+          <img id="imgThumb" alt="thumbnail" class="w-28 h-28 object-cover rounded-md border hidden" />
+          <video id="videoThumb" controls class="w-28 h-28 sm:w-48 sm:h-28 rounded-md border hidden"></video>
+        </div>
+        <!-- Detail file yang akan menyesuaikan lebar -->
+        <div class="flex-1 text-center sm:text-left">
+          <div id="summaryName" class="font-medium text-gray-800 break-all"></div>
           <div id="summarySize" class="text-sm text-gray-500 mt-1"></div>
           <div id="summaryMime" class="text-sm text-gray-500 mt-1"></div>
         </div>
@@ -36,9 +42,9 @@
     </div>
 
     <!-- Message box (untuk error/detailed info) -->
-    <div id="messageBox" class="fixed inset-0 bg-gray-700 bg-opacity-40 flex items-center justify-center hidden z-50">
-      <div class="bg-white rounded-lg p-6 shadow-xl max-w-lg text-center">
-        <pre id="messageText" class="text-left text-sm whitespace-pre-wrap"></pre>
+    <div id="messageBox" class="fixed inset-0 bg-gray-700 bg-opacity-40 flex items-center justify-center hidden z-50 p-4">
+      <div class="bg-white rounded-lg p-6 shadow-xl max-w-lg text-center w-full">
+        <pre id="messageText" class="text-left text-sm whitespace-pre-wrap max-h-[80vh] overflow-y-auto"></pre>
         <div class="mt-4">
           <button id="messageCloseBtn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-600">Tutup</button>
         </div>
@@ -47,25 +53,26 @@
 
     <!-- Daftar file -->
     <div class="mt-8">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-xl font-semibold text-gray-800">Daftar file di Supabase</h2>
+      <div class="flex flex-col sm:flex-row items-center justify-between mb-3 gap-2">
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Daftar file di Supabase</h2>
         <div class="flex items-center gap-2">
-          <button id="refreshButton" class="bg-gray-200 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-300">Segarkan</button>
+          <button id="refreshButton" class="bg-gray-200 text-gray-800 px-3 py-1 rounded-md hover:bg-gray-300 text-sm">Segarkan</button>
           <span id="listStatus" class="text-sm text-gray-500"></span>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
+      <!-- Kontainer responsif untuk tabel -->
+      <div class="overflow-x-auto rounded-lg">
         <table class="w-full table-auto border-collapse">
           <thead>
-            <tr class="bg-gray-50">
+            <tr class="bg-gray-50 text-xs sm:text-sm">
               <th class="text-left p-2 border-b">Filename</th>
               <th class="text-left p-2 border-b">MIME</th>
-              <th class="text-left p-2 border-b">Created At</th>
-              <th class="p-2 border-b">Aksi</th>
+              <th class="text-left p-2 border-b whitespace-nowrap">Dibuat Pada</th>
+              <th class="p-2 border-b whitespace-nowrap">Aksi</th>
             </tr>
           </thead>
-          <tbody id="filesTbody" class="bg-white">
+          <tbody id="filesTbody" class="bg-white text-xs sm:text-sm">
             <!-- Rows will be inserted here -->
           </tbody>
         </table>
@@ -194,7 +201,7 @@
 
     // Upload: do not show popup on success; instead update listStatus briefly and refresh files
     uploadButton.addEventListener('click', async () => {
-      if (!currentBase64) { showMessage('Tidak ada data untuk diupload. Pilih file terlebih dahulu.'); return; }
+      if (!currentBase64) { showMessage('Tidak ada data untuk diunggah. Pilih file terlebih dahulu.'); return; }
 
       const m = currentBase64.match(/^data:(.+);base64,(.*)$/);
       const mime = m ? m[1] : currentMime || 'application/octet-stream';
@@ -203,7 +210,7 @@
       uploadButton.disabled = true;
       uploadButton.classList.add('opacity-50', 'cursor-not-allowed');
       const prevText = uploadButton.textContent;
-      uploadButton.textContent = 'Mengupload...';
+      uploadButton.textContent = 'Mengunggah...';
 
       const payload = { filename: currentFileName, mime_type: mime, base64: base64Data };
 
@@ -221,13 +228,13 @@
 
         if (res.ok) {
           // silent success: set status briefly and refresh list
-          listStatus.textContent = 'Upload sukses';
-          setTimeout(() => { if (listStatus.textContent === 'Upload sukses') listStatus.textContent = ''; }, 3000);
+          listStatus.textContent = 'Unggah sukses';
+          setTimeout(() => { if (listStatus.textContent === 'Unggah sukses') listStatus.textContent = ''; }, 3000);
           resetSelection();
           await fetchFiles();
         } else {
           const text = await res.text();
-          showMessage(`Gagal upload. Status ${res.status} ${res.statusText}\n\n${text}`);
+          showMessage(`Gagal unggah. Status ${res.status} ${res.statusText}\n\n${text}`);
         }
       } catch (err) {
         showMessage('Kesalahan jaringan: ' + err.message);
@@ -269,11 +276,11 @@
           const created = f.created_at ? (new Date(f.created_at)).toLocaleString() : '-';
           return `
             <tr class="border-b">
-              <td class="p-2">${escapeHtml(f.filename)}</td>
-              <td class="p-2">${escapeHtml(f.mime_type || '')}</td>
-              <td class="p-2">${escapeHtml(created)}</td>
+              <td class="p-2 break-words">${escapeHtml(f.filename)}</td>
+              <td class="p-2 break-words">${escapeHtml(f.mime_type || '')}</td>
+              <td class="p-2 whitespace-nowrap">${escapeHtml(created)}</td>
               <td class="p-2">
-                <div class="flex gap-2">
+                <div class="flex flex-col sm:flex-row gap-2">
                   <button data-id="${f.id}" class="viewBtn bg-green-500 text-white px-2 py-1 rounded-md text-sm hover:bg-green-600">Lihat</button>
                   <button data-id="${f.id}" class="deleteBtn bg-red-500 text-white px-2 py-1 rounded-md text-sm hover:bg-red-600">Hapus</button>
                 </div>
@@ -304,8 +311,31 @@
       const deleteBtn = ev.target.closest('.deleteBtn');
       if (deleteBtn) {
         const id = deleteBtn.dataset.id;
-        if (!confirm('Hapus file ini dari database? Tindakan tidak dapat dibatalkan.')) return;
-        await deleteFile(id, deleteBtn);
+        // Ganti konfirmasi dengan custom modal
+        const ok = await new Promise((resolve) => {
+          const message = "Hapus file ini dari database? Tindakan tidak dapat dibatalkan.";
+          showMessage(message);
+          messageBox.querySelector('#messageCloseBtn').textContent = "Batal";
+          const deleteConfirmBtn = document.createElement('button');
+          deleteConfirmBtn.textContent = "Hapus";
+          deleteConfirmBtn.className = "bg-red-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-red-600 ml-2";
+          messageBox.querySelector('.mt-4').appendChild(deleteConfirmBtn);
+          deleteConfirmBtn.addEventListener('click', () => {
+            messageBox.querySelector('.mt-4').removeChild(deleteConfirmBtn);
+            messageBox.querySelector('#messageCloseBtn').textContent = "Tutup";
+            closeMessageBox();
+            resolve(true);
+          });
+          messageBox.querySelector('#messageCloseBtn').addEventListener('click', () => {
+            messageBox.querySelector('.mt-4').removeChild(deleteConfirmBtn);
+            messageBox.querySelector('#messageCloseBtn').textContent = "Tutup";
+            closeMessageBox();
+            resolve(false);
+          }, { once: true });
+        });
+        if (ok) {
+          await deleteFile(id, deleteBtn);
+        }
         return;
       }
     });
