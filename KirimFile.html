@@ -5,16 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Unggah Gambar/Video/Teks</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JavaScript Client Library, dibutuhkan untuk fitur real-time -->
+  <!-- Supabase JavaScript Client Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Library QR Code -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; background-color: #1f2937; color: #f3f4f6; }
-    /* Pastikan tabel tidak meluap di perangkat kecil */
     .table-container { overflow-x: auto; }
-    /* Style kustom untuk placeholder file input */
     input[type="file"]::file-selector-button {
       background-color: #374151;
       color: #f3f4f6;
@@ -27,7 +25,6 @@
     input[type="file"]::file-selector-button:hover {
       background-color: #4b5563;
     }
-    /* Sembunyikan konfirmasi bawaan browser */
     .custom-confirm-modal {
       position: fixed;
       top: 0;
@@ -45,7 +42,6 @@
       opacity: 0;
       pointer-events: none;
     }
-    /* Style kustom untuk tombol pilih file */
     .file-input-wrapper {
       position: relative;
       overflow: hidden;
@@ -66,7 +62,7 @@
       display: inline-block;
       padding: 0.5rem 1.5rem;
       border-radius: 0.5rem;
-      background-color: #3b82f6; /* Warna biru */
+      background-color: #3b82f6;
       color: white;
       transition: background-color 0.2s;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -83,20 +79,17 @@
     <p class="text-center text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
       Pilih gambar atau video, atau ketik teks untuk diunggah.
     </p>
-
     <!-- Tombol untuk menyembunyikan/menampilkan area unggahan -->
     <div class="flex justify-center mb-6">
       <button id="toggleUploadsButton" class="bg-gray-700 text-gray-200 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200">
         Tampilkan Unggahan
       </button>
     </div>
-
     <!-- Area untuk upload file dan teks -->
     <div id="uploadAreasContainer" class="hidden">
       <!-- Upload area for Files -->
       <div id="fileUploadArea" class="space-y-4">
         <div class="flex flex-col sm:flex-row gap-4 items-center">
-          <!-- Tombol Pilih File -->
           <div class="file-input-wrapper flex-1">
             <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
             <input id="fileInput" type="file" accept="image/*,video/*" />
@@ -105,7 +98,6 @@
             Unggah File
           </button>
         </div>
-        
         <!-- Ringkasan file terpilih (responsif) -->
         <div id="fileSummary" class="hidden flex-col sm:flex-row items-center gap-4 p-4 border border-blue-700 rounded-lg bg-blue-950/40 transition-all duration-300">
           <div class="flex-shrink-0">
@@ -119,7 +111,6 @@
           </div>
         </div>
       </div>
-
       <!-- Upload area for Text -->
       <div id="textUploadArea" class="mt-8 space-y-4">
         <h2 class="text-lg font-semibold text-gray-200">Unggah Teks</h2>
@@ -129,7 +120,6 @@
         </button>
       </div>
     </div>
-
     <!-- Message box (untuk error/detailed info) -->
     <div id="messageBox" class="custom-confirm-modal hidden">
       <div class="bg-gray-800 rounded-xl p-6 shadow-2xl max-w-lg text-center w-full border border-gray-700">
@@ -140,7 +130,6 @@
         </div>
       </div>
     </div>
-
     <!-- Daftar file -->
     <div class="mt-8">
       <div class="flex flex-col sm:flex-row items-center justify-between mb-3 gap-2">
@@ -149,12 +138,12 @@
           <span id="listStatus" class="text-sm text-gray-400"></span>
         </div>
       </div>
-
       <!-- Kontainer responsif untuk tabel -->
       <div class="overflow-x-auto rounded-lg border border-gray-700 shadow-sm">
         <table class="w-full table-auto border-collapse">
           <thead>
             <tr class="bg-gray-700 text-xs sm:text-sm text-gray-300">
+              <th class="text-left p-3 border-b border-gray-700">ID Server</th>
               <th class="text-left p-3 border-b border-gray-700">Filename</th>
               <th class="text-left p-3 border-b border-gray-700">MIME</th>
               <th class="text-left p-3 border-b border-gray-700 whitespace-nowrap">Dibuat Pada</th>
@@ -166,26 +155,32 @@
           </tbody>
         </table>
       </div>
+      <!-- Input untuk memasukkan server_id -->
+      <div class="mt-4">
+        <label for="serverIdInput" class="text-sm font-semibold text-gray-200">Masukkan ID Server:</label>
+        <div class="flex flex-col sm:flex-row gap-2 mt-2">
+          <input id="serverIdInput" type="text" placeholder="Ketik ID Server untuk memfilter..." class="w-full p-3 border border-gray-600 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" />
+          <button id="filterServerIdButton" class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+            Filter
+          </button>
+        </div>
+      </div>
     </div>
-
     <!-- QR Code -->
     <div class="mt-8 flex flex-col items-center">
-      <h3 class="text-lg font-semibold text-gray-200 mb-4">Pindai untuk Mengakses</h3>
+      <h3 class="text-lg font-semibold text-gray-200 mb-4">Pindai untuk Mengakses (ID Server: <span id="currentServerId"></span>)</h3>
       <div id="qrCodeContainer" class="p-2 bg-white rounded-lg shadow-md"></div>
     </div>
   </div>
-
   <script>
     // ==== CONFIG ====
     const SUPABASE_URL = 'https://nqvgnmmvlfogouvdxkkr.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdmdubW12bGZvZ291dmR4a2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzOTEzMTgsImV4cCI6MjA3MTk2NzMxOH0.rliklScLWkzcC_qVNsCEus9b96DTravbfnfCILQXBWQ';
-    const MAX_SAFE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB - tunable
+    const MAX_SAFE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
     // =================
-    
     // Inisialisasi Supabase Client
     const { createClient } = supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-
     const fileInput = document.getElementById('fileInput');
     const fileInputLabel = document.getElementById('fileInputLabel');
     const uploadButton = document.getElementById('uploadButton');
@@ -193,26 +188,34 @@
     const uploadTextButton = document.getElementById('uploadTextButton');
     const toggleUploadsButton = document.getElementById('toggleUploadsButton');
     const uploadAreasContainer = document.getElementById('uploadAreasContainer');
-
     const fileSummary = document.getElementById('fileSummary');
     const imgThumb = document.getElementById('imgThumb');
     const videoThumb = document.getElementById('videoThumb');
     const summaryName = document.getElementById('summaryName');
     const summarySize = document.getElementById('summarySize');
     const summaryMime = document.getElementById('summaryMime');
-
     const messageBox = document.getElementById('messageBox');
     const messageText = document.getElementById('messageText');
     const messageCloseBtn = document.getElementById('messageCloseBtn');
-
     const listStatus = document.getElementById('listStatus');
     const filesTbody = document.getElementById('filesTbody');
-
-    // Base64 only in JS variable (never rendered)
+    const serverIdInput = document.getElementById('serverIdInput');
+    const filterServerIdButton = document.getElementById('filterServerIdButton');
+    const currentServerIdDisplay = document.getElementById('currentServerId');
     let currentBase64 = '';
     let currentFileName = '';
     let currentMime = '';
-
+    let sessionServerId = ''; // Store session-wide server_id
+    let filterServerId = ''; // Store the user-entered server_id for filtering
+    // Function to generate random server_id
+    function generateServerId() {
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < 8; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+      return result;
+    }
     function showMessage(text) {
       messageText.textContent = text;
       messageBox.classList.remove('hidden');
@@ -221,8 +224,6 @@
       messageBox.classList.add('hidden');
     }
     messageCloseBtn.addEventListener('click', closeMessageBox);
-
-    // Toggle logic for upload areas
     toggleUploadsButton.addEventListener('click', () => {
       uploadAreasContainer.classList.toggle('hidden');
       if (uploadAreasContainer.classList.contains('hidden')) {
@@ -231,21 +232,15 @@
         toggleUploadsButton.textContent = 'Sembunyikan Unggahan';
       }
     });
-
-    // File selection: preview via object URL, then read as dataURL into currentBase64
     fileInput.addEventListener('change', async (ev) => {
       const file = ev.target.files?.[0];
       if (!file) { resetSelection(); return; }
-
       fileInputLabel.textContent = file.name;
-
-      // show lightweight preview
       const objectUrl = URL.createObjectURL(file);
       summaryName.textContent = file.name;
       summarySize.textContent = `Ukuran: ${formatBytes(file.size)}`;
       summaryMime.textContent = `MIME: ${file.type || 'unknown'}`;
       fileSummary.classList.remove('hidden');
-
       if (file.type.startsWith('image/')) {
         imgThumb.src = objectUrl;
         imgThumb.classList.remove('hidden');
@@ -258,42 +253,35 @@
         imgThumb.classList.add('hidden');
         imgThumb.src = '';
       } else {
-        // generic fallback
         imgThumb.src = '';
         imgThumb.classList.add('hidden');
         videoThumb.classList.add('hidden');
       }
-
-      // If file very large, confirm
       if (file.size > MAX_SAFE_SIZE_BYTES) {
-          // Using custom modal instead of confirm()
         const ok = await new Promise((resolve) => {
-            const message = `File lebih besar dari ${formatBytes(MAX_SAFE_SIZE_BYTES)}. Membaca & mengupload file besar dapat memakan waktu / kuota. Lanjutkan?`;
-            showMessage(message);
-            const closeBtn = messageBox.querySelector('#messageCloseBtn');
-            const confirmBtn = document.createElement('button');
-            confirmBtn.textContent = "Lanjutkan";
-            confirmBtn.className = "bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors ml-2";
-            messageBox.querySelector('.mt-6').appendChild(confirmBtn);
-
-            confirmBtn.addEventListener('click', () => {
-                messageBox.querySelector('.mt-6').removeChild(confirmBtn);
-                closeMessageBox();
-                resolve(true);
-            }, { once: true });
-            closeBtn.addEventListener('click', () => {
-                messageBox.querySelector('.mt-6').removeChild(confirmBtn);
-                closeMessageBox();
-                resolve(false);
-            }, { once: true });
+          const message = `File lebih besar dari ${formatBytes(MAX_SAFE_SIZE_BYTES)}. Membaca & mengupload file besar dapat memakan waktu / kuota. Lanjutkan?`;
+          showMessage(message);
+          const closeBtn = messageBox.querySelector('#messageCloseBtn');
+          const confirmBtn = document.createElement('button');
+          confirmBtn.textContent = "Lanjutkan";
+          confirmBtn.className = "bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors ml-2";
+          messageBox.querySelector('.mt-6').appendChild(confirmBtn);
+          confirmBtn.addEventListener('click', () => {
+            messageBox.querySelector('.mt-6').removeChild(confirmBtn);
+            closeMessageBox();
+            resolve(true);
+          }, { once: true });
+          closeBtn.addEventListener('click', () => {
+            messageBox.querySelector('.mt-6').removeChild(confirmBtn);
+            closeMessageBox();
+            resolve(false);
+          }, { once: true });
         });
         if (!ok) { resetSelection(); return; }
       }
-
-      // Read DataURL into JS variable only (may be heavy for video)
       const reader = new FileReader();
       reader.onload = (e) => {
-        currentBase64 = e.target.result; // data:[mime];base64,....
+        currentBase64 = e.target.result;
         currentFileName = file.name || `file_${Date.now()}`;
         currentMime = file.type || 'application/octet-stream';
         uploadButton.disabled = false;
@@ -305,8 +293,6 @@
       };
       reader.readAsDataURL(file);
     });
-    
-    // Listen for text input to enable/disable button
     textInput.addEventListener('input', () => {
       if (textInput.value.trim().length > 0) {
         uploadTextButton.disabled = false;
@@ -316,7 +302,6 @@
         uploadTextButton.classList.add('opacity-50', 'cursor-not-allowed');
       }
     });
-
     function resetSelection() {
       currentBase64 = '';
       currentFileName = '';
@@ -335,7 +320,6 @@
       fileInput.value = '';
       fileInputLabel.textContent = "Pilih File";
     }
-
     function formatBytes(bytes, decimals = 2) {
       if (!bytes) return '0 B';
       const k = 1024;
@@ -344,44 +328,34 @@
       const i = Math.floor(Math.log(bytes) / Math.log(k));
       return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
-
-    // Upload file handler
     uploadButton.addEventListener('click', async () => {
       if (!currentBase64) { showMessage('Tidak ada data untuk diunggah. Pilih file terlebih dahulu.'); return; }
-      
       const base64Data = currentBase64.split(',')[1];
       await performUpload(currentFileName, currentMime, base64Data, uploadButton);
     });
-    
-    // Upload text handler
     uploadTextButton.addEventListener('click', async () => {
       const text = textInput.value.trim();
       if (!text) {
         showMessage('Kotak teks kosong. Silakan ketik sesuatu untuk diunggah.');
         return;
       }
-      
       const fileName = `text_${Date.now()}.txt`;
       const mimeType = 'text/plain';
-      const base64Data = btoa(text); // Mengubah teks menjadi base64
-
+      const base64Data = btoa(text);
       await performUpload(fileName, mimeType, base64Data, uploadTextButton);
       textInput.value = '';
       uploadTextButton.disabled = true;
       uploadTextButton.classList.add('opacity-50', 'cursor-not-allowed');
     });
-    
     async function performUpload(filename, mimeType, base64Data, btn) {
       btn.disabled = true;
       btn.classList.add('opacity-50', 'cursor-not-allowed');
       const prevText = btn.textContent;
       btn.textContent = 'Mengunggah...';
-
       try {
         const { data, error } = await supabaseClient
           .from('images')
-          .insert([{ filename: filename, mime_type: mimeType, base64: base64Data }]);
-
+          .insert([{ filename, mime_type: mimeType, base64: base64Data, server_id: sessionServerId }]);
         if (error) {
           showMessage(`Gagal unggah: ${error.message}`);
         } else {
@@ -399,33 +373,36 @@
         btn.textContent = prevText;
       }
     }
-
-    // --- Fetch file list (no base64) ---
     async function fetchFiles() {
       listStatus.textContent = 'Memuat...';
       filesTbody.innerHTML = '';
       try {
-        const { data: files, error } = await supabaseClient
+        let query = supabaseClient
           .from('images')
-          .select('id,filename,mime_type,created_at')
+          .select('id,server_id,filename,mime_type,created_at')
           .order('created_at', { ascending: false });
-
+        // Filter by sessionServerId if no filterServerId is set, otherwise filter by filterServerId
+        if (filterServerId) {
+          query = query.eq('server_id', filterServerId);
+        } else {
+          query = query.eq('server_id', sessionServerId);
+        }
+        const { data: files, error } = await query;
         if (error) {
           showMessage(`Gagal mengambil daftar file: ${error.message}`);
           listStatus.textContent = 'Gagal';
           return;
         }
-
         if (!Array.isArray(files) || files.length === 0) {
-          filesTbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">Belum ada file.</td></tr>`;
+          filesTbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada file untuk ID Server ini.</td></tr>`;
           listStatus.textContent = 'Selesai';
           return;
         }
-
         filesTbody.innerHTML = files.map(f => {
           const created = f.created_at ? (new Date(f.created_at)).toLocaleString() : '-';
           return `
             <tr class="hover:bg-gray-700 transition-colors">
+              <td class="p-3 break-words text-gray-200">${escapeHtml(f.server_id || '')}</td>
               <td class="p-3 break-words text-gray-200">${escapeHtml(f.filename)}</td>
               <td class="p-3 break-words text-gray-400">${escapeHtml(f.mime_type || '')}</td>
               <td class="p-3 whitespace-nowrap text-gray-400">${escapeHtml(created)}</td>
@@ -444,13 +421,10 @@
         listStatus.textContent = 'Gagal';
       }
     }
-
     function escapeHtml(s) {
       if (!s) return '';
       return s.replaceAll('&', '&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
     }
-
-    // Event delegation for view & delete
     filesTbody.addEventListener('click', async (ev) => {
       const viewBtn = ev.target.closest('.viewBtn');
       if (viewBtn) {
@@ -461,7 +435,6 @@
       const deleteBtn = ev.target.closest('.deleteBtn');
       if (deleteBtn) {
         const id = deleteBtn.dataset.id;
-        // Ganti konfirmasi dengan custom modal
         const ok = await new Promise((resolve) => {
           const message = "Hapus file ini dari database? Tindakan tidak dapat dibatalkan.";
           showMessage(message);
@@ -489,8 +462,6 @@
         return;
       }
     });
-
-    // --- View: fetch base64 from Supabase and open in new tab (works for images, videos & text) ---
     async function viewFile(id) {
       try {
         const { data: rows, error } = await supabaseClient
@@ -498,17 +469,13 @@
           .select('base64,mime_type,filename')
           .eq('id', id)
           .limit(1);
-
         if (error) {
           showMessage(`Gagal mengambil file: ${error.message}`);
           return;
         }
-        
         if (!rows || rows.length === 0) { showMessage('Data file tidak ditemukan.'); return; }
         const row = rows[0];
         const dataUri = `data:${row.mime_type || 'application/octet-stream'};base64,${row.base64}`;
-        
-        // Cek tipe MIME dan tampilkan dengan cara yang sesuai
         const w = window.open();
         try {
           w.document.write(`<title>${escapeHtml(row.filename || 'file')}</title>`);
@@ -517,15 +484,12 @@
           } else if ((row.mime_type || '').startsWith('video/')) {
             w.document.write(`<video controls src="${dataUri}" style="width:100%;height:auto;display:block;margin:0 auto"></video>`);
           } else if ((row.mime_type || '').startsWith('text/')) {
-            // Menampilkan konten teks
             const textContent = atob(row.base64);
             w.document.write(`<pre style="font-family:monospace; white-space:pre-wrap; word-wrap:break-word; padding:1rem; background-color:#2a3443; color:white; border-radius:8px;">${escapeHtml(textContent)}</pre>`);
           } else {
-            // fallback: link download
             w.document.write(`<a href="${dataUri}" download="${escapeHtml(row.filename || 'file')}">Unduh file</a>`);
           }
         } catch (e) {
-          // fallback: trigger download
           const a = document.createElement('a');
           a.href = dataUri;
           a.download = row.filename || 'file';
@@ -535,8 +499,6 @@
         showMessage('Kesalahan saat mengambil file: ' + err.message);
       }
     }
-
-    // --- Delete file ---
     async function deleteFile(id, btnElement) {
       if (btnElement) {
         btnElement.disabled = true;
@@ -548,7 +510,6 @@
           .from('images')
           .delete()
           .eq('id', id);
-
         if (error) {
           showMessage(`Gagal menghapus: ${error.message}`);
         } else {
@@ -564,36 +525,56 @@
         }
       }
     }
-
-    // Inisialisasi: pasang listener real-time dan ambil daftar file awal
+    // Filter files by server_id
+    filterServerIdButton.addEventListener('click', () => {
+      filterServerId = serverIdInput.value.trim();
+      if (!filterServerId) {
+        filterServerId = sessionServerId; // Revert to sessionServerId if input is empty
+        serverIdInput.value = '';
+      }
+      fetchFiles();
+    });
+    // Allow Enter key to trigger filter
+    serverIdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        filterServerId = serverIdInput.value.trim();
+        if (!filterServerId) {
+          filterServerId = sessionServerId;
+          serverIdInput.value = '';
+        }
+        fetchFiles();
+      }
+    });
     async function init() {
-      // Langganan (subscribe) ke event perubahan pada tabel 'images'
+      // Generate session-wide server_id
+      sessionServerId = generateServerId();
+      currentServerIdDisplay.textContent = sessionServerId;
       supabaseClient
         .channel('images_channel')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'images' }, payload => {
-          // Ketika ada perubahan (sisipkan, hapus, perbarui), muat ulang daftar
           fetchFiles();
         })
         .subscribe();
-      
-      // Ambil daftar file awal
       fetchFiles();
-
-      // Buat kode QR
       const qrCodeContainer = document.getElementById('qrCodeContainer');
       new QRCode(qrCodeContainer, {
-        text: "https://asmdatabase.vercel.app/KirimFile.html",
+        text: `https://asmdatabase.vercel.app/KirimFile.html?server_id=${sessionServerId}`,
         width: 128,
         height: 128,
-        colorDark : "#000000",
-        colorLight : "#ffffff",
-        correctLevel : QRCode.CorrectLevel.H
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
       });
+      // Check for server_id in URL query parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlServerId = urlParams.get('server_id');
+      if (urlServerId) {
+        filterServerId = urlServerId;
+        serverIdInput.value = urlServerId;
+        fetchFiles();
+      }
     }
-    
-    // Panggil fungsi inisialisasi
     init();
-
   </script>
 </body>
-</html>
+</html><style></style><script></script>
