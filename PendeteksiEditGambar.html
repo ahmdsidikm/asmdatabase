@@ -80,40 +80,50 @@
       Pilih gambar atau video, atau ketik teks untuk diunggah.
     </p>
 
-    <!-- Upload area for Files -->
-    <div class="space-y-4">
-      <div class="flex flex-col sm:flex-row gap-4 items-center">
-        <!-- Tombol Pilih File -->
-        <div class="file-input-wrapper flex-1">
-          <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
-          <input id="fileInput" type="file" accept="image/*,video/*" />
-        </div>
-        <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
-          Unggah File
-        </button>
-      </div>
-      
-      <!-- Ringkasan file terpilih (responsif) -->
-      <div id="fileSummary" class="hidden flex-col sm:flex-row items-center gap-4 p-4 border border-blue-200 rounded-lg bg-blue-50 transition-all duration-300">
-        <div class="flex-shrink-0">
-          <img id="imgThumb" alt="thumbnail" class="w-28 h-28 object-cover rounded-lg border border-blue-300 shadow-sm hidden" />
-          <video id="videoThumb" controls class="w-28 h-28 sm:w-48 sm:h-28 rounded-lg border border-blue-300 shadow-sm hidden"></video>
-        </div>
-        <div class="flex-1 text-center sm:text-left">
-          <div id="summaryName" class="font-bold text-gray-800 break-words"></div>
-          <div id="summarySize" class="text-sm text-gray-600 mt-1"></div>
-          <div id="summaryMime" class="text-sm text-gray-600 mt-1"></div>
-        </div>
-      </div>
+    <!-- Tombol untuk menyembunyikan/menampilkan area unggahan -->
+    <div class="flex justify-center mb-6">
+      <button id="toggleUploadsButton" class="bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-400 transition-colors duration-200">
+        Tampilkan Unggahan
+      </button>
     </div>
 
-    <!-- Upload area for Text -->
-    <div id="textUploadArea" class="mt-8 space-y-4">
-      <h2 class="text-lg font-semibold text-gray-800">Unggah Teks</h2>
-      <textarea id="textInput" rows="5" placeholder="Ketik teks yang ingin diunggah di sini..." class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></textarea>
-      <button id="uploadTextButton" disabled class="w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
-        Unggah Teks
-      </button>
+    <!-- Area untuk upload file dan teks -->
+    <div id="uploadAreasContainer" class="hidden">
+      <!-- Upload area for Files -->
+      <div id="fileUploadArea" class="space-y-4">
+        <div class="flex flex-col sm:flex-row gap-4 items-center">
+          <!-- Tombol Pilih File -->
+          <div class="file-input-wrapper flex-1">
+            <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
+            <input id="fileInput" type="file" accept="image/*,video/*" />
+          </div>
+          <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
+            Unggah File
+          </button>
+        </div>
+        
+        <!-- Ringkasan file terpilih (responsif) -->
+        <div id="fileSummary" class="hidden flex-col sm:flex-row items-center gap-4 p-4 border border-blue-200 rounded-lg bg-blue-50 transition-all duration-300">
+          <div class="flex-shrink-0">
+            <img id="imgThumb" alt="thumbnail" class="w-28 h-28 object-cover rounded-lg border border-blue-300 shadow-sm hidden" />
+            <video id="videoThumb" controls class="w-28 h-28 sm:w-48 sm:h-28 rounded-lg border border-blue-300 shadow-sm hidden"></video>
+          </div>
+          <div class="flex-1 text-center sm:text-left">
+            <div id="summaryName" class="font-bold text-gray-800 break-words"></div>
+            <div id="summarySize" class="text-sm text-gray-600 mt-1"></div>
+            <div id="summaryMime" class="text-sm text-gray-600 mt-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload area for Text -->
+      <div id="textUploadArea" class="mt-8 space-y-4">
+        <h2 class="text-lg font-semibold text-gray-800">Unggah Teks</h2>
+        <textarea id="textInput" rows="5" placeholder="Ketik teks yang ingin diunggah di sini..." class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></textarea>
+        <button id="uploadTextButton" disabled class="w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
+          Unggah Teks
+        </button>
+      </div>
     </div>
 
     <!-- Message box (untuk error/detailed info) -->
@@ -171,6 +181,8 @@
     const uploadButton = document.getElementById('uploadButton');
     const textInput = document.getElementById('textInput');
     const uploadTextButton = document.getElementById('uploadTextButton');
+    const toggleUploadsButton = document.getElementById('toggleUploadsButton');
+    const uploadAreasContainer = document.getElementById('uploadAreasContainer');
 
     const fileSummary = document.getElementById('fileSummary');
     const imgThumb = document.getElementById('imgThumb');
@@ -200,6 +212,16 @@
       messageBox.classList.add('hidden');
     }
     messageCloseBtn.addEventListener('click', closeMessageBox);
+
+    // Toggle logic for upload areas
+    toggleUploadsButton.addEventListener('click', () => {
+      uploadAreasContainer.classList.toggle('hidden');
+      if (uploadAreasContainer.classList.contains('hidden')) {
+        toggleUploadsButton.textContent = 'Tampilkan Unggahan';
+      } else {
+        toggleUploadsButton.textContent = 'Sembunyikan Unggahan';
+      }
+    });
 
     // File selection: preview via object URL, then read as dataURL into currentBase64
     fileInput.addEventListener('change', async (ev) => {
