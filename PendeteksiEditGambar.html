@@ -41,6 +41,36 @@
       opacity: 0;
       pointer-events: none;
     }
+    /* Style kustom untuk tombol pilih file */
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        cursor: pointer;
+        font-weight: 500;
+    }
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        cursor: inherit;
+        width: 100%;
+        height: 100%;
+    }
+    .file-input-label {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 0.5rem;
+        background-color: #3b82f6; /* Warna biru */
+        color: white;
+        transition: background-color 0.2s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    .file-input-label:hover {
+        background-color: #2563eb;
+    }
   </style>
 </head>
 <body class="bg-gray-100 flex items-start justify-center min-h-screen p-4 sm:p-6">
@@ -53,12 +83,16 @@
     <!-- Upload area -->
     <div class="space-y-4">
       <div class="flex flex-col sm:flex-row gap-4 items-center">
-        <input id="fileInput" type="file" accept="image/*,video/*" class="flex-1 text-gray-700 bg-gray-50 border border-gray-300 rounded-lg p-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" />
+        <!-- Tombol Pilih File yang baru -->
+        <div class="file-input-wrapper flex-1">
+          <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
+          <input id="fileInput" type="file" accept="image/*,video/*" />
+        </div>
         <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
           Unggah ke Supabase
         </button>
       </div>
-
+      
       <!-- Ringkasan file terpilih (responsif) -->
       <div id="fileSummary" class="hidden flex-col sm:flex-row items-center gap-4 p-4 border border-blue-200 rounded-lg bg-blue-50 transition-all duration-300">
         <div class="flex-shrink-0">
@@ -124,6 +158,7 @@
     // =================
 
     const fileInput = document.getElementById('fileInput');
+    const fileInputLabel = document.getElementById('fileInputLabel');
     const uploadButton = document.getElementById('uploadButton');
 
     const fileSummary = document.getElementById('fileSummary');
@@ -159,6 +194,8 @@
     fileInput.addEventListener('change', async (ev) => {
       const file = ev.target.files?.[0];
       if (!file) { resetSelection(); return; }
+
+      fileInputLabel.textContent = file.name;
 
       // show lightweight preview
       const objectUrl = URL.createObjectURL(file);
@@ -223,6 +260,7 @@
       uploadButton.disabled = true;
       uploadButton.classList.add('opacity-50', 'cursor-not-allowed');
       fileInput.value = '';
+      fileInputLabel.textContent = "Pilih File";
     }
 
     function formatBytes(bytes, decimals = 2) {
