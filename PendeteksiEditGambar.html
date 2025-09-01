@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Unggah Gambar/Video ke Supabase (Tampilan Baru)</title>
+  <title>Unggah Gambar/Video/Teks ke Supabase</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -75,21 +75,21 @@
 </head>
 <body class="bg-gray-100 flex items-start justify-center min-h-screen p-4 sm:p-6">
   <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-sm md:max-w-4xl border border-gray-200">
-    <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2 sm:mb-4">Unggah Gambar / Video ke Supabase</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-2 sm:mb-4">Unggah Gambar, Video, & Teks ke Supabase</h1>
     <p class="text-center text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">
-      Pilih gambar atau video — hasil Base64 tidak akan ditampilkan penuh agar tidak lag.
+      Pilih gambar atau video, atau ketik teks untuk diunggah.
     </p>
 
-    <!-- Upload area -->
+    <!-- Upload area for Files -->
     <div class="space-y-4">
       <div class="flex flex-col sm:flex-row gap-4 items-center">
-        <!-- Tombol Pilih File yang baru -->
+        <!-- Tombol Pilih File -->
         <div class="file-input-wrapper flex-1">
           <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
           <input id="fileInput" type="file" accept="image/*,video/*" />
         </div>
         <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
-          Unggah ke Supabase
+          Unggah File
         </button>
       </div>
       
@@ -105,6 +105,15 @@
           <div id="summaryMime" class="text-sm text-gray-600 mt-1"></div>
         </div>
       </div>
+    </div>
+
+    <!-- Upload area for Text -->
+    <div id="textUploadArea" class="mt-8 space-y-4">
+      <h2 class="text-lg font-semibold text-gray-800">Unggah Teks</h2>
+      <textarea id="textInput" rows="5" placeholder="Ketik teks yang ingin diunggah di sini..." class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></textarea>
+      <button id="uploadTextButton" disabled class="w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
+        Unggah Teks
+      </button>
     </div>
 
     <!-- Message box (untuk error/detailed info) -->
@@ -160,6 +169,8 @@
     const fileInput = document.getElementById('fileInput');
     const fileInputLabel = document.getElementById('fileInputLabel');
     const uploadButton = document.getElementById('uploadButton');
+    const textInput = document.getElementById('textInput');
+    const uploadTextButton = document.getElementById('uploadTextButton');
 
     const fileSummary = document.getElementById('fileSummary');
     const imgThumb = document.getElementById('imgThumb');
@@ -190,7 +201,7 @@
     }
     messageCloseBtn.addEventListener('click', closeMessageBox);
 
-    // File selection: preview via object URL, confirm if large, then read as dataURL into currentBase64
+    // File selection: preview via object URL, then read as dataURL into currentBase64
     fileInput.addEventListener('change', async (ev) => {
       const file = ev.target.files?.[0];
       if (!file) { resetSelection(); return; }
@@ -224,7 +235,27 @@
 
       // If file very large, confirm
       if (file.size > MAX_SAFE_SIZE_BYTES) {
-        const ok = confirm(`File lebih besar dari ${formatBytes(MAX_SAFE_SIZE_BYTES)}. Membaca & mengupload file besar dapat memakan waktu / kuota. Lanjutkan?`);
+         // Using custom modal instead of confirm()
+        const ok = await new Promise((resolve) => {
+            const message = `File lebih besar dari ${formatBytes(MAX_SAFE_SIZE_BYTES)}. Membaca & mengupload file besar dapat memakan waktu / kuota. Lanjutkan?`;
+            showMessage(message);
+            const closeBtn = messageBox.querySelector('#messageCloseBtn');
+            const confirmBtn = document.createElement('button');
+            confirmBtn.textContent = "Lanjutkan";
+            confirmBtn.className = "bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors ml-2";
+            messageBox.querySelector('.mt-6').appendChild(confirmBtn);
+
+            confirmBtn.addEventListener('click', () => {
+                messageBox.querySelector('.mt-6').removeChild(confirmBtn);
+                closeMessageBox();
+                resolve(true);
+            }, { once: true });
+            closeBtn.addEventListener('click', () => {
+                messageBox.querySelector('.mt-6').removeChild(confirmBtn);
+                closeMessageBox();
+                resolve(false);
+            }, { once: true });
+        });
         if (!ok) { resetSelection(); return; }
       }
 
@@ -242,6 +273,17 @@
         resetSelection();
       };
       reader.readAsDataURL(file);
+    });
+    
+    // Listen for text input to enable/disable button
+    textInput.addEventListener('input', () => {
+      if (textInput.value.trim().length > 0) {
+        uploadTextButton.disabled = false;
+        uploadTextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+      } else {
+        uploadTextButton.disabled = true;
+        uploadTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+      }
     });
 
     function resetSelection() {
@@ -272,7 +314,7 @@
       return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
 
-    // Upload: do not show popup on success; instead update listStatus briefly and refresh files
+    // Upload file handler
     uploadButton.addEventListener('click', async () => {
       if (!currentBase64) { showMessage('Tidak ada data untuk diunggah. Pilih file terlebih dahulu.'); return; }
 
@@ -280,12 +322,34 @@
       const mime = m ? m[1] : currentMime || 'application/octet-stream';
       const base64Data = m ? m[2] : currentBase64;
 
-      uploadButton.disabled = true;
-      uploadButton.classList.add('opacity-50', 'cursor-not-allowed');
-      const prevText = uploadButton.textContent;
-      uploadButton.textContent = 'Mengunggah...';
+      await performUpload(currentFileName, mime, base64Data, uploadButton);
+    });
+    
+    // Upload text handler
+    uploadTextButton.addEventListener('click', async () => {
+      const text = textInput.value.trim();
+      if (!text) {
+        showMessage('Kotak teks kosong. Silakan ketik sesuatu untuk diunggah.');
+        return;
+      }
+      
+      const fileName = `text_${Date.now()}.txt`;
+      const mimeType = 'text/plain';
+      const base64Data = btoa(text); // Mengubah teks menjadi base64
 
-      const payload = { filename: currentFileName, mime_type: mime, base64: base64Data };
+      await performUpload(fileName, mimeType, base64Data, uploadTextButton);
+      textInput.value = '';
+      uploadTextButton.disabled = true;
+      uploadTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+    });
+    
+    async function performUpload(filename, mimeType, base64Data, btn) {
+      btn.disabled = true;
+      btn.classList.add('opacity-50', 'cursor-not-allowed');
+      const prevText = btn.textContent;
+      btn.textContent = 'Mengunggah...';
+
+      const payload = { filename: filename, mime_type: mimeType, base64: base64Data };
 
       try {
         const res = await fetch(SUPABASE_REST_ENDPOINT, {
@@ -300,10 +364,11 @@
         });
 
         if (res.ok) {
-          // silent success: set status briefly and refresh list
           listStatus.textContent = 'Unggah sukses';
           setTimeout(() => { if (listStatus.textContent === 'Unggah sukses') listStatus.textContent = ''; }, 3000);
-          resetSelection();
+          if (btn === uploadButton) {
+            resetSelection();
+          }
           await fetchFiles();
         } else {
           const text = await res.text();
@@ -312,11 +377,11 @@
       } catch (err) {
         showMessage('Kesalahan jaringan: ' + err.message);
       } finally {
-        uploadButton.disabled = false;
-        uploadButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        uploadButton.textContent = prevText;
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.textContent = prevText;
       }
-    });
+    }
 
     // --- Fetch file list (no base64) ---
     async function fetchFiles() {
@@ -413,7 +478,7 @@
       }
     });
 
-    // --- View: fetch base64 from Supabase and open in new tab (works for images & videos) ---
+    // --- View: fetch base64 from Supabase and open in new tab (works for images, videos & text) ---
     async function viewFile(id) {
       try {
         const res = await fetch(`${SUPABASE_REST_ENDPOINT}?select=base64,mime_type,filename&limit=1&id=eq.${encodeURIComponent(id)}`, {
@@ -432,7 +497,8 @@
         if (!rows || rows.length === 0) { showMessage('Data file tidak ditemukan.'); return; }
         const row = rows[0];
         const dataUri = `data:${row.mime_type || 'application/octet-stream'};base64,${row.base64}`;
-        // buka di tab baru, untuk video & gambar akan tampil
+        
+        // Cek tipe MIME dan tampilkan dengan cara yang sesuai
         const w = window.open();
         try {
           w.document.write(`<title>${escapeHtml(row.filename || 'file')}</title>`);
@@ -440,6 +506,10 @@
             w.document.write(`<img src="${dataUri}" style="max-width:100%;height:auto;display:block;margin:0 auto" />`);
           } else if ((row.mime_type || '').startsWith('video/')) {
             w.document.write(`<video controls src="${dataUri}" style="width:100%;height:auto;display:block;margin:0 auto"></video>`);
+          } else if ((row.mime_type || '').startsWith('text/')) {
+            // Menampilkan konten teks
+            const textContent = atob(row.base64);
+            w.document.write(`<pre style="font-family:monospace; white-space:pre-wrap; word-wrap:break-word; padding:1rem; background-color:#f4f4f4; border-radius:8px;">${escapeHtml(textContent)}</pre>`);
           } else {
             // fallback: link download
             w.document.write(`<a href="${dataUri}" download="${escapeHtml(row.filename || 'file')}">Unduh file</a>`);
