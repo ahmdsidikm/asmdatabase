@@ -76,6 +76,46 @@
       color: #fca5a5;
       font-weight: 500;
     }
+    .popup-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .popup-modal.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .popup-content {
+      background-color: #1f2937;
+      padding: 2rem;
+      border-radius: 1rem;
+      max-width: 90%;
+      width: 600px;
+      position: relative;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    }
+    .close-button {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #9ca3af;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .close-button:hover {
+      color: #f3f4f6;
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 flex items-start justify-center min-h-screen p-4 sm:p-6">
@@ -84,45 +124,49 @@
     <p class="text-center text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
       Pilih gambar, video, dokumen, atau ketik teks untuk diunggah.
     </p>
-    <!-- Tombol untuk menyembunyikan/menampilkan area unggahan -->
+    <!-- Tombol untuk membuka popup unggahan -->
     <div class="flex justify-center mb-6">
-      <button id="toggleUploadsButton" class="bg-gray-700 text-gray-200 font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200">
-        Tampilkan Unggahan
+      <button id="openUploadPopupBtn" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
+        Unggah File & Teks
       </button>
     </div>
-    <!-- Area untuk upload file dan teks -->
-    <div id="uploadAreasContainer" class="hidden">
-      <!-- Upload area for Files -->
-      <div id="fileUploadArea" class="space-y-4">
-        <div class="flex flex-col sm:flex-row gap-4 items-center">
-          <div class="file-input-wrapper flex-1">
-            <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
-            <input id="fileInput" type="file" />
+    <!-- Popup untuk area upload file dan teks -->
+    <div id="uploadPopup" class="popup-modal hidden">
+      <div class="popup-content">
+        <button id="closeUploadPopupBtn" class="close-button">&times;</button>
+        <h2 class="text-xl font-bold mb-4 text-white">Unggah File atau Teks</h2>
+        <!-- Upload area for Files -->
+        <div id="fileUploadArea" class="space-y-4">
+          <div class="flex flex-col sm:flex-row gap-4 items-center">
+            <div class="file-input-wrapper flex-1">
+              <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
+              <input id="fileInput" type="file" />
+            </div>
+            <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
+              Unggah File
+            </button>
           </div>
-          <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
-            Unggah File
+          <!-- Ringkasan file terpilih (responsif) -->
+          <div id="fileSummary" class="hidden flex-col sm:flex-row items-center gap-4 p-4 border border-blue-700 rounded-lg bg-blue-950/40 transition-all duration-300">
+            <div class="flex-shrink-0">
+              <img id="imgThumb" alt="thumbnail" class="w-28 h-28 object-cover rounded-lg border border-blue-700 shadow-sm hidden" />
+              <video id="videoThumb" controls class="w-28 h-28 sm:w-48 sm:h-28 rounded-lg border border-blue-700 shadow-sm hidden"></video>
+            </div>
+            <div class="flex-1 text-center sm:text-left">
+              <div id="summaryName" class="font-bold text-gray-200 break-words"></div>
+              <div id="summarySize" class="text-sm text-gray-400 mt-1"></div>
+              <div id="summaryMime" class="text-sm text-gray-400 mt-1"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Upload area for Text -->
+        <div id="textUploadArea" class="mt-8 space-y-4">
+          <h2 class="text-lg font-semibold text-gray-200">Unggah Teks</h2>
+          <textarea id="textInput" rows="5" placeholder="Ketik teks yang ingin diunggah di sini..." class="w-full p-3 border border-gray-600 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></textarea>
+          <button id="uploadTextButton" disabled class="w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
+            Unggah Teks
           </button>
         </div>
-        <!-- Ringkasan file terpilih (responsif) -->
-        <div id="fileSummary" class="hidden flex-col sm:flex-row items-center gap-4 p-4 border border-blue-700 rounded-lg bg-blue-950/40 transition-all duration-300">
-          <div class="flex-shrink-0">
-            <img id="imgThumb" alt="thumbnail" class="w-28 h-28 object-cover rounded-lg border border-blue-700 shadow-sm hidden" />
-            <video id="videoThumb" controls class="w-28 h-28 sm:w-48 sm:h-28 rounded-lg border border-blue-700 shadow-sm hidden"></video>
-          </div>
-          <div class="flex-1 text-center sm:text-left">
-            <div id="summaryName" class="font-bold text-gray-200 break-words"></div>
-            <div id="summarySize" class="text-sm text-gray-400 mt-1"></div>
-            <div id="summaryMime" class="text-sm text-gray-400 mt-1"></div>
-          </div>
-        </div>
-      </div>
-      <!-- Upload area for Text -->
-      <div id="textUploadArea" class="mt-8 space-y-4">
-        <h2 class="text-lg font-semibold text-gray-200">Unggah Teks</h2>
-        <textarea id="textInput" rows="5" placeholder="Ketik teks yang ingin diunggah di sini..." class="w-full p-3 border border-gray-600 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></textarea>
-        <button id="uploadTextButton" disabled class="w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
-          Unggah Teks
-        </button>
       </div>
     </div>
     <!-- Message box (untuk error/detailed info) -->
@@ -192,8 +236,9 @@
     const uploadButton = document.getElementById('uploadButton');
     const textInput = document.getElementById('textInput');
     const uploadTextButton = document.getElementById('uploadTextButton');
-    const toggleUploadsButton = document.getElementById('toggleUploadsButton');
-    const uploadAreasContainer = document.getElementById('uploadAreasContainer');
+    const openUploadPopupBtn = document.getElementById('openUploadPopupBtn');
+    const closeUploadPopupBtn = document.getElementById('closeUploadPopupBtn');
+    const uploadPopup = document.getElementById('uploadPopup');
     const fileSummary = document.getElementById('fileSummary');
     const imgThumb = document.getElementById('imgThumb');
     const videoThumb = document.getElementById('videoThumb');
@@ -231,13 +276,11 @@
       messageBox.classList.add('hidden');
     }
     messageCloseBtn.addEventListener('click', closeMessageBox);
-    toggleUploadsButton.addEventListener('click', () => {
-      uploadAreasContainer.classList.toggle('hidden');
-      if (uploadAreasContainer.classList.contains('hidden')) {
-        toggleUploadsButton.textContent = 'Tampilkan Unggahan';
-      } else {
-        toggleUploadsButton.textContent = 'Sembunyikan Unggahan';
-      }
+    openUploadPopupBtn.addEventListener('click', () => {
+      uploadPopup.classList.remove('hidden');
+    });
+    closeUploadPopupBtn.addEventListener('click', () => {
+      uploadPopup.classList.add('hidden');
     });
     fileInput.addEventListener('change', async (ev) => {
       const file = ev.target.files?.[0];
