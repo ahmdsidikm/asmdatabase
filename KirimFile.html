@@ -71,6 +71,11 @@
     .file-input-label:hover {
       background-color: #2563eb;
     }
+    .countdown-timer {
+      font-size: 0.8rem;
+      color: #fca5a5;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 flex items-start justify-center min-h-screen p-4 sm:p-6">
@@ -146,7 +151,7 @@
               <th class="text-left p-3 border-b border-gray-700">ID Server</th>
               <th class="text-left p-3 border-b border-gray-700">Filename</th>
               <th class="text-left p-3 border-b border-gray-700">MIME</th>
-              <th class="text-left p-3 border-b border-gray-700 whitespace-nowrap">Dibuat Pada</th>
+              <th class="text-left p-3 border-b border-gray-700 whitespace-nowrap">Waktu Habis</th>
               <th class="p-3 border-b border-gray-700 whitespace-nowrap">Aksi</th>
             </tr>
           </thead>
@@ -177,6 +182,7 @@
     const SUPABASE_URL = 'https://nqvgnmmvlfogouvdxkkr.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdmdubW12bGZvZ291dmR4a2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzOTEzMTgsImV4cCI6MjA3MTk2NzMxOH0.rliklScLWkzcC_qVNsCEus9b96DTravbfnfCILQXBWQ';
     const MAX_SAFE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+    const EXPIRATION_MINUTES = 5;
     // =================
     // Inisialisasi Supabase Client
     const { createClient } = supabase;
@@ -207,6 +213,7 @@
     let currentMime = '';
     let sessionServerId = ''; // Store session-wide server_id
     let filterServerId = ''; // Store the user-entered server_id for filtering
+    const countdownIntervals = {};
     // Function to generate random server_id
     function generateServerId() {
       const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -373,9 +380,45 @@
         btn.textContent = prevText;
       }
     }
+    function startCountdown(fileId, createdAt) {
+      const row = document.querySelector(`tr[data-id="${fileId}"]`);
+      if (!row) return;
+      const timerElement = row.querySelector('.countdown-timer');
+      if (!timerElement) return;
+      
+      const createdTime = new Date(createdAt).getTime();
+      const expirationTime = createdTime + (EXPIRATION_MINUTES * 60 * 1000);
+      
+      // Clear existing interval to prevent duplicates
+      if (countdownIntervals[fileId]) {
+        clearInterval(countdownIntervals[fileId]);
+      }
+      
+      countdownIntervals[fileId] = setInterval(() => {
+        const now = new Date().getTime();
+        const distance = expirationTime - now;
+        
+        if (distance < 0) {
+          clearInterval(countdownIntervals[fileId]);
+          timerElement.textContent = 'Menghapus...';
+          deleteFile(fileId, null);
+          return;
+        }
+        
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        timerElement.textContent = `(${minutes}m ${seconds}s)`;
+      }, 1000);
+    }
+    
     async function fetchFiles() {
       listStatus.textContent = 'Memuat...';
       filesTbody.innerHTML = '';
+      // Clear all countdown intervals
+      for (const id in countdownIntervals) {
+          clearInterval(countdownIntervals[id]);
+      }
       try {
         let query = supabaseClient
           .from('images')
@@ -399,13 +442,14 @@
           return;
         }
         filesTbody.innerHTML = files.map(f => {
-          const created = f.created_at ? (new Date(f.created_at)).toLocaleString() : '-';
           return `
-            <tr class="hover:bg-gray-700 transition-colors">
+            <tr data-id="${f.id}" class="hover:bg-gray-700 transition-colors">
               <td class="p-3 break-words text-gray-200">${escapeHtml(f.server_id || '')}</td>
               <td class="p-3 break-words text-gray-200">${escapeHtml(f.filename)}</td>
               <td class="p-3 break-words text-gray-400">${escapeHtml(f.mime_type || '')}</td>
-              <td class="p-3 whitespace-nowrap text-gray-400">${escapeHtml(created)}</td>
+              <td class="p-3 whitespace-nowrap text-gray-400">
+                <span class="countdown-timer"></span>
+              </td>
               <td class="p-3">
                 <div class="flex flex-col sm:flex-row gap-2 items-center">
                   <button data-id="${f.id}" class="viewBtn bg-green-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-green-600 transition-colors">Lihat</button>
@@ -415,6 +459,12 @@
             </tr>
           `;
         }).join('');
+        
+        // Start countdown for each file
+        files.forEach(f => {
+          startCountdown(f.id, f.created_at);
+        });
+        
         listStatus.textContent = `Terlihat ${files.length} file`;
       } catch (err) {
         showMessage('Kesalahan saat mengambil daftar: ' + err.message);
@@ -549,13 +599,16 @@
       // Generate session-wide server_id
       sessionServerId = generateServerId();
       currentServerIdDisplay.textContent = sessionServerId;
+      
       supabaseClient
         .channel('images_channel')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'images' }, payload => {
           fetchFiles();
         })
         .subscribe();
+      
       fetchFiles();
+      
       const qrCodeContainer = document.getElementById('qrCodeContainer');
       new QRCode(qrCodeContainer, {
         text: `https://asmdatabase.vercel.app/KirimFile.html?server_id=${sessionServerId}`,
@@ -577,4 +630,4 @@
     init();
   </script>
 </body>
-</html><style></style><script></script>
+</html>
