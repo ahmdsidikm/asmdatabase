@@ -236,12 +236,9 @@
       </div>
       <!-- Input untuk memasukkan server_id -->
       <div class="mt-4">
-        <label for="serverIdInput" class="text-sm font-semibold text-gray-200">Masukkan ID Server:</label>
+        <label for="serverIdInput" class="text-sm font-semibold text-gray-200">Masukkan ID Server (Filter Otomatis):</label>
         <div class="flex flex-col sm:flex-row gap-2 mt-2">
           <input id="serverIdInput" type="text" placeholder="Ketik ID Server untuk memfilter..." class="w-full p-3 border border-gray-600 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" />
-          <button id="filterServerIdButton" class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200">
-            Filter
-          </button>
         </div>
       </div>
     </div>
@@ -281,7 +278,6 @@
     const listStatus = document.getElementById('listStatus');
     const filesTbody = document.getElementById('filesTbody');
     const serverIdInput = document.getElementById('serverIdInput');
-    const filterServerIdButton = document.getElementById('filterServerIdButton');
     const currentServerIdDisplay = document.getElementById('currentServerId');
     const useInputServerIdCheckbox = document.getElementById('useInputServerId');
     const textInput = document.getElementById('textInput');
@@ -290,6 +286,7 @@
     let currentMime = '';
     let sessionServerId = ''; // Store session-wide server_id
     let filterServerId = ''; // Store the user-entered server_id for filtering
+    let filterTimeout;
     const countdownIntervals = {};
     // Function to generate random server_id
     function generateServerId() {
@@ -521,12 +518,9 @@
           .from('images')
           .select('id,server_id,filename,mime_type,created_at,expires_at')
           .order('created_at', { ascending: false });
-        // Filter by sessionServerId if no filterServerId is set, otherwise filter by filterServerId
-        if (filterServerId) {
-          query = query.eq('server_id', filterServerId);
-        } else {
-          query = query.eq('server_id', sessionServerId);
-        }
+        // Filter by serverIdInput value if it's not empty, otherwise use sessionServerId
+        const currentFilterId = serverIdInput.value.trim() || sessionServerId;
+        query = query.eq('server_id', currentFilterId);
         const { data: files, error } = await query;
         if (error) {
           showMessage(`Gagal mengambil daftar file: ${error.message}`);
@@ -672,25 +666,10 @@
         }
       }
     }
-    // Filter files by server_id
-    filterServerIdButton.addEventListener('click', () => {
-      filterServerId = serverIdInput.value.trim();
-      if (!filterServerId) {
-        filterServerId = sessionServerId; // Revert to sessionServerId if input is empty
-        serverIdInput.value = '';
-      }
-      fetchFiles();
-    });
-    // Allow Enter key to trigger filter
-    serverIdInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        filterServerId = serverIdInput.value.trim();
-        if (!filterServerId) {
-          filterServerId = sessionServerId;
-          serverIdInput.value = '';
-        }
-        fetchFiles();
-      }
+    // Filter files by server_id automatically
+    serverIdInput.addEventListener('input', () => {
+      clearTimeout(filterTimeout);
+      filterTimeout = setTimeout(fetchFiles, 500); // 500ms debounce
     });
     async function init() {
       // Generate session-wide server_id
@@ -719,7 +698,6 @@
       const urlParams = new URLSearchParams(window.location.search);
       const urlServerId = urlParams.get('server_id');
       if (urlServerId) {
-        filterServerId = urlServerId;
         serverIdInput.value = urlServerId;
         fetchFiles();
       }
