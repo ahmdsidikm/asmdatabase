@@ -142,6 +142,14 @@
               <span id="fileInputLabel" class="file-input-label w-full block sm:inline-block">Pilih File</span>
               <input id="fileInput" type="file" />
             </div>
+            <select id="expiryTimeSelect" class="w-full sm:w-auto p-2 border border-gray-600 bg-gray-700 rounded-lg text-white">
+              <option value="5">5 Menit</option>
+              <option value="15">15 Menit</option>
+              <option value="30">30 Menit</option>
+              <option value="60">1 Jam</option>
+              <option value="240">4 Jam</option>
+              <option value="1440">1 Hari</option>
+            </select>
             <button id="uploadButton" disabled class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
               Unggah File
             </button>
@@ -163,9 +171,19 @@
         <div id="textUploadArea" class="mt-8 space-y-4">
           <h2 class="text-lg font-semibold text-gray-200">Unggah Teks</h2>
           <textarea id="textInput" rows="5" placeholder="Ketik teks yang ingin diunggah di sini..." class="w-full p-3 border border-gray-600 bg-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"></textarea>
-          <button id="uploadTextButton" disabled class="w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
-            Unggah Teks
-          </button>
+          <div class="flex items-center gap-4">
+            <select id="expiryTextSelect" class="w-full sm:w-auto p-2 border border-gray-600 bg-gray-700 rounded-lg text-white">
+              <option value="5">5 Menit</option>
+              <option value="15">15 Menit</option>
+              <option value="30">30 Menit</option>
+              <option value="60">1 Jam</option>
+              <option value="240">4 Jam</option>
+              <option value="1440">1 Hari</option>
+            </select>
+            <button id="uploadTextButton" disabled class="w-full bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 opacity-50 cursor-not-allowed">
+              Unggah Teks
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -226,13 +244,14 @@
     const SUPABASE_URL = 'https://nqvgnmmvlfogouvdxkkr.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdmdubW12bGZvZ291dmR4a2tyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzOTEzMTgsImV4cCI6MjA3MTk2NzMxOH0.rliklScLWkzcC_qVNsCEus9b96DTravbfnfCILQXBWQ';
     const MAX_SAFE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
-    const EXPIRATION_MINUTES = 5;
     // =================
     // Inisialisasi Supabase Client
     const { createClient } = supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
     const fileInput = document.getElementById('fileInput');
     const fileInputLabel = document.getElementById('fileInputLabel');
+    const expiryTimeSelect = document.getElementById('expiryTimeSelect');
+    const expiryTextSelect = document.getElementById('expiryTextSelect');
     const uploadButton = document.getElementById('uploadButton');
     const textInput = document.getElementById('textInput');
     const uploadTextButton = document.getElementById('uploadTextButton');
@@ -381,7 +400,8 @@
     uploadButton.addEventListener('click', async () => {
       if (!currentBase64) { showMessage('Tidak ada data untuk diunggah. Pilih file terlebih dahulu.'); return; }
       const base64Data = currentBase64.split(',')[1];
-      await performUpload(currentFileName, currentMime, base64Data, uploadButton);
+      const expirationMinutes = parseInt(expiryTimeSelect.value, 10);
+      await performUpload(currentFileName, currentMime, base64Data, expirationMinutes, uploadButton);
     });
     uploadTextButton.addEventListener('click', async () => {
       const text = textInput.value.trim();
@@ -392,20 +412,22 @@
       const fileName = `text_${Date.now()}.txt`;
       const mimeType = 'text/plain';
       const base64Data = btoa(text);
-      await performUpload(fileName, mimeType, base64Data, uploadTextButton);
+      const expirationMinutes = parseInt(expiryTextSelect.value, 10);
+      await performUpload(fileName, mimeType, base64Data, expirationMinutes, uploadTextButton);
       textInput.value = '';
       uploadTextButton.disabled = true;
       uploadTextButton.classList.add('opacity-50', 'cursor-not-allowed');
     });
-    async function performUpload(filename, mimeType, base64Data, btn) {
+    async function performUpload(filename, mimeType, base64Data, expirationMinutes, btn) {
       btn.disabled = true;
       btn.classList.add('opacity-50', 'cursor-not-allowed');
       const prevText = btn.textContent;
       btn.textContent = 'Mengunggah...';
+      const expiresAt = new Date(new Date().getTime() + expirationMinutes * 60 * 1000).toISOString();
       try {
         const { data, error } = await supabaseClient
           .from('images')
-          .insert([{ filename, mime_type: mimeType, base64: base64Data, server_id: sessionServerId }]);
+          .insert([{ filename, mime_type: mimeType, base64: base64Data, server_id: sessionServerId, expires_at: expiresAt }]);
         if (error) {
           showMessage(`Gagal unggah: ${error.message}`);
         } else {
@@ -423,14 +445,13 @@
         btn.textContent = prevText;
       }
     }
-    function startCountdown(fileId, createdAt) {
+    function startCountdown(fileId, expiresAt) {
       const row = document.querySelector(`tr[data-id="${fileId}"]`);
       if (!row) return;
       const timerElement = row.querySelector('.countdown-timer');
       if (!timerElement) return;
       
-      const createdTime = new Date(createdAt).getTime();
-      const expirationTime = createdTime + (EXPIRATION_MINUTES * 60 * 1000);
+      const expirationTime = new Date(expiresAt).getTime();
       
       // Clear existing interval to prevent duplicates
       if (countdownIntervals[fileId]) {
@@ -444,7 +465,7 @@
         if (distance < 0) {
           clearInterval(countdownIntervals[fileId]);
           timerElement.textContent = 'Menghapus...';
-          deleteFile(fileId, null);
+          // No need to call deleteFile, the database trigger will handle it
           return;
         }
         
@@ -465,7 +486,7 @@
       try {
         let query = supabaseClient
           .from('images')
-          .select('id,server_id,filename,mime_type,created_at')
+          .select('id,server_id,filename,mime_type,created_at,expires_at')
           .order('created_at', { ascending: false });
         // Filter by sessionServerId if no filterServerId is set, otherwise filter by filterServerId
         if (filterServerId) {
@@ -505,7 +526,7 @@
         
         // Start countdown for each file
         files.forEach(f => {
-          startCountdown(f.id, f.created_at);
+          startCountdown(f.id, f.expires_at);
         });
         
         listStatus.textContent = `Terlihat ${files.length} file`;
