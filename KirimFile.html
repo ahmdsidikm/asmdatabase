@@ -116,6 +116,11 @@
     .close-button:hover {
       color: #f3f4f6;
     }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 flex items-start justify-center min-h-screen p-4 sm:p-6">
@@ -185,6 +190,13 @@
             </button>
           </div>
         </div>
+        <!-- Checkbox untuk mengunggah ke ID server yang dimasukkan -->
+        <div class="mt-6 flex flex-col items-center">
+            <div class="checkbox-container">
+                <input type="checkbox" id="useInputServerId" class="form-checkbox text-blue-600 h-5 w-5 rounded-md focus:ring-blue-500">
+                <label for="useInputServerId" class="text-sm sm:text-base text-gray-300">Unggah ke ID Server yang dimasukkan</label>
+            </div>
+        </div>
       </div>
     </div>
     <!-- Message box (untuk error/detailed info) -->
@@ -253,7 +265,6 @@
     const expiryTimeSelect = document.getElementById('expiryTimeSelect');
     const expiryTextSelect = document.getElementById('expiryTextSelect');
     const uploadButton = document.getElementById('uploadButton');
-    const textInput = document.getElementById('textInput');
     const uploadTextButton = document.getElementById('uploadTextButton');
     const openUploadPopupBtn = document.getElementById('openUploadPopupBtn');
     const closeUploadPopupBtn = document.getElementById('closeUploadPopupBtn');
@@ -272,6 +283,8 @@
     const serverIdInput = document.getElementById('serverIdInput');
     const filterServerIdButton = document.getElementById('filterServerIdButton');
     const currentServerIdDisplay = document.getElementById('currentServerId');
+    const useInputServerIdCheckbox = document.getElementById('useInputServerId');
+    const textInput = document.getElementById('textInput');
     let currentBase64 = '';
     let currentFileName = '';
     let currentMime = '';
@@ -401,7 +414,17 @@
       if (!currentBase64) { showMessage('Tidak ada data untuk diunggah. Pilih file terlebih dahulu.'); return; }
       const base64Data = currentBase64.split(',')[1];
       const expirationMinutes = parseInt(expiryTimeSelect.value, 10);
-      await performUpload(currentFileName, currentMime, base64Data, expirationMinutes, uploadButton);
+      let targetServerId = sessionServerId;
+      if (useInputServerIdCheckbox.checked) {
+        const inputId = serverIdInput.value.trim();
+        if (inputId) {
+          targetServerId = inputId;
+        } else {
+          showMessage('Silakan masukkan ID Server tujuan di kotak input di bawah.');
+          return;
+        }
+      }
+      await performUpload(currentFileName, currentMime, base64Data, expirationMinutes, uploadButton, targetServerId);
     });
     uploadTextButton.addEventListener('click', async () => {
       const text = textInput.value.trim();
@@ -413,12 +436,22 @@
       const mimeType = 'text/plain';
       const base64Data = btoa(text);
       const expirationMinutes = parseInt(expiryTextSelect.value, 10);
-      await performUpload(fileName, mimeType, base64Data, expirationMinutes, uploadTextButton);
+      let targetServerId = sessionServerId;
+      if (useInputServerIdCheckbox.checked) {
+        const inputId = serverIdInput.value.trim();
+        if (inputId) {
+          targetServerId = inputId;
+        } else {
+          showMessage('Silakan masukkan ID Server tujuan di kotak input di bawah.');
+          return;
+        }
+      }
+      await performUpload(fileName, mimeType, base64Data, expirationMinutes, uploadTextButton, targetServerId);
       textInput.value = '';
       uploadTextButton.disabled = true;
       uploadTextButton.classList.add('opacity-50', 'cursor-not-allowed');
     });
-    async function performUpload(filename, mimeType, base64Data, expirationMinutes, btn) {
+    async function performUpload(filename, mimeType, base64Data, expirationMinutes, btn, serverIdToUse) {
       btn.disabled = true;
       btn.classList.add('opacity-50', 'cursor-not-allowed');
       const prevText = btn.textContent;
@@ -427,7 +460,7 @@
       try {
         const { data, error } = await supabaseClient
           .from('images')
-          .insert([{ filename, mime_type: mimeType, base64: base64Data, server_id: sessionServerId, expires_at: expiresAt }]);
+          .insert([{ filename, mime_type: mimeType, base64: base64Data, server_id: serverIdToUse, expires_at: expiresAt }]);
         if (error) {
           showMessage(`Gagal unggah: ${error.message}`);
         } else {
@@ -458,14 +491,14 @@
         clearInterval(countdownIntervals[fileId]);
       }
       
-      countdownIntervals[fileId] = setInterval(() => {
+      countdownIntervals[fileId] = setInterval(async () => {
         const now = new Date().getTime();
         const distance = expirationTime - now;
         
         if (distance < 0) {
           clearInterval(countdownIntervals[fileId]);
           timerElement.textContent = 'Menghapus...';
-          // No need to call deleteFile, the database trigger will handle it
+          await deleteFile(fileId, null); // Call delete function on expiration
           return;
         }
         
@@ -620,7 +653,7 @@
         btnElement.textContent = 'Menghapus...';
       }
       try {
-        const { data, error } = await supabaseClient
+        const { error } = await supabaseClient
           .from('images')
           .delete()
           .eq('id', id);
