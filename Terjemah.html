@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pembaca Teks dari Gambar</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Cropper.js CSS dan JS untuk pemangkasan gambar -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
         body {
@@ -56,9 +60,17 @@
         </button>
     </div>
 
+    <!-- UI Pemangkasan Gambar -->
+    <div id="crop-section" class="hidden flex flex-col items-center space-y-4">
+        <img id="image-to-crop" class="w-full rounded-lg shadow-md border border-gray-300" style="max-height: 400px; display: block;">
+        <button id="crop-btn" class="bg-blue-600 text-white font-medium py-3 px-6 rounded-full shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">
+            Pangkas & Analisis
+        </button>
+    </div>
+
     <!-- UI Hasil & Loading -->
     <div id="result-section" class="hidden flex flex-col items-center space-y-4">
-        <img id="captured-image" class="w-full rounded-lg shadow-md border border-gray-300" style="display: none;">
+        <img id="analyzed-image" class="w-full rounded-lg shadow-md border border-gray-300">
         <div id="loading-indicator" class="hidden flex items-center space-x-2">
             <div class="loading-spinner"></div>
             <span class="text-gray-500">Menganalisis teks...</span>
@@ -91,8 +103,11 @@
     const video = document.getElementById('video');
     const snapBtn = document.getElementById('snap-btn');
     const cameraSection = document.getElementById('camera-section');
+    const cropSection = document.getElementById('crop-section');
+    const imageToCrop = document.getElementById('image-to-crop');
+    const cropBtn = document.getElementById('crop-btn');
     const resultSection = document.getElementById('result-section');
-    const capturedImage = document.getElementById('captured-image');
+    const analyzedImage = document.getElementById('analyzed-image');
     const loadingIndicator = document.getElementById('loading-indicator');
     const textOutput = document.getElementById('text-output');
     const retryBtn = document.getElementById('retry-btn');
@@ -102,10 +117,12 @@
     const modalOkBtn = document.getElementById('modal-ok-btn');
 
     let stream;
+    let cropper;
     let retries = 0;
     const MAX_RETRIES = 5;
     const RETRY_DELAY = 1000;
 
+    // Menampilkan modal kustom
     function showModal(title, message) {
         modalTitle.textContent = title;
         modalMessage.textContent = message;
@@ -113,6 +130,7 @@
         modalOverlay.classList.add('flex');
     }
 
+    // Menyembunyikan modal kustom
     function hideModal() {
         modalOverlay.classList.add('hidden');
         modalOverlay.classList.remove('flex');
@@ -120,6 +138,7 @@
 
     modalOkBtn.addEventListener('click', hideModal);
 
+    // Memulai kamera dan mengubah tampilan UI
     async function startCamera() {
         try {
             stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -127,20 +146,22 @@
             startSection.classList.add('hidden');
             cameraSection.classList.remove('hidden');
             resultSection.classList.add('hidden');
+            cropSection.classList.add('hidden');
             textOutput.innerHTML = '<p class="text-gray-700 text-sm">Hasil teks akan muncul di sini.</p>';
-            capturedImage.style.display = 'none';
         } catch (error) {
             console.error("Kesalahan saat mengakses kamera:", error);
             showModal("Kesalahan", "Gagal memulai kamera. Pastikan Anda memberikan izin.");
         }
     }
 
+    // Menghentikan streaming kamera
     function stopCamera() {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
     }
 
+    // Mengirim gambar untuk dianalisis oleh Gemini AI
     async function recognizeText(base64Image) {
         retries = 0;
         await sendRequest(base64Image);
@@ -148,8 +169,7 @@
 
     async function sendRequest(base64Image) {
         loadingIndicator.classList.remove('hidden');
-        snapBtn.disabled = true;
-        galleryBtn.disabled = true;
+        cropBtn.disabled = true;
 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
@@ -176,7 +196,7 @@
                 if (response.status === 429 && retries < MAX_RETRIES) {
                     retries++;
                     await new Promise(res => setTimeout(res, RETRY_DELAY * Math.pow(2, retries - 1)));
-                    await sendRequest(base64Image); // Retry
+                    await sendRequest(base64Image); // Coba lagi
                     return;
                 }
                 const errorData = await response.json();
@@ -193,13 +213,14 @@
             textOutput.innerHTML = `<p class="text-red-500">Kesalahan: ${error.message}</p>`;
         } finally {
             loadingIndicator.classList.add('hidden');
-            snapBtn.disabled = false;
-            galleryBtn.disabled = false;
+            cropBtn.disabled = false;
         }
     }
 
+    // Event listener untuk tombol 'Mulai Kamera'
     startBtn.addEventListener('click', startCamera);
 
+    // Event listener untuk tombol 'Ambil Gambar'
     snapBtn.addEventListener('click', () => {
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
@@ -210,23 +231,26 @@
 
         stopCamera();
         
-        capturedImage.src = imageDataUrl;
-        capturedImage.style.display = 'block';
+        // Tampilkan UI pemangkasan dengan gambar yang diambil
+        imageToCrop.src = imageDataUrl;
         cameraSection.classList.add('hidden');
-        resultSection.classList.remove('hidden');
-
-        recognizeText(imageDataUrl);
+        cropSection.classList.remove('hidden');
+        
+        if (cropper) {
+            cropper.destroy();
+        }
+        cropper = new Cropper(imageToCrop, {
+            aspectRatio: NaN,
+            viewMode: 1,
+        });
     });
 
-    retryBtn.addEventListener('click', () => {
-        resultSection.classList.add('hidden');
-        startSection.classList.remove('hidden');
-    });
-
+    // Event listener untuk tombol 'Pilih dari Galeri'
     galleryBtn.addEventListener('click', () => {
         fileInput.click();
     });
 
+    // Event listener untuk input file
     fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -234,15 +258,49 @@
             reader.onload = (e) => {
                 const imageDataUrl = e.target.result;
                 
-                capturedImage.src = imageDataUrl;
-                capturedImage.style.display = 'block';
+                // Tampilkan UI pemangkasan dengan gambar yang dipilih
+                imageToCrop.src = imageDataUrl;
                 startSection.classList.add('hidden');
-                resultSection.classList.remove('hidden');
+                cropSection.classList.remove('hidden');
 
-                recognizeText(imageDataUrl);
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(imageToCrop, {
+                    aspectRatio: NaN,
+                    viewMode: 1,
+                });
             };
             reader.readAsDataURL(file);
         }
+    });
+
+    // Event listener untuk tombol 'Pangkas & Analisis'
+    cropBtn.addEventListener('click', () => {
+        if (!cropper) return;
+
+        // Dapatkan gambar yang sudah dipangkas
+        const croppedCanvas = cropper.getCroppedCanvas({
+            width: 1024,
+            height: 1024,
+        });
+        const croppedImageDataUrl = croppedCanvas.toDataURL('image/jpeg');
+        
+        // Tampilkan gambar yang dipangkas
+        analyzedImage.src = croppedImageDataUrl;
+        
+        // Sembunyikan UI pemangkasan dan tampilkan UI hasil
+        cropSection.classList.add('hidden');
+        resultSection.classList.remove('hidden');
+
+        // Lakukan analisis teks
+        recognizeText(croppedImageDataUrl);
+    });
+
+    // Event listener untuk tombol 'Coba Lagi'
+    retryBtn.addEventListener('click', () => {
+        resultSection.classList.add('hidden');
+        startSection.classList.remove('hidden');
     });
 </script>
 
