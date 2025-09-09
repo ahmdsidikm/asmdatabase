@@ -70,14 +70,22 @@
 
     <!-- UI Hasil & Loading -->
     <div id="result-section" class="hidden flex flex-col items-center space-y-4">
-        <img id="analyzed-image" class="w-full rounded-lg shadow-md border border-gray-300">
         <div id="loading-indicator" class="hidden flex items-center space-x-2">
             <div class="loading-spinner"></div>
             <span class="text-gray-500">Menganalisis teks...</span>
         </div>
-        <div id="text-output" class="w-full bg-gray-50 p-4 rounded-lg border border-gray-200" style="min-height: 100px;">
-            <p class="text-gray-700 text-sm">Hasil teks akan muncul di sini.</p>
+        
+        <!-- Kontainer terpadu untuk gambar dan teks -->
+        <div class="w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+            <img id="analyzed-image" class="w-full h-auto">
+            <div id="text-output" class="p-4">
+                <p class="text-gray-700 whitespace-pre-wrap">Hasil teks akan muncul di sini.</p>
+            </div>
         </div>
+
+        <button id="copy-btn" class="bg-blue-600 text-white font-medium py-2 px-4 rounded-full shadow hover:bg-blue-700 transition duration-300">
+            Salin Teks
+        </button>
         <button id="retry-btn" class="bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-full shadow hover:bg-gray-300 transition duration-300">
             Coba Lagi
         </button>
@@ -110,6 +118,7 @@
     const analyzedImage = document.getElementById('analyzed-image');
     const loadingIndicator = document.getElementById('loading-indicator');
     const textOutput = document.getElementById('text-output');
+    const copyBtn = document.getElementById('copy-btn');
     const retryBtn = document.getElementById('retry-btn');
     const modalOverlay = document.getElementById('modal-overlay');
     const modalTitle = document.getElementById('modal-title');
@@ -295,6 +304,19 @@
 
         // Lakukan analisis teks
         recognizeText(croppedImageDataUrl);
+    });
+
+    // Event listener untuk tombol 'Salin Teks'
+    copyBtn.addEventListener('click', () => {
+        const textToCopy = textOutput.textContent.trim();
+        if (textToCopy && textToCopy !== "Hasil teks akan muncul di sini.") {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showModal("Berhasil", "Teks berhasil disalin ke papan klip!");
+            }).catch(err => {
+                showModal("Gagal", "Gagal menyalin teks.");
+                console.error('Gagal menyalin teks: ', err);
+            });
+        }
     });
 
     // Event listener untuk tombol 'Coba Lagi'
