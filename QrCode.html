@@ -1,677 +1,629 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pemindai QR & Barcode (tanpa mode kontur)</title>
-
-<!-- Library untuk QR (jsQR) dan QR generator (qrious) -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
-
-<!-- Quagga untuk fallback decoding barcode 1D -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-
-<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-<style>
-/* ---------- Umum ---------- */
-body {
-    font-family: 'VT323', monospace;
-    background: #d3d3d3;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
-}
-.container {
-    background: #e0e0e0;
-    border: 3px solid #808080;
-    padding: 20px;
-    box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.75);
-    max-width: 500px;
-    width: 90%;
-    text-align: center;
-    border-radius: 0;
-}
-h1 { color: #333; margin: 0 0 12px 0; }
-
-/* video + canvas */
-#video-stream-container { position: relative; width: 100%; max-width: 400px; margin: 0 auto 15px auto; }
-#liveVideo { width: 100%; max-width: 400px; border: 2px solid #555; background: #000; margin: 0 auto; display: none; object-fit: cover; }
-#snapshot { display: none; }
-
-/* controls */
-.controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
-.controls .row { display:flex; gap:8px; justify-content:center; }
-button, #fileInputBtn {
-    padding: 12px; font-size: 1.05em; border: 2px solid #808080;
-    background: #c0c0c0; color: #333; cursor: pointer; font-family: 'VT323', monospace;
-    text-transform: uppercase; box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75);
-    transition: all 0.1s ease;
-}
-button[disabled], button.disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-button:hover:not([disabled]), #fileInputBtn:hover { background: #a0a0a0; transform: translate(1px, 1px); }
-button:active:not([disabled]), #fileInputBtn:active { background: #909090; transform: translate(2px, 2px); }
-input[type="file"] { display: none; }
-
-/* output area */
-#output {
-    background: #000000;
-    padding: 15px;
-    border: 2px solid #808080;
-    margin-top: 15px;
-    font-size: 1.05em;
-    color: #00ff00;
-    text-shadow: 0 0 5px #00ff00;
-    min-height: 48px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
-    max-height: 200px;
-    overflow-y: auto;
-}
-
-/* action buttons */
-.action-buttons { display: flex; justify-content: space-between; gap: 10px; width: 100%; max-width: 360px; margin: 12px auto 0 auto; }
-.action-buttons button { flex: 1 1 48%; display: inline-block; margin: 0; }
-
-/* checkbox classic */
-.checkbox-wrapper { margin-top: 10px; font-size: 1.1em; display:flex; justify-content:center; align-items:center; gap:8px; position: relative; }
-.checkbox-wrapper input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; left: -9999px; }
-.checkbox-wrapper label { position: relative; padding-left: 34px; cursor: pointer; user-select: none; color: #333; display: inline-block; line-height: 20px; font-size: 1.05em; }
-.checkbox-wrapper label::before { content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border: 2px solid #555; background: #ffffff; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02); border-radius: 3px; }
-.checkbox-wrapper label::after { content: ""; position: absolute; left: 6px; top: 50%; transform: translateY(-60%) rotate(45deg); width: 6px; height: 12px; border: solid #000; border-width: 0 2px 2px 0; opacity: 0; transition: opacity 0.08s ease; }
-.checkbox-wrapper input[type="checkbox"]:checked + label::after { opacity: 1; }
-.checkbox-wrapper label:hover::before { border-color: #333; }
-
-/* Responsive kecil */
-@media (max-width:420px) { button { font-size: 1em; padding:10px; } }
-
-/* ---------- Modal (Hasil Gambar / Video) ---------- */
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.75); }
-.modal.open { display: flex; align-items: center; justify-content: center; }
-.modal-content {
-    background-color: #e0e0e0;
-    margin: 0 12px;
-    padding: 12px;
-    border: 2px solid #808080;
-    text-align: center;
-    border-radius: 6px;
-    box-shadow: 5px 5px 0px 0px rgba(0,0,0,0.75);
-    max-width: 98vw;
-    width: auto;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-}
-
-/* area konten hasil: agar bisa scroll jika konten lebih besar */
-#resultContainer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    max-width: 100%;
-    max-height: 85vh;        /* batasi tinggi modal konten */
-    overflow: auto;          /* scroll jika perlu di device kecil */
-    box-sizing: border-box;
-    padding: 4px;
-}
-
-/* gaya untuk gambar & video di modal (responsif menurut viewport) */
-#resultContainer img,
-#resultContainer video {
-    display: block;
-    max-width: 95vw;      /* lebar maksimal relatif terhadap viewport */
-    max-height: 85vh;     /* tinggi maksimal relatif terhadap viewport */
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    border: 2px solid #555;
-    box-shadow: 2px 2px 0 rgba(0,0,0,0.6);
-    border-radius: 4px;
-}
-
-/* tombol unduh & keluar di modal: tetap terlihat di bawah konten */
-#downloadBtn, #closePageBtn {
-    padding: 10px 14px;
-    font-size: 1em;
-    border: 2px solid #808080;
-    background: #c0c0c0;
-    color: #333;
-    cursor: pointer;
-    font-family: 'VT323', monospace;
-    text-transform: uppercase;
-    box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.75);
-}
-.closeBtn { color: #333; position: absolute; top: 14px; right: 18px; font-size: 26px; font-weight: bold; cursor: pointer; }
-.closeBtn:hover { color: #ff0000; }
-
-/* Pastikan tombol close berada di atas layout */
-.modal .closeBtn { z-index: 1010; }
-
-/* baris tombol modal: buat Keluar di kiri dan Unduh di kanan */
-#modalButtonRow { width: 100%; display:flex; justify-content:space-between; gap:12px; max-width:95%; box-sizing: border-box; }
-#modalButtonRow button { flex: 1 1 auto; }
-
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sistem Resep & Penjualan (Supabase) - Local Penjualan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    .tab-button.active {
+      border-bottom: 3px solid #6366f1;
+      color: #6366f1;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1f2937;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #4b5563;
+      border-radius: 4px;
+      border: 2px solid #111827;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-gray-900 text-gray-200 font-sans min-h-screen flex flex-col items-center p-4">
+  <div class="w-full max-w-2xl bg-gray-800 rounded-xl shadow-lg mb-6 p-2 flex justify-around">
+    <button id="bahan-tab" class="tab-button px-4 py-2 text-center text-gray-400 font-semibold text-lg rounded-md transition-colors duration-200 hover:bg-gray-700 active">Bahan</button>
+    <button id="resep-tab" class="tab-button px-4 py-2 text-center text-gray-400 font-semibold text-lg rounded-md transition-colors duration-200 hover:bg-gray-700">Resep</button>
+    <button id="harga-tab" class="tab-button px-4 py-2 text-center text-gray-400 font-semibold text-lg rounded-md transition-colors duration-200 hover:bg-gray-700">Harga</button>
+    <button id="penjualan-tab" class="tab-button px-4 py-2 text-center text-gray-400 font-semibold text-lg rounded-md transition-colors duration-200 hover:bg-gray-700">Penjualan</button>
+  </div>
 
-<div class="container">
-    <h1>Pemindai QR & Barcode v3.1</h1>
-    <div id="video-stream-container">
-        <video id="liveVideo" autoplay playsinline></video>
-    </div>
-
-    <canvas id="snapshot"></canvas>
-
-    <div class="controls">
-        <div class="row">
-            <button id="startCameraButton">Nyalakan Kamera</button>
-            <button id="flashlightBtn" disabled>Senter Tidak Tersedia</button>
+  <!-- BAHAN CONTENT -->
+  <div id="bahan-content" class="tab-content w-full max-w-2xl bg-gray-800 rounded-xl shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-gray-100 mb-6 text-center">Input Jumlah Bahan</h1>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400">Nama Bahan</label>
+        <input type="text" id="nama_bahan" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-400">Jumlah</label>
+          <input type="number" id="jumlah_bahan" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
-        <div class="row">
-            <button id="fileInputBtn">Pilih Gambar</button>
-            <input type="file" id="fileInput" accept="image/*">
-            <button id="createQRBtn">Buat QR</button>
+        <div>
+          <label class="block text-sm font-medium text-gray-400">Unit</label>
+          <select id="unit_bahan" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="g">Gram</option><option value="Kg">Kilogram</option><option value="ons">Ons</option>
+            <option value="mL">Mililiter</option><option value="L">Liter</option><option value="sendok teh">Sendok Teh</option><option value="unit">Unit</option>
+          </select>
         </div>
+      </div>
     </div>
-
-    <div class="checkbox-wrapper">
-        <input type="checkbox" id="luckyCheck" />
-        <label for="luckyCheck">Saya beruntung</label>
+    <div class="mt-6 text-center">
+      <button id="simpan-bahan-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full transition-colors duration-200">Simpan Bahan</button>
+      <button id="batal-edit-bahan-btn" class="ml-2 hidden bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200">Batal</button>
     </div>
-
-    <div id="output">STATUS: SIAP</div>
-
-    <div id="actionButtons" class="action-buttons" style="display: none;">
-        <button id="copyTextBtn">Salin Teks</button>
-        <button id="rightActionBtn">Aksi</button>
+    <div class="mt-8">
+      <h2 class="text-2xl font-bold text-gray-300 mb-4">Daftar Bahan</h2>
+      <ul id="bahan-list" class="space-y-3 text-gray-400"></ul>
     </div>
-</div>
+  </div>
 
-<!-- Modal Pembuat Kode QR -->
-<div id="qrModal" class="modal" aria-hidden="true">
-    <div class="modal-content">
-        <span class="closeBtn" id="closeQRModal">&times;</span>
-        <h2>Buat Kode QR</h2>
-        <input type="text" id="qrText" placeholder="Masukkan teks/link..." style="width:90%; padding:10px; font-family: 'VT323'; font-size:1em; border: 2px solid #808080; background: #c0c0c0; color: #333;">
-        <canvas id="qrCanvas"></canvas>
-        <div style="width:100%;display:flex;justify-content:space-between;gap:12px;max-width:95%;box-sizing:border-box;">
-            <button id="closeQRExitBtn">Keluar</button>
-            <button id="downloadQRBtn">Unduh QR</button>
-        </div>
+  <!-- RESEP CONTENT -->
+  <div id="resep-content" class="tab-content hidden w-full max-w-2xl bg-gray-800 rounded-xl shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-gray-100 mb-6 text-center">Buat Resep Baru</h1>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400">Nama Resep</label>
+        <input type="text" id="nama_resep" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <h2 class="text-xl font-semibold text-gray-300 mt-6">Daftar Bahan Resep</h2>
+      <div id="resep-bahan-container" class="space-y-3"></div>
+      <div class="mt-4">
+        <button id="tambah-bahan-resep-btn" class="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-2 px-4 rounded-full transition-colors duration-200 flex items-center justify-center">+ Tambah Bahan</button>
+      </div>
     </div>
-</div>
-
-<!-- Modal Hasil QR Gambar/Video (RESPONSIF) -->
-<div id="resultModal" class="modal" aria-hidden="true">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-label="Hasil Dekripsi">
-        <div id="resultContainer" ></div>
-        <div id="modalButtonRow">
-            <button id="closePageBtn" style="display:none;">Keluar</button>
-            <button id="downloadBtn" style="display:none;">Unduh</button>
-        </div>
+    <div class="mt-6 text-center">
+      <button id="simpan-resep-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-full transition-colors duration-200">Simpan Resep</button>
     </div>
-</div>
+    <div class="mt-8">
+      <h2 class="text-2xl font-bold text-gray-300 mb-4">Daftar Resep</h2>
+      <ul id="resep-list" class="space-y-4 text-gray-400"></ul>
+    </div>
+  </div>
 
-<script>
-/* === Elemen DOM === */
-const liveVideo = document.getElementById('liveVideo');
-const snapshot = document.getElementById('snapshot');
-const output = document.getElementById('output');
-const fileInput = document.getElementById('fileInput');
-const fileInputBtn = document.getElementById('fileInputBtn');
-const startCameraButton = document.getElementById('startCameraButton');
-const createQRBtn = document.getElementById('createQRBtn');
+  <!-- HARGA CONTENT -->
+  <div id="harga-content" class="tab-content hidden w-full max-w-2xl bg-gray-800 rounded-xl shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-gray-100 mb-6 text-center">Pengaturan Harga</h1>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400">Pilih </label>
+        <select id="resep_harga" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-400">Harga Jual (per unit)</label>
+        <input type="number" id="harga_resep" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+    </div>
+    <div class="mt-6 text-center">
+      <button id="simpan-harga-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full transition-colors duration-200">Simpan Harga</button>
+    </div>
+    <div class="mt-8">
+      <h2 class="text-2xl font-bold text-gray-300 mb-4">Daftar Harga Resep</h2>
+      <ul id="harga-list" class="space-y-4 text-gray-400"></ul>
+    </div>
+  </div>
 
-const flashlightBtn = document.getElementById('flashlightBtn');
+  <!-- PENJUALAN CONTENT -->
+  <div id="penjualan-content" class="tab-content hidden w-full max-w-2xl bg-gray-800 rounded-xl shadow-lg p-6">
+    <h1 class="text-3xl font-bold text-gray-100 mb-6 text-center">Penjualan</h1>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400">Pilih Menu</label>
+        <select id="resep_penjualan" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-400">Jumlah Terjual</label>
+        <input type="number" id="jumlah_penjualan" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+    </div>
+    <div class="mt-6 text-center">
+      <button id="jual-resep-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-6 rounded-full transition-colors duration-200">Pesan</button>
+    </div>
+    <div class="mt-8">
+      <h2 class="text-2xl font-bold text-gray-300 mb-4">Riwayat Penjualan (Disimpan di localStorage)</h2>
+      <ul id="penjualan-log" class="space-y-3 text-gray-400"></ul>
+      <div class="mt-2 text-sm text-gray-500">(Riwayat penjualan disimpan di browser sampai Anda menekan 'Selesai'.)</div>
+      <div class="mt-2 flex gap-4">
+        <button id="selesai-semua-btn" class="text-sm bg-rose-600 hover:bg-rose-700 text-white px-3 py-1 rounded-full transition-colors duration-200">Selesai</button>
+      </div>
+    </div>
+    <div class="mt-8 pt-4 border-t-2 border-gray-700 text-gray-300">
+      <div class="flex justify-between font-bold text-lg mb-2"><span>Total Item Terjual:</span><span id="total-item">0</span></div>
+      <div class="flex justify-between font-bold text-lg"><span>Total Pendapatan:</span><span id="total-harga">Rp 0</span></div>
 
-const qrModal = document.getElementById('qrModal');
-const closeQRModal = document.getElementById('closeQRModal');
-const qrText = document.getElementById('qrText');
-const qrCanvas = document.getElementById('qrCanvas');
-const downloadQRBtn = document.getElementById('downloadQRBtn');
-const closeQRExitBtn = document.getElementById('closeQRExitBtn');
-if (closeQRExitBtn) closeQRExitBtn.addEventListener('click', () => { location.reload(); });
+      <!-- NEW: Input pembayaran dan kembalian -->
+      <div class="mt-4 space-y-2">
+        <label class="block text-sm font-medium text-gray-400">Jumlah dibayar oleh konsumen (Rp)</label>
+        <input type="text" id="bayar-input" placeholder="Masukkan jumlah yang diterima (contoh: 50000)" class="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="flex justify-between font-semibold text-lg"><span>Kembalian:</span><span id="kembalian">Rp 0</span></div>
+      </div>
+    </div>
+  </div>
 
-const resultModal = document.getElementById('resultModal');
-const resultContainer = document.getElementById('resultContainer');
-const downloadBtn = document.getElementById('downloadBtn');
-const closePageBtn = document.getElementById('closePageBtn');
+  <!-- Script Supabase + aplikasi (module import) -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-const actionButtons = document.getElementById('actionButtons');
-const copyTextBtn = document.getElementById('copyTextBtn');
-const rightActionBtn = document.getElementById('rightActionBtn');
+    const SUPABASE_URL = 'https://iipnpthucrauuwwmvael.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpcG5wdGh1Y3JhdXV3d212YWVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3ODYxMDQsImV4cCI6MjA3MjM2MjEwNH0.4cJAGrUdiq7-LvYA85PcaKoZPKXvuZbxKyA48kIjUI4';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const luckyCheck = document.getElementById('luckyCheck');
+    let bahanList = [], resepList = [], penjualanLog = [], editingBahanId = null, editingResepId = null;
+    let currentTotalHarga = 0;
 
-let stream = null, animationFrameId = null;
-let lastDecodedData = null;
-let lastDecodedDataLink = null;
-let lastDecodedText = null;
-
-let track = null;
-let torchOn = false;
-
-/* === Nada notifikasi (beep) === */
-function playBeep() {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.type = 'square';
-        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.18);
-    } catch (err) { console.error("Audio error:", err); }
-}
-
-/* === Caesar decipher === */
-function caesarDecipher(str, shift) {
-    let result = '';
-    for (let i = 0; i < str.length; i++) {
-        let code = str.charCodeAt(i);
-        if (code >= 65 && code <= 90) result += String.fromCharCode((code - 65 - shift + 26) % 26 + 65);
-        else if (code >= 97 && code <= 122) result += String.fromCharCode((code - 97 - shift + 26) % 26 + 97);
-        else result += str[i];
+    function showMessage(title, text) {
+      console.log('MSG:', title, text);
+      const m = document.createElement('div');
+      m.innerHTML = `<div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex justify-center items-center z-50 p-4">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center border border-gray-700">
+          <p class="text-lg font-semibold mb-4 text-gray-100">${title}</p>
+          <pre class="mb-4 text-sm whitespace-pre-wrap text-left text-gray-300">${text}</pre>
+          <button id="close-msg" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200">Tutup</button>
+        </div></div>`;
+      document.body.appendChild(m);
+      m.querySelector('#close-msg').onclick = () => m.remove();
     }
-    return result;
-}
 
-/* === Tampilkan hasil dekripsi (gambar/video/teks) - modal responsif === */
-function showDecodedBase64(data) {
-    output.textContent = '';
-    resultContainer.innerHTML = '';
-    lastDecodedData = null;
-    downloadBtn.style.display = 'none';
-    closePageBtn.style.display = 'none';
-    actionButtons.style.display = 'none';
-    lastDecodedDataLink = null;
-    lastDecodedText = null;
+    async function muatDariSupabase() {
+      try {
+        const { data: bahanData, error: bahanErr } = await supabase.from('bahan').select('*').order('nama',{ascending:true});
+        if (bahanErr) throw bahanErr;
+        bahanList = bahanData || [];
 
-    if (data.startsWith('data:image/')) {
-        let img = document.createElement('img');
-        img.src = data;
-        img.alt = "Gambar hasil dekripsi";
-        resultContainer.appendChild(img);
-        lastDecodedData = data;
-        downloadBtn.style.display = 'inline-block';
-        closePageBtn.style.display = 'inline-block';
-        openResultModal();
-    } else if (data.startsWith('data:video/')) {
-        let vid = document.createElement('video');
-        vid.src = data;
-        vid.controls = true;
-        vid.loop = true;
-        vid.autoplay = true;
-         vid.muted = true;  
-        vid.playsInline = true;
-        vid.preload = "metadata";
-        resultContainer.appendChild(vid);
-        lastDecodedData = data;
-        downloadBtn.style.display = 'inline-block';
-        closePageBtn.style.display = 'inline-block';
-        openResultModal();
-    } else {
-        processQRData(data);
+        const { data: resepData, error: resepErr } = await supabase.from('resep').select('*').order('nama',{ascending:true});
+        if (resepErr) throw resepErr;
+        resepList = resepData || [];
+
+        try { penjualanLog = JSON.parse(localStorage.getItem('penjualan_local') || '[]'); } catch(e) { penjualanLog = []; }
+
+        renderBahanList(); renderResepList(); renderPenjualanLog(); hitungDanTampilkanTotal();
+      } catch (err) {
+        console.error('muatDariSupabase error', err);
+        showMessage('Gagal memuat data', err.message || JSON.stringify(err));
+      }
     }
-}
 
-/* === Modal open/close helpers (handle scroll lock) === */
-function openResultModal() {
-    resultModal.classList.add('open');
-    resultModal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-}
+    // ---------- LocalStorage helpers for penjualan ----------
+    function saveLocalPenjualan() { localStorage.setItem('penjualan_local', JSON.stringify(penjualanLog)); }
+    function loadLocalPenjualan() { try { penjualanLog = JSON.parse(localStorage.getItem('penjualan_local') || '[]'); } catch(e){ penjualanLog = []; } }
 
-function closeResultModalFunc() {
-    resultModal.classList.remove('open');
-    resultModal.setAttribute('aria-hidden', 'true');
-    resultContainer.innerHTML = '';
-    downloadBtn.style.display = 'none';
-    closePageBtn.style.display = 'none';
-    document.body.style.overflow = '';
-}
-resultModal.addEventListener('click', (e) => {
-    if (e.target === resultModal) closeResultModalFunc();
-});
-
-/* tombol aksi salin / buka */
-copyTextBtn.addEventListener('click', async () => {
-    if(lastDecodedText) {
-        try {
-            await navigator.clipboard.writeText(lastDecodedText);
-            output.textContent = "Teks berhasil disalin!";
-            setTimeout(() => { output.textContent = lastDecodedText; }, 1500);
-        } catch (e) {
-            output.textContent = "Gagal menyalin. Silakan salin manual: " + lastDecodedText;
-        }
+    // BAHAN
+    function renderBahanList() {
+      const el = document.getElementById('bahan-list'); el.innerHTML = '';
+      bahanList.forEach(b => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center bg-gray-700 p-3 rounded-lg shadow-sm';
+        li.innerHTML = `<span>${b.nama}: ${b.jumlah} ${b.unit}</span>
+          <div>
+            <button data-id="${b.id}" class="edit-bahan-btn text-indigo-400 hover:text-indigo-300 mr-2">Edit</button>
+            <button data-id="${b.id}" class="hapus-bahan-btn text-rose-400 hover:text-rose-300">Hapus</button>
+          </div>`;
+        el.appendChild(li);
+      });
+      updateResepBahanOptions();
+      document.querySelectorAll('.edit-bahan-btn').forEach(btn => btn.onclick = (e) => editBahan(e.currentTarget.dataset.id));
+      document.querySelectorAll('.hapus-bahan-btn').forEach(btn => btn.onclick = (e) => hapusBahan(e.currentTarget.dataset.id));
     }
-});
-rightActionBtn.addEventListener('click', () => {
-    if (lastDecodedDataLink) {
-        window.open(lastDecodedDataLink, "_blank");
-    } else if (lastDecodedText) {
-        const q = encodeURIComponent(lastDecodedText);
-        window.open(`https://www.google.com/search?q=${q}`, '_blank');
-    }
-});
-downloadBtn.addEventListener('click', () => {
-    if (!lastDecodedData) return;
-    const a = document.createElement('a');
-    a.href = lastDecodedData;
-    a.download = lastDecodedData.startsWith('data:image/') ? 'hasil_terdekode.png' : 'hasil_terdekode';
-    a.click();
-});
-closePageBtn.addEventListener('click', () => {
-    // Segera reload halaman saat tombol Keluar diklik
-    location.reload();
-});
 
-/* === Penanganan upload file === */
-fileInputBtn.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    stopCamera();
-    const reader = new FileReader();
-    reader.onload = async ev => {
-        const img = new Image();
-        img.onload = async function() {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img,0,0);
-            const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-            const code = jsQR(imageData.data,imageData.width,imageData.height);
-            if(code){
-                playBeep();
-                output.textContent="QR DITEMUKAN: "+code.data;
-                processQRData(code.data);
-                return;
-            }
-            output.textContent = "Mencoba deteksi barcode pada gambar...";
-            try {
-                const barcode = await tryDecodeBarcodeFromCanvas(canvas);
-                if (barcode) {
-                    playBeep();
-                    output.textContent = "BARCODE DITEMUKAN: " + barcode;
-                    processQRData(barcode);
-                } else {
-                    output.textContent = "Tidak ditemukan QR atau barcode pada gambar";
-                    downloadBtn.style.display='none';
-                    closePageBtn.style.display='none';
-                    actionButtons.style.display='none';
-                }
-            } catch(err) {
-                output.textContent = "GALAT: " + err;
-            }
-        };
-        img.src = ev.target.result;
+    window.editBahan = async function(id) {
+      const b = bahanList.find(x => x.id === id); if(!b) return;
+      editingBahanId = id;
+      document.getElementById('nama_bahan').value = b.nama;
+      document.getElementById('jumlah_bahan').value = b.jumlah;
+      document.getElementById('unit_bahan').value = b.unit || 'gram';
+      document.getElementById('simpan-bahan-btn').textContent = 'Update Bahan';
+      document.getElementById('batal-edit-bahan-btn').classList.remove('hidden');
     };
-    reader.readAsDataURL(file);
-});
 
-/* === Ambil & dekripsi helper === */
-async function fetchAndDecrypt(link, shift) {
-    try {
-        output.textContent = "STATUS: MENGAMBIL DATA MENTAH...";
-        let res = await fetch(link);
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        let rawText = await res.text();
-        let shifted = caesarDecipher(rawText, shift);
-        showDecodedBase64(shifted);
-    } catch (err) { output.textContent = "GALAT: " + err; }
-}
-
-/* === Camera start/stop + torch === */
-function stopCamera() {
-    if (stream) {
-        if (torchOn && track) {
-            try { track.applyConstraints({ advanced: [{ torch: false }] }); } catch(e) { /* ignore */ }
-            torchOn = false;
-            flashlightBtn.textContent = "Senter OFF";
-        }
-        stream.getTracks().forEach(t => t.stop());
-        stream = null;
-        track = null;
+    function batalEditBahan() {
+      editingBahanId = null;
+      document.getElementById('nama_bahan').value = '';
+      document.getElementById('jumlah_bahan').value = '';
+      document.getElementById('unit_bahan').value = 'gram';
+      document.getElementById('simpan-bahan-btn').textContent = 'Simpan Bahan';
+      document.getElementById('batal-edit-bahan-btn').classList.add('hidden');
     }
-    if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
-    liveVideo.pause();
-    liveVideo.srcObject = null;
-    liveVideo.style.display = 'none';
-    startCameraButton.textContent = 'Nyalakan Kamera';
-    flashlightBtn.disabled = true;
-    flashlightBtn.textContent = 'Senter Tidak Tersedia';
-}
 
-async function startCamera() {
-    stopCamera();
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }});
-        liveVideo.srcObject = stream;
-        track = stream.getVideoTracks()[0] || null;
+    window.hapusBahan = async function(id) {
+      if(!confirm('Hapus bahan ini?')) return;
+      try {
+        const { error } = await supabase.from('bahan').delete().eq('id', id);
+        if(error) throw error;
+        await muatDariSupabase();
+      } catch(err) { console.error('hapusBahan', err); showMessage('Gagal hapus bahan', err.message || JSON.stringify(err)); }
+    };
 
-        liveVideo.style.display = 'block';
-
-        // cek kemampuan torch
-        try {
-            const caps = track && track.getCapabilities ? track.getCapabilities() : null;
-            if (caps && caps.torch) {
-                flashlightBtn.disabled = false;
-                flashlightBtn.textContent = 'Senter OFF';
-            } else {
-                flashlightBtn.disabled = true;
-                flashlightBtn.textContent = 'Senter Tidak Tersedia';
-            }
-        } catch (e) {
-            flashlightBtn.disabled = true;
-            flashlightBtn.textContent = 'Senter Tidak Tersedia';
+    async function simpanBahan() {
+      const nama = document.getElementById('nama_bahan').value.trim();
+      const jumlah = parseFloat(document.getElementById('jumlah_bahan').value);
+      const unit = document.getElementById('unit_bahan').value;
+      if(!nama || isNaN(jumlah)) { showMessage('Isi data bahan','Harap isi nama dan jumlah bahan.'); return; }
+      try {
+        if(editingBahanId) {
+          const { error } = await supabase.from('bahan').update({ nama, jumlah, unit }).eq('id', editingBahanId);
+          if(error) throw error; editingBahanId = null;
+        } else {
+          const { error } = await supabase.from('bahan').insert([{ nama, jumlah, unit }]);
+          if(error) throw error;
         }
-
-        liveVideo.play();
-        startCameraButton.textContent = 'Matikan Kamera';
-        output.textContent = "STATUS: KAMERA DINYALAKAN";
-        scanQRCode();
-    } catch (err) {
-        output.textContent = "GALAT: " + err;
+        batalEditBahan(); await muatDariSupabase();
+      } catch(err) { console.error('simpanBahan error', err); showMessage('Gagal simpan bahan', err.message || JSON.stringify(err)); }
     }
-}
-function toggleCamera() { if (stream) stopCamera(); else startCamera(); }
 
-/* Toggle flashlight */
-flashlightBtn.addEventListener('click', async () => {
-    if (!track) { output.textContent = "Senter tidak tersedia"; return; }
-    try {
-        const caps = track.getCapabilities ? track.getCapabilities() : {};
-        if (!caps.torch) { output.textContent = "Perangkat tidak mendukung senter"; return; }
-        await track.applyConstraints({ advanced: [{ torch: !torchOn }] });
-        torchOn = !torchOn;
-        flashlightBtn.textContent = torchOn ? "Senter ON" : "Senter OFF";
-        output.textContent = torchOn ? "Senter: ON" : "Senter: OFF";
-    } catch (err) {
-        output.textContent = "Gagal mengubah senter: " + err;
+    // RESEP
+    function updateResepBahanOptions() {
+      const selects = document.querySelectorAll('#resep-bahan-container select, #resep-bahan-container select');
+      selects.forEach(select => {
+        const current = select.value;
+        select.innerHTML = '<option value="" disabled selected>Pilih Bahan</option>';
+        bahanList.forEach(b => {
+          const o = document.createElement('option'); o.value = b.nama; o.textContent = b.nama; select.appendChild(o);
+        });
+        if(current) select.value = current;
+      });
     }
-});
 
-/* === Barcode detection helper (promisified) === */
-function tryDecodeBarcodeFromCanvas(canvas) {
-    return new Promise((resolve) => {
-        if ('BarcodeDetector' in window) {
-            try {
-                const formats = ["code_128","code_39","code_93","ean_13","ean_8","upc_e","upc_a","itf","codabar"];
-                const detector = new BarcodeDetector({ formats });
-                detector.detect(canvas).then(results => {
-                    if (results && results.length > 0) resolve(results[0].rawValue || null);
-                    else resolve(null);
-                }).catch(err => { console.warn("BarcodeDetector error:", err); resolve(null); });
-                return;
-            } catch (err) { console.warn("BarcodeDetector exception:", err); }
+    function tambahBahanResep() {
+      const container = document.getElementById('resep-bahan-container');
+      const row = document.createElement('div');
+      row.className = 'grid grid-cols-3 gap-2 items-center';
+      row.innerHTML = `<select class="col-span-1 block w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+        <input type="number" placeholder="Jumlah" class="col-span-1 block w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <button class="col-span-1 text-rose-400 hover:text-rose-300">Hapus</button>`;
+      row.querySelector('button').onclick = () => row.remove();
+      container.appendChild(row);
+      updateResepBahanOptions();
+    }
+
+    async function simpanResep() {
+      const nama = document.getElementById('nama_resep').value.trim();
+      const rows = document.querySelectorAll('#resep-bahan-container .grid');
+      if(!nama || rows.length === 0) { showMessage('Data resep kurang','Isi nama dan minimal 1 bahan.'); return; }
+      const bahanArr = [];
+      let valid = true;
+      rows.forEach(r => {
+        const nm = r.querySelector('select').value;
+        const j = parseFloat(r.querySelector('input').value);
+        if(!nm || isNaN(j)) valid = false;
+        else {
+          const bAsli = bahanList.find(b => b.nama === nm);
+          bahanArr.push({ nama: nm, jumlah: j, unit: bAsli ? bAsli.unit : '' });
         }
-        try {
-            const src = canvas.toDataURL();
-            if (window.Quagga && Quagga.decodeSingle) {
-                Quagga.decodeSingle({
-                    src,
-                    numOfWorkers: 0,
-                    inputStream: { size: 800 },
-                    locator: { patchSize: "medium", halfSample: true },
-                    decoder: {
-                        readers: [
-                            "code_128_reader","ean_reader","ean_8_reader","code_39_reader",
-                            "upc_reader","upc_e_reader","codabar_reader","i2of5_reader"
-                        ]
-                    }
-                }, function(result) {
-                    if (result && result.codeResult && result.codeResult.code) resolve(result.codeResult.code);
-                    else resolve(null);
-                });
-            } else {
-                resolve(null);
-            }
-        } catch (err) {
-            console.warn("Quagga fallback error:", err);
-            resolve(null);
+      });
+      if(!valid || bahanArr.length===0) { showMessage('Data resep tidak valid','Periksa bahan dan jumlahnya.'); return; }
+      try {
+        if(editingResepId) {
+          const { error } = await supabase.from('resep').update({ nama, bahan: bahanArr }).eq('id', editingResepId);
+          if(error) throw error; editingResepId = null;
+        } else {
+          const { error } = await supabase.from('resep').insert([{ nama, bahan: bahanArr }]);
+          if(error) throw error;
         }
+        document.getElementById('nama_resep').value = ''; document.getElementById('resep-bahan-container').innerHTML = '';
+        tambahBahanResep(); await muatDariSupabase();
+      } catch(err) { console.error('simpanResep', err); showMessage('Gagal simpan resep', err.message || JSON.stringify(err)); }
+    }
+
+    window.hapusResep = async function(id) {
+      if(!confirm('Hapus resep ini?')) return;
+      try { const { error } = await supabase.from('resep').delete().eq('id', id); if(error) throw error; await muatDariSupabase(); }
+      catch(err){ console.error(err); showMessage('Gagal hapus resep', err.message || JSON.stringify(err)); }
+    };
+
+    function hitungMaxProduksi(resep) {
+      let max = Infinity;
+      resep.bahan.forEach(rb => {
+        const stok = bahanList.find(b => b.nama === rb.nama);
+        if(!stok) { max = 0; return; }
+        const possible = Math.floor(Number(stok.jumlah) / Number(rb.jumlah));
+        max = Math.min(max, possible);
+      });
+      return max === Infinity ? 0 : max;
+    }
+
+    function renderResepList() {
+      const el = document.getElementById('resep-list'); el.innerHTML = '';
+      resepList.forEach(r => {
+        const li = document.createElement('li');
+        li.className = 'bg-gray-700 p-4 rounded-lg shadow-sm';
+
+        const bahanHabis = r.bahan.filter(rb => {
+          const stok = bahanList.find(b => b.nama === rb.nama);
+          return (!stok) || (Number(stok.jumlah) < Number(rb.jumlah));
+        });
+        const bahanHtml = r.bahan.map(b => `<li class="ml-4 list-disc">- ${b.nama}: ${b.jumlah} ${b.unit}</li>`).join('');
+        const hargaText = r.harga ? `Rp ${Number(r.harga).toLocaleString('id-ID')}` : 'Belum atur harga';
+        const keteranganStok = bahanHabis.length > 0 ? `<p class="mt-2 text-sm text-rose-400 font-semibold">Stok tidak cukup: ${bahanHabis.map(x=>x.nama).join(', ')}</p>` : '';
+
+        li.innerHTML = `<div class="flex justify-between items-center mb-2"><h3 class="text-lg font-bold text-gray-100">${r.nama}</h3>
+            <div><button data-id="${r.id}" class="edit-resep-btn text-indigo-400 mr-2">Edit</button><button data-id="${r.id}" class="hapus-resep-btn text-rose-400">Hapus</button></div></div>
+            <ul class="text-gray-400">${bahanHtml}</ul>
+            ${keteranganStok}
+            <p class="mt-2 text-sm text-gray-500">Harga: ${hargaText} â¢ Bisa dibuat maksimal: ${hitungMaxProduksi(r)} unit.</p>`;
+        el.appendChild(li);
+      });
+      document.querySelectorAll('.edit-resep-btn').forEach(btn => btn.onclick = (e) => editResep(e.currentTarget.dataset.id));
+      document.querySelectorAll('.hapus-resep-btn').forEach(btn => btn.onclick = (e) => hapusResep(e.currentTarget.dataset.id));
+      renderPenjualanTab(); renderHargaTab();
+    }
+
+    window.editResep = function(id) {
+      const r = resepList.find(x => x.id === id); if(!r) return;
+      editingResepId = id;
+      document.getElementById('nama_resep').value = r.nama;
+      const container = document.getElementById('resep-bahan-container'); container.innerHTML = '';
+      r.bahan.forEach(b => {
+        const row = document.createElement('div');
+        row.className = 'grid grid-cols-3 gap-2 items-center';
+        row.innerHTML = `<select class="col-span-1 block w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+          <input type="number" value="${b.jumlah}" class="col-span-1 block w-full px-2 py-1 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <button class="col-span-1 text-rose-400 hover:text-rose-300">Hapus</button>`;
+        row.querySelector('button').onclick = () => row.remove();
+        container.appendChild(row);
+        row.querySelector('select').value = b.nama;
+      });
+      updateResepBahanOptions();
+    };
+
+    // HARGA
+    function renderHargaTab() {
+      const sel = document.getElementById('resep_harga'); sel.innerHTML = '<option value="" disabled selected>Pilih Resep</option>';
+      resepList.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = r.nama; sel.appendChild(o); });
+      const list = document.getElementById('harga-list'); list.innerHTML = '';
+      resepList.filter(r => r.harga).forEach(r => {
+        const li = document.createElement('li'); li.className = 'flex justify-between items-center bg-gray-700 p-4 rounded-lg shadow-sm';
+        li.innerHTML = `<h3 class="text-lg font-bold text-gray-100">${r.nama}</h3>
+          <div class="flex items-center"><span class="text-gray-400 mr-4">Rp ${Number(r.harga).toLocaleString('id-ID')}</span>
+          <button data-id="${r.id}" class="hapus-harga-btn text-rose-400">Hapus</button></div>`;
+        list.appendChild(li);
+      });
+      document.querySelectorAll('.hapus-harga-btn').forEach(btn => btn.onclick = (e) => hapusHarga(e.currentTarget.dataset.id));
+    }
+
+    async function simpanHarga() {
+      const resepId = document.getElementById('resep_harga').value;
+      const harga = parseFloat(document.getElementById('harga_resep').value);
+      if(!resepId || isNaN(harga) || harga <= 0) { showMessage('Data harga tidak valid','Pilih resep dan masukkan harga valid.'); return; }
+      try { const { error } = await supabase.from('resep').update({ harga }).eq('id', resepId); if(error) throw error; await muatDariSupabase(); }
+      catch(err){ console.error('simpanHarga', err); showMessage('Gagal simpan harga', err.message || JSON.stringify(err)); }
+    }
+
+    window.hapusHarga = async function(resepId) {
+      if(!confirm('Hapus harga untuk resep ini?')) return;
+      try { const { error } = await supabase.from('resep').update({ harga: null }).eq('id', resepId); if(error) throw error; await muatDariSupabase(); }
+      catch(err){ console.error('hapusHarga', err); showMessage('Gagal hapus harga', err.message || JSON.stringify(err)); }
+    };
+
+    // PENJUALAN (local only)
+    function renderPenjualanTab() {
+      const sel = document.getElementById('resep_penjualan'); sel.innerHTML = '<option value="" disabled selected>Pilih Menu</option>';
+      resepList.forEach(r => { const o = document.createElement('option'); o.value = r.id; o.textContent = r.nama; sel.appendChild(o); });
+    }
+
+    function genId() { return Date.now().toString() + '-' + Math.random().toString(36).slice(2,8); }
+
+    async function jualResep() {
+      const resepId = document.getElementById('resep_penjualan').value;
+      const jumlahTerjualNum = parseInt(document.getElementById('jumlah_penjualan').value);
+      if(!resepId || isNaN(jumlahTerjualNum) || jumlahTerjualNum <= 0) { showMessage('Data jual tidak valid','Pilih resep dan masukkan jumlah yang valid.'); return; }
+      const resepTerpilih = resepList.find(r => r.id === resepId);
+      if(!resepTerpilih || !resepTerpilih.harga) { showMessage('Harga belum diatur','Atur harga resep ini di tab Harga sebelum menjual.'); return; }
+      try {
+        const { data: freshBahan } = await supabase.from('bahan').select('*');
+        const bahanByName = (freshBahan || []).reduce((acc, b) => (acc[b.nama] = b, acc), {});
+        let cukup = true; const kurang = [];
+        resepTerpilih.bahan.forEach(rb => {
+          const stok = bahanByName[rb.nama];
+          const butuh = rb.jumlah * jumlahTerjualNum;
+          if(!stok || Number(stok.jumlah) < butuh) { cukup = false; kurang.push({ nama: rb.nama, butuh, tersedia: stok ? stok.jumlah : 0 }); }
+        });
+        if(!cukup) { showMessage('Stok kurang', kurang.map(k=>`- ${k.nama}: butuh ${k.butuh}, tersedia ${k.tersedia}`).join('\n')); return; }
+
+        for(const rb of resepTerpilih.bahan) {
+          const stok = bahanByName[rb.nama];
+          const sisa = Number(stok.jumlah) - (rb.jumlah * jumlahTerjualNum);
+          await supabase.from('bahan').update({ jumlah: sisa }).eq('id', stok.id);
+        }
+
+        const totalHarga = Number(resepTerpilih.harga) * jumlahTerjualNum;
+        const item = {
+          id: genId(),
+          resep_id: resepTerpilih.id,
+          nama: resepTerpilih.nama,
+          jumlah: jumlahTerjualNum,
+          totalharga: totalHarga,
+          tanggal: (new Date()).toISOString()
+        };
+        penjualanLog.unshift(item);
+        saveLocalPenjualan();
+        renderPenjualanLog();
+        hitungDanTampilkanTotal();
+        console.log(`Penjualan disimpan di browser: ${item.nama} x${item.jumlah} â Rp ${item.totalharga}`);
+      } catch(err){ console.error('jualResep error', err); showMessage('Gagal proses penjualan', err.message || JSON.stringify(err)); }
+    }
+
+    function renderPenjualanLog() {
+      const el = document.getElementById('penjualan-log'); el.innerHTML = '';
+      penjualanLog.forEach(log => {
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center bg-gray-700 p-3 rounded-lg shadow-sm';
+        const tanggal = new Date(log.tanggal).toLocaleString();
+        li.innerHTML = `<span><strong>${log.nama}</strong>, ${log.jumlah} terjual<br>Total: Rp ${Number(log.totalharga||0).toLocaleString('id-ID')} pada ${tanggal}</span>
+          <div class="flex items-center gap-2">
+            <button data-id="${log.id}" class="hapus-penjualan-btn text-rose-400 hover:text-rose-300">Hapus</button>
+          </div>`;
+        el.appendChild(li);
+      });
+      document.querySelectorAll('.hapus-penjualan-btn').forEach(btn => btn.onclick = (e) => hapusPenjualan(e.currentTarget.dataset.id));
+      hitungDanTampilkanTotal();
+    }
+
+    window.hapusPenjualan = async function(id) {
+      if(!confirm('Hapus catatan penjualan ini dari browser?')) return;
+      const itemToDelete = penjualanLog.find(p => p.id === id);
+      if (!itemToDelete) return;
+      
+      try {
+        const resepTerpilih = resepList.find(r => r.id === itemToDelete.resep_id);
+        if (!resepTerpilih) throw new Error('Resep tidak ditemukan.');
+
+        const { data: freshBahan } = await supabase.from('bahan').select('*');
+        const bahanByName = (freshBahan || []).reduce((acc, b) => (acc[b.nama] = b, acc), {});
+        
+        // Kembalikan stok bahan
+        for(const rb of resepTerpilih.bahan) {
+          const stok = bahanByName[rb.nama];
+          if (stok) {
+            const tambah = rb.jumlah * itemToDelete.jumlah;
+            const sisa = Number(stok.jumlah) + tambah;
+            await supabase.from('bahan').update({ jumlah: sisa }).eq('id', stok.id);
+          }
+        }
+        
+        // Hapus dari log lokal
+        penjualanLog = penjualanLog.filter(p => p.id !== id);
+        saveLocalPenjualan();
+        renderPenjualanLog();
+        showMessage('Sukses', `Catatan penjualan untuk ${itemToDelete.nama} berhasil dihapus dan stok bahan dikembalikan.`);
+        
+      } catch(err) {
+        console.error('hapusPenjualan error', err);
+        showMessage('Gagal menghapus penjualan', err.message || JSON.stringify(err));
+      }
+    };
+
+    async function selesaiSemua() {
+      if(!confirm('Upload semua riwayat penjualan lokal ke Supabase lalu kosongkan riwayat di browser?')) return;
+      if(penjualanLog.length === 0) { showMessage('Kosong','Tidak ada riwayat penjualan lokal untuk disimpan.'); return; }
+      try {
+        const payload = penjualanLog.map(p => ({ nama: p.nama, jumlah: p.jumlah, totalharga: p.totalharga, tanggal: p.tanggal }));
+        const { error } = await supabase.from('penjualan').insert(payload);
+        if(error) throw error;
+        penjualanLog = [];
+        saveLocalPenjualan();
+        renderPenjualanLog();
+        showMessage('Sukses', 'Semua riwayat lokal berhasil diupload ke Supabase dan dihapus dari browser.');
+      } catch(err) { console.error('simpan semua', err); showMessage('Gagal upload semua', err.message || JSON.stringify(err)); }
+    }
+
+    function parseNumberFromInput(str) {
+      if(!str) return 0;
+      const cleaned = String(str).replace(/[^\d.-]/g, '');
+      const n = parseFloat(cleaned);
+      return isNaN(n) ? 0 : n;
+    }
+
+    function hitungDanTampilkanTotal() {
+      let totalItem = 0, totalHarga = 0;
+      penjualanLog.forEach(log => { totalItem += Number(log.jumlah||0); totalHarga += Number(log.totalharga||0); });
+      currentTotalHarga = totalHarga;
+      document.getElementById('total-item').textContent = totalItem;
+      document.getElementById('total-harga').textContent = `Rp ${totalHarga.toLocaleString('id-ID')}`;
+      hitungKembalian();
+    }
+
+    function hitungKembalian() {
+      const bayarStr = document.getElementById('bayar-input').value;
+      const bayar = parseNumberFromInput(bayarStr);
+      const kembalianEl = document.getElementById('kembalian');
+      const diff = bayar - currentTotalHarga;
+      if(!bayarStr || bayar === 0) {
+        kembalianEl.textContent = `Rp 0`;
+        kembalianEl.classList.remove('text-rose-400');
+        return;
+      }
+      if(diff >= 0) {
+        kembalianEl.textContent = `Rp ${diff.toLocaleString('id-ID')}`;
+        kembalianEl.classList.remove('text-rose-400');
+      } else {
+        kembalianEl.textContent = `Kurang Rp ${Math.abs(diff).toLocaleString('id-ID')}`;
+        kembalianEl.classList.add('text-rose-400');
+      }
+    }
+
+    function setupRealtime() {
+      try {
+        if (typeof supabase.channel === 'function') {
+          const ch = supabase.channel('realtime-bahan-resep')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'bahan' }, payload => {
+              console.debug('realtime bahan event', payload);
+              muatDariSupabase().catch(console.error);
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'resep' }, payload => {
+              console.debug('realtime resep event', payload);
+              muatDariSupabase().catch(console.error);
+            })
+            .subscribe(status => console.log('realtime channel status', status));
+          console.log('Realtime channel created (v2 style).');
+        } else if (supabase.from && typeof supabase.from === 'function') {
+          try {
+            supabase.from('bahan').on('*', payload => {
+              console.debug('realtime bahan payload (v1)', payload);
+              muatDariSupabase().catch(console.error);
+            }).subscribe();
+
+            supabase.from('resep').on('*', payload => {
+              console.debug('realtime resep payload (v1)', payload);
+              muatDariSupabase().catch(console.error);
+            }).subscribe();
+            console.log('Realtime listeners attached (v1 style).');
+          } catch (e) {
+            console.warn('Fallback realtime attach failed', e);
+          }
+        } else {
+          console.warn('Realtime not available on this Supabase client.');
+        }
+      } catch (err) {
+        console.warn('setupRealtime error', err);
+      }
+    }
+
+    window.simpanBahan = simpanBahan;
+    window.batalEditBahan = batalEditBahan;
+    window.tambahBahanResep = tambahBahanResep;
+    window.simpanResep = simpanResep;
+    window.simpanHarga = simpanHarga;
+    window.jualResep = jualResep;
+    window.selesaiSemua = selesaiSemua;
+    window.hapusPenjualan = window.hapusPenjualan;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      loadLocalPenjualan();
+      await muatDariSupabase().catch(console.error);
+      setupRealtime();
+
+      const tabs = document.querySelectorAll('.tab-button');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active')); tab.classList.add('active');
+        contents.forEach(c => c.classList.add('hidden'));
+        const tabId = tab.id.replace('-tab','');
+        document.getElementById(tabId + '-content').classList.remove('hidden');
+      }));
+
+      document.getElementById('simpan-bahan-btn').addEventListener('click', simpanBahan);
+      document.getElementById('batal-edit-bahan-btn').addEventListener('click', batalEditBahan);
+      document.getElementById('tambah-bahan-resep-btn').addEventListener('click', tambahBahanResep);
+      document.getElementById('simpan-resep-btn').addEventListener('click', simpanResep);
+      document.getElementById('simpan-harga-btn').addEventListener('click', simpanHarga);
+      document.getElementById('jual-resep-btn').addEventListener('click', jualResep);
+      document.getElementById('selesai-semua-btn').addEventListener('click', selesaiSemua);
+      document.getElementById('bayar-input').addEventListener('input', hitungKembalian);
+
+      if(document.getElementById('resep-bahan-container').children.length === 0) tambahBahanResep();
     });
-}
-
-/* === Scan loop === */
-function scanQRCode() {
-    const ctx = snapshot.getContext('2d');
-
-    async function tick() {
-        if (!stream) return;
-        if (liveVideo.readyState === liveVideo.HAVE_ENOUGH_DATA) {
-            const w = liveVideo.videoWidth;
-            const h = liveVideo.videoHeight;
-            if (w === 0 || h === 0) { animationFrameId = requestAnimationFrame(tick); return; }
-
-            snapshot.width = w; snapshot.height = h;
-
-            ctx.drawImage(liveVideo, 0, 0, w, h);
-            const imageData = ctx.getImageData(0, 0, w, h);
-
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code) {
-                playBeep();
-                output.textContent = "QR DITEMUKAN: " + code.data;
-                processQRData(code.data);
-                stopCamera();
-                return;
-            }
-
-            try {
-                const barcode = await tryDecodeBarcodeFromCanvas(snapshot);
-                if (barcode) {
-                    playBeep();
-                    output.textContent = "BARCODE DITEMUKAN: " + barcode;
-                    processQRData(barcode);
-                    stopCamera();
-                    return;
-                }
-            } catch (err) { console.warn("Barcode check failed:", err); }
-        }
-        animationFrameId = requestAnimationFrame(tick);
-    }
-    tick();
-}
-
-/* === Process decoded data (text/link) === */
-function processQRData(data) {
-    lastDecodedData = null;
-    downloadBtn.style.display = 'none';
-    closePageBtn.style.display = 'none';
-    actionButtons.style.display = 'none';
-    lastDecodedDataLink = null;
-    lastDecodedText = null;
-    output.textContent = '';
-
-    let parts = data.split("||").map(p => p.trim());
-
-    if (luckyCheck.checked) {
-        if (parts.length === 2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) {
-            fetchAndDecrypt(parts[0], parseInt(parts[1]));
-            return;
-        }
-    }
-
-    output.textContent = "" + data;
-    lastDecodedText = data;
-
-    if (data.startsWith("http://") || data.startsWith("https://")) {
-        lastDecodedDataLink = data;
-        actionButtons.style.display = 'flex';
-        copyTextBtn.style.display = 'inline-block';
-        rightActionBtn.style.display = 'inline-block';
-        rightActionBtn.textContent = 'Buka Link';
-        copyTextBtn.title = 'Salin hasil (link)';
-        rightActionBtn.title = 'Buka link di tab baru';
-    } else {
-        actionButtons.style.display = 'flex';
-        copyTextBtn.style.display = 'inline-block';
-        rightActionBtn.style.display = 'inline-block';
-        rightActionBtn.textContent = 'Cari di Google';
-        copyTextBtn.title = 'Salin teks';
-        rightActionBtn.title = 'Cari teks di Google';
-    }
-}
-
-/* === Start/stop binding & QR generator === */
-startCameraButton.addEventListener('click', toggleCamera);
-
-/* QR generator modal */
-createQRBtn.addEventListener('click', () => { qrModal.classList.add('open'); qrModal.style.display = 'flex'; generateQRFromInput(); });
-closeQRModal.addEventListener('click', () => { qrModal.classList.remove('open'); qrModal.style.display = 'none'; });
-qrText.addEventListener('input', generateQRFromInput);
-function generateQRFromInput() {
-    const text = qrText.value.trim() || " ";
-    new QRious({
-        element: qrCanvas,
-        value: text,
-        size: 300,
-        level: 'H',
-        background: '#e0e0e0',
-        foreground: '#333333'
-    });
-}
-downloadQRBtn.addEventListener('click', () => {
-    const a = document.createElement('a');
-    a.href = qrCanvas.toDataURL("image/png");
-    a.download = 'kode_qr.png';
-    a.click();
-});
-
-/* Close qr modal on overlay click */
-window.addEventListener('click', (e) => {
-    if (e.target === qrModal) { qrModal.classList.remove('open'); qrModal.style.display = 'none'; }
-});
-
-/* Tutup modal & restore scroll pada ESC */
-window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        if (resultModal.classList.contains('open')) closeResultModalFunc();
-        if (qrModal.classList.contains('open')) { qrModal.classList.remove('open'); qrModal.style.display='none'; }
-    }
-});
-</script>
+  </script>
 </body>
 </html>
+<style></style><script></script><style></style><script></script>
