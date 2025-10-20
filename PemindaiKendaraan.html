@@ -29,22 +29,22 @@
             text-align: center;
             border: 1px solid #cfd8dc; /* Subtle border */
         }
-        video, #captured-image {
-            width: 100%;
-            max-width: 520px; /* Adjusted max width */
-            height: auto;
-            border-radius: 15px; /* More rounded image/video */
-            background-color: #263238; /* Darker background for visual contrast */
-            margin-bottom: 30px; /* Increased margin */
-            display: block;
-            object-fit: contain;
-            aspect-ratio: 16 / 9;
-            border: 2px solid #b0bec5; /* More pronounced border */
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Shadow for media elements */
-            margin-left: auto; /* Pusatkan gambar/video secara horizontal */
-            margin-right: auto; /* Pusatkan gambar/video secara horizontal */
-        }
-        #captured-image {
+video, #captured-image {
+    width: 100%;
+    max-width: 720px; /* Sebelumnya 520px → diperbesar */
+    height: auto;
+    border-radius: 15px;
+    background-color: #263238;
+    margin-bottom: 30px;
+    display: block;
+    object-fit: cover; /* Ganti dari contain ke cover agar tampak lebih penuh */
+    aspect-ratio: 16 / 9;
+    border: 2px solid #b0bec5;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-left: auto;
+    margin-right: auto;
+}
+ptured-image {
             display: none;
         }
         .button-group {
