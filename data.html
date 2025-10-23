@@ -1,582 +1,430 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manajemen Data - UI Kesamping</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .card {
-      @apply bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 space-y-4;
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-    }
-    #daftar {
-      margin-top: 1rem;
-      overflow-y: auto;
-      max-height: 60vh;
-    }
-    #daftar li {
-      @apply bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-md flex justify-between items-center mb-2;
-      overflow-x: auto;
-      white-space: nowrap;
-      align-items: flex-start;
-      transition: all 0.3s ease;
-    }
-    #daftar li:hover {
-      @apply shadow-md;
-      transform: translateY(-2px);
-    }
-    #daftar::-webkit-scrollbar {
-      width: 8px;
-    }
-    #daftar::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 5px;
-    }
-    #daftar::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 5px;
-    }
-    #daftar::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-    #daftar li div {
-      overflow: visible;
-      white-space: nowrap;
-      max-width: 80%;
-    }
-    #daftar li div p {
-      margin-bottom: 0.25rem;
-    }
-    #daftar li:last-child {
-      margin-bottom: 0;
-    }
-    #alert-container {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .input-error {
-      @apply border-red-500 focus:ring-red-500;
-    }
-    .error-message {
-      @apply text-red-500 text-sm mt-1;
-    }
-
-    /* Modal Styles */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.5);
-    }
-
-    .modal-content {
-      background-color: #2d3748; /* Dark background */
-      color: #f7fafc; /* Light text */
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #4a5568; /* Darker border */
-      width: 90%;
-      max-width: 500px;
-      border-radius: 8px;
-      position: relative;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3); /* Slightly darker shadow */
-      animation: fadeIn 0.3s;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-50px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #4a5568; /* Darker border */
-    }
-
-    .modal-header h2 {
-      margin: 0;
-      font-size: 1.5rem;
-      color: #f56565; /* Red color for heading in dark theme*/
-    }
-
-    .close-button {
-      color: #cbd5e0; /* Light color for close button */
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      cursor: pointer;
-    }
-
-    .close-button:hover,
-    .close-button:focus {
-      color: #fff;
-      text-decoration: none;
-    }
-
-    .modal-body {
-      margin-bottom: 20px;
-    }
-
-    .modal-body label {
-      display: block;
-      margin-bottom: 5px;
-      color: #cbd5e0; /* Light color for labels */
-      font-weight: 600;
-    }
-
-    .modal-body input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #4a5568; /* Darker border for inputs */
-      border-radius: 5px;
-      margin-bottom: 15px;
-      box-sizing: border-box;
-      font-size: 1rem;
-      transition: border-color 0.3s ease;
-      background-color: #2d3748; /* Dark background for inputs */
-      color: #f7fafc; /* Light text color for inputs */
-    }
-
-    .modal-body input:focus {
-      outline: none;
-      border-color: #f56565; /* Red color for focus in dark theme */
-      box-shadow: 0 0 5px rgba(244, 114, 182, 0.3);
-    }
-
-    .modal-footer {
-      text-align: right;
-    }
-
-    .modal-footer button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    .modal-footer button:hover {
-      background-color: #c53030;
-    }
-
-    .modal-footer button.cancel {
-      background-color: #f56565;
-      color: white;
-      margin-right: 10px;
-    }
-
-    .modal-footer button.cancel:hover {
-      background-color: #c53030;
-      color: white;
-    }
-
-    .modal-footer button.submit {
-      background-color: #48bb78;
-      color: white;
-    }
-
-    .modal-footer button.submit:hover {
-      background-color: #38a169;
-      color: white;
-    }
-  </style>
-  <script>
-    const hour = new Date().getHours();
-    if (hour >= 18 || hour < 6) {
-      document.documentElement.classList.add('dark');
-    }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemindai Kucing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fff8e1; /* warm background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 25px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            padding: 35px;
+            max-width: 580px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #f0e0c8;
+        }
+video, #captured-image {
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    border-radius: 15px;
+    background-color: #263238;
+    margin-bottom: 30px;
+    display: block;
+    object-fit: cover;
+    aspect-ratio: 16 / 9;
+    border: 2px solid #efc18a;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    margin-left: auto;
+    margin-right: auto;
+}
+#captured-image {
+            display: none;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        button {
+            background-image: linear-gradient(to right, #ffb74d 0%, #ff8a65 100%);
+            color: white;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button i {
+            font-size: 2.5rem;
+            margin-right: 0;
+        }
+        button:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.28);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            background-image: linear-gradient(to right, #9e9e9e 0%, #757575 100%);
+        }
+        #loading-indicator {
+            display: none;
+            margin-top: 30px;
+            color: #424242;
+            font-style: italic;
+            font-size: 1.05rem;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #results {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #fff3e0;
+            border-radius: 16px;
+            border: 2px solid #ffcc80;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            font-size: 1.05rem;
+            color: #6d4c41;
+            font-weight: 500;
+            word-wrap: break-word;
+            text-align: left;
+            line-height: 1.6;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+        #results p { margin-bottom: 8px; }
+        #results p:last-child { margin-bottom: 0; }
+        #hidden-canvas, #gallery-input { display: none; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-white dark:from-gray-800 dark:to-gray-900 min-h-screen p-6 text-gray-800 dark:text-white">
-  <div class="max-w-7xl mx-auto">
-    <h1 class="text-3xl font-bold text-center text-blue-700 dark:text-blue-300 mb-6">Manajemen Data</h1>
-    <div id="alert-container"></div>
-    
-    <div class="flex flex-col lg:flex-row gap-6">
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 lg:w-1/3">
-        <button id="tambah-data" class="w-full bg-green-600 hover:bg-green-700 text-white py-2 rounded-md transition">Tambah / Edit Data</button>
-      </div>
+<body>
+    <div class="container">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-6">Pemindai Kucing</h1>
+        <p class="text-gray-700 mb-10 text-lg">Pindai dari kamera atau pilih gambar dari galeri untuk mendapatkan detail kucing: ras (jenis), usia estimasi, warna, jenis kelamin, dan perkiraan harga di pasaran.</p>
 
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 lg:w-2/3 flex flex-col">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <div class="flex gap-2 items-center w-full sm:w-auto">
-            <input type="text" id="search" placeholder="Cari Nama atau Kode" class="rounded-md border border-blue-300 dark:border-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:bg-gray-800 dark:text-white" />
-          </div>
-          <button id="lihat-arsip" class="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition whitespace-nowrap">Lihat Arsip</button>
+        <video id="video-feed" autoplay playsinline></video>
+        <img id="captured-image" alt="Gambar Kucing yang Dipindai">
+        <canvas id="hidden-canvas"></canvas>
+
+        <div class="button-group">
+            <button id="scan-camera-button"><i class="fas fa-camera"></i></button>
+            <button id="take-photo-button" style="display: none;"><i class="fas fa-camera-retro"></i></button>
+            <input type="file" id="gallery-input" accept="image/*">
+            <button id="select-gallery-button"><i class="fas fa-image"></i></button>
         </div>
 
-        <h2 class="text-lg font-semibold mb-3" id="judul-daftar">Daftar Data</h2>
-        <ul id="daftar" class="space-y-3 flex-1"></ul>
-      </div>
-    </div>
-  </div>
-
-  <div id="dataModal" class="modal">
-    <div class="modal-content">
-      <span class="close-button">&times;</span>
-      <h2>Tambah / Edit Data</h2>
-      <div class="modal-body">
-        <label for="nama">Nama:</label>
-        <input type="text" id="nama-modal" placeholder="Nama" />
-        <label for="judul">Judul:</label>
-        <input type="text" id="judul-modal" placeholder="Judul" />
-        <label for="kode">Kode:</label>
-        <input type="text" id="kode-modal" placeholder="Kode" />
-        <label for="link">Link (Opsional):</label>
-        <input type="text" id="link-modal" placeholder="Link (Opsional)" />
-        <div id="error-message-container-modal" class="hidden mt-2">
-          <p id="error-message-modal" class="error-message"></p>
+        <div id="loading-indicator" class="flex items-center justify-center space-x-3">
+            <svg class="animate-spin h-6 w-6 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Memindai kucing... Mohon tunggu.</span>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="cancel">Batal</button>
-        <button type="button" class="submit">Simpan</button>
-      </div>
+
+        <div id="results" class="text-gray-700">
+            Hasil akan muncul di sini.
+        </div>
     </div>
-  </div>
 
-  <script>
-    const supabaseUrl = 'https://qzdvdfebkzlwkhvxwsju.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZHZkZmVia3psd2todnh3c2p1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzcyMTA4OTksImV4cCI6MjA1Mjc4Njg5OX0.Z9XKmX49vu0kZwn6YMom8QeLNNdKQMXCIkxcIoHKQFs';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    <script>
+        const videoFeed = document.getElementById('video-feed');
+        const capturedImage = document.getElementById('captured-image');
+        const hiddenCanvas = document.getElementById('hidden-canvas');
+        const scanCameraButton = document.getElementById('scan-camera-button');
+        const takePhotoButton = document.getElementById('take-photo-button');
+        const galleryInput = document.getElementById('gallery-input');
+        const selectGalleryButton = document.getElementById('select-gallery-button');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const resultsDiv = document.getElementById('results');
+        const context = hiddenCanvas.getContext('2d');
 
-    const tambahDataButton = document.getElementById('tambah-data');
-    const dataModal = document.getElementById('dataModal');
-    const closeButton = document.querySelector('.close-button');
-    const cancelButton = document.querySelector('.cancel');
-    const submitButton = document.querySelector('.submit');
+        async function startCameraStream() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { exact: "environment" } }
+                });
+                videoFeed.srcObject = stream;
+                videoFeed.style.display = 'block';
+                capturedImage.style.display = 'none';
 
-    const namaInputModal = document.getElementById('nama-modal');
-    const judulInputModal = document.getElementById('judul-modal');
-    const kodeInputModal = document.getElementById('kode-modal');
-    const linkInputModal = document.getElementById('link-modal');
-    const alertContainer = document.getElementById('alert-container');
-    const searchInput = document.getElementById('search');
-    const arsipButton = document.getElementById('lihat-arsip');
-    const judulDaftar = document.getElementById('judul-daftar');
-    const daftarList = document.getElementById('daftar');
-    const errorMessageContainerModal = document.getElementById('error-message-container-modal');
-    const errorMessageModal = document.getElementById('error-message-modal');
+                return new Promise((resolve) => {
+                    videoFeed.onloadedmetadata = () => {
+                        hiddenCanvas.width = videoFeed.videoWidth;
+                        hiddenCanvas.height = videoFeed.videoHeight;
+                        capturedImage.width = videoFeed.videoWidth;
+                        capturedImage.height = videoFeed.videoHeight;
+                        videoFeed.play().then(() => { resolve(); }).catch(err => {
+                            console.error("Error playing video:", err);
+                            resultsDiv.innerHTML = '<p class="text-red-500">Gagal memutar video kamera.</p>';
+                            scanCameraButton.disabled = true;
+                            resolve();
+                        });
+                    };
+                });
 
-    let editingId = null;
-    let showingArchive = false;
-    let timeoutId;
+            } catch (error) {
+                console.error('Gagal mengakses kamera:', error);
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    videoFeed.srcObject = stream;
+                    videoFeed.style.display = 'block';
+                    capturedImage.style.display = 'none';
 
-    function showAlert(message, type = 'success') {
-      alertContainer.innerHTML = `<div class="bg-${type === 'success' ? 'green' : 'red'}-100 border border-${type === 'success' ? 'green' : 'red'}-400 text-${type === 'success' ? 'green' : 'red'}-700 px-4 py-2 rounded-md mb-4 dark:bg-opacity-10">
-        <strong>${type === 'success' ? 'Berhasil!' : 'Gagal!'}</strong> ${message}
-      </div>`;
-      setTimeout(() => alertContainer.innerHTML = '', 4000);
-    }
+                    return new Promise((resolve) => {
+                        videoFeed.onloadedmetadata = () => {
+                            hiddenCanvas.width = videoFeed.videoWidth;
+                            hiddenCanvas.height = videoFeed.videoHeight;
+                            capturedImage.width = videoFeed.videoWidth;
+                            capturedImage.height = videoFeed.videoHeight;
+                            videoFeed.play().then(() => {
+                                resultsDiv.innerHTML = '<p class="text-yellow-600">Kamera belakang tidak ditemukan atau tidak dapat diakses. Menggunakan kamera default.</p>';
+                                resolve();
+                            }).catch(err => {
+                                console.error("Error playing fallback video:", err);
+                                resultsDiv.innerHTML = '<p class="text-red-500">Gagal memutar video kamera default.</p>';
+                                scanCameraButton.disabled = true;
+                                resolve();
+                            });
+                        };
+                    });
+                } catch (defaultCameraError) {
+                    console.error('Gagal mengakses kamera apapun:', defaultCameraError);
+                    resultsDiv.innerHTML = '<p class="text-red-500">Gagal mengakses kamera. Pastikan Anda memberikan izin.</p>';
+                    scanCameraButton.disabled = true;
+                    return Promise.reject("No camera access");
+                }
+            }
+        }
 
-    async function fetchData(searchTerm = '') {
-      const table = showingArchive ? 'arsip' : 'nama_kode';
-      let query = supabase.from(table).select('*').order('id', { ascending: false });
-      if (searchTerm) query = query.or(`nama.ilike.%${searchTerm}%,kode.ilike.%${searchTerm}%`);
-      const { data, error } = await query;
-      if (error) return showAlert(error.message, 'error');
-      renderList(data, showingArchive);
-    }
+        function stopCameraStream() {
+            if (videoFeed.srcObject) {
+                const tracks = videoFeed.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                videoFeed.srcObject = null;
+            }
+            videoFeed.style.display = 'none';
+        }
 
-    function renderList(data, isArchive = false) {
-      daftarList.innerHTML = '';
-      data.forEach(item => {
-        const el = document.createElement('li');
-        el.className = 'bg-white dark:bg-gray-700 border dark:border-gray-600 p-4 rounded-md flex justify-between items-center';
-        el.innerHTML = `
-          <div>
-            <p class="font-bold text-lg">${item.nama}</p>
-            <p class="text-sm text-gray-700 dark:text-gray-300">${item.judul || '(Tanpa Judul)'}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Kode: ${item.kode}</p>
-          </div>
-          <div class="flex gap-3 text-sm">
-            ${item.link ? `<a href="${item.link}" target="_blank" class="text-blue-600 hover:underline dark:text-blue-400 whitespace-nowrap">Lihat</a>` : ''}
-            ${isArchive
-              ? `
-                <button class="text-green-600 hover:underline restore-btn whitespace-nowrap" data-id="${item.id}">Kembalikan</button>
-                <button class="text-red-600 hover:underline delete-arsip-btn whitespace-nowrap" data-id="${item.id}">Hapus</button>
-              `
-              : `
-                <button class="text-yellow-600 hover:underline edit-btn whitespace-nowrap" data-id="${item.id}">Edit</button>
-                <button class="text-red-600 hover:underline delete-btn whitespace-nowrap" data-id="${item.id}">Hapus</button>
-                <button class="text-gray-600 hover:underline archive-btn whitespace-nowrap" data-id="${item.id}">Arsip</button>
-              `}
-          </div>
-        `;
-        daftarList.appendChild(el);
-      });
+        async function sendImageToGemini(base64ImageData) {
+            loadingIndicator.style.display = 'flex';
+            resultsDiv.textContent = '';
+            scanCameraButton.disabled = true;
+            selectGalleryButton.disabled = true;
+            takePhotoButton.style.display = 'none';
 
-      if (!isArchive) {
-        addEventListenersToButtons();
-      } else {
-        document.querySelectorAll('.restore-btn').forEach(btn => {
-          btn.addEventListener('click', () => restoreArchiveData(btn.dataset.id));
+            try {
+                const prompt = `Identifikasi kucing dalam gambar. Berikan detail berikut dalam format JSON. Jika tidak ada kucing yang terlihat, berikan JSON: {"terdeteksi": "Tidak"}. Untuk tiap field yang tidak dapat ditentukan, gunakan "Tidak tersedia".
+                {
+                    "terdeteksi": "Ya atau Tidak",
+                    "jenis_kucing": "ras/jenis kucing (misal: Persian, Siamese, Domestic Shorthair)",
+                    "perkiraan_usia": "perkiraan usia (misal: 2 tahun, 6 bulan)",
+                    "jenis_kelamin": "Jantan/Betina/Tidak tersedia",
+                    "warna_bulu": "warna dominan bulu (misal: Putih, Oranye, Tabby)",
+                    "kondisi_kesehatan_ringkas": "indikator kesehatan singkat jika terlihat (misal: tampak sehat, kurus, luka pada tubuh), atau 'Tidak tersedia'",
+                    "perkiraan_harga_pasaran": "estimasi harga di pasaran Indonesia dalam Rupiah (misal: Rp 1.500.000), atau 'Tidak tersedia' jika tidak dapat diestimasi",
+                    "ras_probabilitas": "persentase/kepercayaan terhadap identifikasi ras jika memungkinkan (misal: 85%), atau 'Tidak tersedia'",
+                    "keterangan_tambahan": "ringkasan singkat (misal: cocok untuk indoor, perawatan tinggi), atau 'Tidak tersedia'"
+                }
+                Berikan output sebagai JSON saja tanpa teks tambahan.`;
+
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                {
+                                    inlineData: {
+                                        mimeType: "image/png",
+                                        data: base64ImageData
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "terdeteksi": { "type": "STRING" },
+                                "jenis_kucing": { "type": "STRING" },
+                                "perkiraan_usia": { "type": "STRING" },
+                                "jenis_kelamin": { "type": "STRING" },
+                                "warna_bulu": { "type": "STRING" },
+                                "kondisi_kesehatan_ringkas": { "type": "STRING" },
+                                "perkiraan_harga_pasaran": { "type": "STRING" },
+                                "ras_probabilitas": { "type": "STRING" },
+                                "keterangan_tambahan": { "type": "STRING" }
+                            },
+                            propertyOrdering: [
+                                "terdeteksi","jenis_kucing","perkiraan_usia","jenis_kelamin","warna_bulu","kondisi_kesehatan_ringkas","perkiraan_harga_pasaran","ras_probabilitas","keterangan_tambahan"
+                            ]
+                        }
+                    }
+                };
+
+                const apiKey = "AIzaSyD55RE9twbJIk367GVV9fU8quPovcFNic8"; // tetap menggunakan API yang sama (ganti jika perlu)
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    const catDetails = JSON.parse(jsonString);
+
+                    let detailsHtml = '';
+                    if (catDetails.terdeteksi === "Tidak" || catDetails.terdeteksi === "Tidak ada kucing terdeteksi") {
+                        detailsHtml = `<p class="text-red-500">Tidak ada kucing terdeteksi dalam gambar.</p>`;
+                    } else {
+                        detailsHtml += `<p><strong>Jenis / Ras:</strong> ${catDetails.jenis_kucing || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Perkiraan Usia:</strong> ${catDetails.perkiraan_usia || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Jenis Kelamin:</strong> ${catDetails.jenis_kelamin || 'Tidak tersedia'}</p>`;
+                        detailsHtml += `<p><strong>Warna Bulu:</strong> ${catDetails.warna_bulu || 'Tidak tersedia'}</p>`;
+
+                        if (catDetails.kondisi_kesehatan_ringkas && catDetails.kondisi_kesehatan_ringkas !== 'Tidak tersedia') {
+                            detailsHtml += `<p><strong>Kondisi Kesehatan (Ringkas):</strong> ${catDetails.kondisi_kesehatan_ringkas}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Kondisi Kesehatan (Ringkas):</strong> Tidak tersedia.</p>`;
+                        }
+
+                        if (catDetails.perkiraan_harga_pasaran && catDetails.perkiraan_harga_pasaran !== 'Tidak tersedia') {
+                            detailsHtml += `<p><strong>Perkiraan Harga di Pasaran:</strong> ${catDetails.perkiraan_harga_pasaran}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Perkiraan Harga di Pasaran:</strong> Tidak tersedia.</p>`;
+                        }
+
+                        detailsHtml += `<p><strong>Kepercayaan Identifikasi Ras:</strong> ${catDetails.ras_probabilitas || 'Tidak tersedia'}</p>`;
+
+                        if (catDetails.keterangan_tambahan && catDetails.keterangan_tambahan !== 'Tidak tersedia') {
+                            detailsHtml += `<p><strong>Keterangan Tambahan:</strong> ${catDetails.keterangan_tambahan}</p>`;
+                        } else {
+                            detailsHtml += `<p><strong>Keterangan Tambahan:</strong> Tidak tersedia.</p>`;
+                        }
+                    }
+                    resultsDiv.innerHTML = detailsHtml;
+
+                } else {
+                    resultsDiv.textContent = 'Tidak dapat mengidentifikasi detail kucing.';
+                    console.error('Unexpected API response structure:', result);
+                }
+
+            } catch (error) {
+                console.error('Kesalahan saat memindai kucing:', error);
+                resultsDiv.innerHTML = '<p class="text-red-500">Terjadi kesalahan saat memindai. Silakan coba lagi.</p>';
+            } finally {
+                loadingIndicator.style.display = 'none';
+                scanCameraButton.disabled = false;
+                selectGalleryButton.disabled = false;
+                takePhotoButton.disabled = false;
+            }
+        }
+
+        scanCameraButton.addEventListener('click', async () => {
+            try {
+                await startCameraStream();
+                scanCameraButton.disabled = true;
+                selectGalleryButton.disabled = true;
+                takePhotoButton.style.display = 'block';
+                resultsDiv.textContent = '';
+            } catch (error) {
+                console.error("Error during camera scan initiation:", error);
+                loadingIndicator.style.display = 'none';
+                scanCameraButton.disabled = false;
+                selectGalleryButton.disabled = false;
+                videoFeed.style.display = 'none';
+                capturedImage.style.display = 'none';
+            }
         });
-        document.querySelectorAll('.delete-arsip-btn').forEach(btn => {
-          btn.addEventListener('click', () => deleteArchiveData(btn.dataset.id));
+
+        takePhotoButton.addEventListener('click', () => {
+            takePhotoButton.disabled = true;
+            loadingIndicator.style.display = 'flex';
+            resultsDiv.textContent = '';
+
+            context.drawImage(videoFeed, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+            capturedImage.src = hiddenCanvas.toDataURL('image/png');
+
+            videoFeed.style.display = 'none';
+            capturedImage.style.display = 'block';
+
+            stopCameraStream();
+
+            sendImageToGemini(hiddenCanvas.toDataURL('image/png').split(',')[1]);
         });
-      }
-    }
 
-    function addEventListenersToButtons() {
-      document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          editingId = btn.dataset.id;
-          openModal(btn.dataset.id);
+        selectGalleryButton.addEventListener('click', () => {
+            stopCameraStream();
+            galleryInput.click();
+            scanCameraButton.disabled = true;
+            selectGalleryButton.disabled = true;
+            takePhotoButton.style.display = 'none';
+            resultsDiv.textContent = '';
         });
-      });
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => deleteData(btn.dataset.id));
-      });
-      document.querySelectorAll('.archive-btn').forEach(btn => {
-        btn.addEventListener('click', () => archiveData(btn.dataset.id));
-      });
-    }
 
-    async function addData() {
-      const nama = namaInputModal.value.trim();
-      const judul = judulInputModal.value.trim();
-      const kode = kodeInputModal.value.trim();
-      const link = linkInputModal.value.trim();
+        galleryInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        hiddenCanvas.width = img.width;
+                        hiddenCanvas.height = img.height;
+                        context.drawImage(img, 0, 0, img.width, img.height);
 
-      let hasErrors = false;
+                        videoFeed.style.display = 'none';
+                        capturedImage.style.display = 'block';
+                        capturedImage.src = e.target.result;
 
-      if (!nama) {
-        namaInputModal.classList.add('input-error');
-        hasErrors = true;
-      } else {
-        namaInputModal.classList.remove('input-error');
-      }
-      if (!kode) {
-        kodeInputModal.classList.add('input-error');
-        hasErrors = true;
-      } else {
-        kodeInputModal.classList.remove('input-error');
-      }
+                        sendImageToGemini(hiddenCanvas.toDataURL('image/png').split(',')[1]);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-      if (hasErrors) {
-        errorMessageModal.textContent = 'Nama dan Kode wajib diisi.';
-        errorMessageContainerModal.classList.remove('hidden');
-        return;
-      } else {
-        errorMessageContainerModal.classList.add('hidden');
-      }
-
-      const { error } = await supabase.from('nama_kode').insert([{ nama, judul, kode, link }]);
-      if (error) return showAlert(error.message, 'error');
-      showAlert('Data berhasil ditambahkan!');
-      namaInputModal.value = judulInputModal.value = kodeInputModal.value = linkInputModal.value = '';
-      fetchData();
-      closeModal();
-    }
-
-    async function editData(id) {
-      const listItem = document.querySelector(`[data-id="${id}"]`).closest('li');
-      const nama = listItem.querySelector('p.font-bold').textContent;
-      const judul = listItem.querySelectorAll('p')[1].textContent;
-      const kode = listItem.querySelectorAll('p')[2].textContent.replace('Kode: ', '');
-      const link = listItem.querySelector('a')?.href || '';
-
-      namaInputModal.value = nama;
-      judulInputModal.value = judul;
-      kodeInputModal.value = kode;
-      linkInputModal.value = link;
-      editingId = id;
-      openModal(id);
-    }
-
-    async function saveData() {
-      const nama = namaInputModal.value.trim();
-      const judul = judulInputModal.value.trim();
-      const kode = kodeInputModal.value.trim();
-      const link = linkInputModal.value.trim();
-
-      let hasErrors = false;
-
-      if (!nama) {
-        namaInputModal.classList.add('input-error');
-        hasErrors = true;
-      } else {
-        namaInputModal.classList.remove('input-error');
-      }
-      if (!kode) {
-        kodeInputModal.classList.add('input-error');
-        hasErrors = true;
-      } else {
-        kodeInputModal.classList.remove('input-error');
-      }
-
-      if (hasErrors) {
-        errorMessageModal.textContent = 'Nama dan Kode wajib diisi.';
-        errorMessageContainerModal.classList.remove('hidden');
-        return;
-      } else {
-        errorMessageContainerModal.classList.add('hidden');
-      }
-
-      if (editingId) {
-        // Update data yang ada
-        const { error } = await supabase.from('nama_kode').update({ nama, judul, kode, link }).eq('id', editingId);
-        if (error) return showAlert(error.message, 'error');
-        showAlert('Data berhasil diperbarui!');
-      } else {
-        // Tambah data baru
-        const { error } = await supabase.from('nama_kode').insert([{ nama, judul, kode, link }]);
-        if (error) return showAlert(error.message, 'error');
-        showAlert('Data berhasil ditambahkan!');
-      }
-
-      fetchData();
-      closeModal();
-      resetModalForm();
-    }
-
-    async function deleteData(id) {
-      if (!confirm('Yakin ingin menghapus data ini?')) return;
-      const { error } = await supabase.from('nama_kode').delete().eq('id', id);
-      if (error) return showAlert(error.message, 'error');
-      showAlert('Data berhasil dihapus!');
-      fetchData();
-    }
-
-    async function archiveData(id) {
-      const listItem = document.querySelector(`[data-id="${id}"]`).closest('li');
-      const nama = listItem.querySelector('p.font-bold').textContent;
-      const judul = listItem.querySelectorAll('p')[1].textContent;
-      const kode = listItem.querySelectorAll('p')[2].textContent.replace('Kode: ', '');
-      const link = listItem.querySelector('a')?.href || '';
-
-      if (!confirm('Pindahkan data ini ke arsip?')) return;
-
-      const { error: insertError } = await supabase.from('arsip').insert([{ nama, judul, kode, link }]);
-      if (insertError) return showAlert('Gagal mengarsipkan: ' + insertError.message, 'error');
-
-      const { error: deleteError } = await supabase.from('nama_kode').delete().eq('id', id);
-      if (deleteError) return showAlert('Gagal menghapus setelah arsip: ' + deleteError.message, 'error');
-
-      showAlert('Data berhasil dipindahkan ke arsip!');
-      fetchData();
-    }
-
-    async function deleteArchiveData(id) {
-      if (!confirm('Hapus permanen dari arsip?')) return;
-      const { error } = await supabase.from('arsip').delete().eq('id', id);
-      if (error) return showAlert(error.message, 'error');
-      showAlert('Data berhasil dihapus dari arsip!');
-      fetchData();
-    }
-
-    async function restoreArchiveData(id) {
-      const listItem = document.querySelector(`[data-id="${id}"]`).closest('li');
-      const nama = listItem.querySelector('p.font-bold').textContent;
-      const judul = listItem.querySelectorAll('p')[1].textContent;
-      const kode = listItem.querySelectorAll('p')[2].textContent.replace('Kode: ', '');
-      const link = listItem.querySelector('a')?.href || '';
-
-      if (!confirm('Kembalikan data ini ke daftar utama?')) return;
-
-      const { error: insertError } = await supabase.from('nama_kode').insert([{ nama, judul, kode, link }]);
-      if (insertError) return showAlert('Gagal mengembalikan: ' + insertError.message, 'error');
-
-      const { error: deleteError } = await supabase.from('arsip').delete().eq('id', id);
-      if (deleteError) return showAlert('Gagal menghapus dari arsip: ' + deleteError.message, 'error');
-
-      showAlert('Data berhasil dikembalikan!');
-      fetchData();
-    }
-
-    // Modal Functions
-    function openModal(id = null) {
-      dataModal.style.display = 'block';
-      if (id) {
-        const listItem = document.querySelector(`[data-id="${id}"]`).closest('li');
-        const nama = listItem.querySelector('p.font-bold').textContent;
-        const judul = listItem.querySelectorAll('p')[1].textContent;
-        const kode = listItem.querySelectorAll('p')[2].textContent.replace('Kode: ', '');
-        const link = listItem.querySelector('a')?.href || '';
-
-        namaInputModal.value = nama;
-        judulInputModal.value = judul;
-        kodeInputModal.value = kode;
-        linkInputModal.value = link;
-        editingId = id;
-        submitButton.textContent = 'Simpan';
-      } else {
-        submitButton.textContent = 'Tambah';
-        resetModalForm();
-        editingId = null;
-      }
-    }
-
-    function closeModal() {
-      dataModal.style.display = 'none';
-      resetModalForm();
-      editingId = null;
-    }
-
-    function resetModalForm() {
-      namaInputModal.value = '';
-      judulInputModal.value = '';
-      kodeInputModal.value = '';
-      linkInputModal.value = '';
-      errorMessageModal.textContent = '';
-      errorMessageContainerModal.classList.add('hidden');
-      namaInputModal.classList.remove('input-error');
-      kodeInputModal.classList.remove('input-error');
-    }
-
-    tambahDataButton.addEventListener('click', openModal);
-    closeButton.addEventListener('click', closeModal);
-    cancelButton.addEventListener('click', closeModal);
-    submitButton.addEventListener('click', () => {if (editingId) {
-        saveData(editingId);
-      } else {
-        saveData();
-      }
-    });
-
-    window.addEventListener('click', (event) => {
-      if (event.target === dataModal) {
-        closeModal();
-      }
-    });
-
-    searchInput.addEventListener('input', () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        fetchData(searchInput.value.trim());
-      }, 300);
-    });
-
-    arsipButton.addEventListener('click', () => {
-      showingArchive = !showingArchive;
-      arsipButton.textContent = showingArchive ? 'Lihat Data Aktif' : 'Lihat Arsip';
-      judulDaftar.textContent = showingArchive ? 'Daftar Arsip' : 'Daftar Data';
-      fetchData();
-    });
-
-    fetchData();
-  </script>
+        window.onload = () => {
+            videoFeed.style.display = 'none';
+            capturedImage.style.display = 'none';
+            takePhotoButton.style.display = 'none';
+        };
+    </script>
 </body>
 </html>
-
