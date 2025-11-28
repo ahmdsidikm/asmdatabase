@@ -2,1089 +2,1144 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Enkripsi & Dekripsi File Aman</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': 'var(--primary-color)',
-                        'primary-hover': 'var(--primary-hover)',
-                        'secondary': 'var(--secondary-color)',
-                        'secondary-hover': 'var(--secondary-hover)',
-                        'success': 'var(--success-color)',
-                        'success-hover': 'var(--success-hover)',
-                        'bg-color': 'var(--bg-color)',
-                        'text-color': 'var(--text-color)',
-                        'border-color': 'var(--border-color)',
-                        'input-bg': 'var(--input-bg)',
-                        'input-border': 'var(--input-border)',
-                    },
-                    boxShadow: {
-                        'custom': 'var(--box-shadow)',
-                    },
-                    borderRadius: {
-                        'md': 'var(--rounded-md)',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: 'var(--font-mono)',
-                    }
-                },
-            }
-        }
-    </script>
+    <title>Enkripsi & Dekripsi Multi-File</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
-        :root {
-            --bg-color: #f9fafb;
-            --text-color: #1f2937;
-            --primary-color: #8b5cf6;
-            --primary-hover: #a855f7;
-            --secondary-color: #e5e7eb;
-            --secondary-hover: #f3f4f6;
-            --success-color: #16a34a;
-            --success-hover: #15803d;
-            --border-color: #d1d5db;
-            --input-bg: #fff;
-            --input-border: #d1d5db;
-            --box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-            --rounded-md: 0.375rem;
-            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        .drop-zone {
+            border: 3px dashed #6366f1;
+            transition: all 0.3s ease;
         }
-
-        .dark {
-            --bg-color: #111827;
-            --text-color: #f9fafb;
-            --primary-color: #8b5cf6;
-            --primary-hover: #a855f7;
-            --secondary-color: #374151;
-            --secondary-hover: #4b5563;
-            --success-color: #14e5b0;
-            --success-hover: #06d6a0;
-            --border-color: #4b5563;
-            --input-bg: #374151;
-            --input-border: #6b7280;
-            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #4f46e5;
+            background-color: rgba(99, 102, 241, 0.1);
         }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
+        .tab-active {
+            background: linear-gradient(to right, #9333ea, #ec4899);
         }
-
-        .container {
-            max-width: 800px;
-            width: 100%;
-            background-color: var(--bg-color);
-            padding: 2rem;
-            border-radius: var(--rounded-md);
-            margin-top: 1.5rem;
-            box-shadow: var(--box-shadow);
-            border: 1px solid var(--border-color);
-            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        .progress-bar {
+            transition: width 0.3s ease;
         }
-
-        .heading-primary {
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            text-align: center;
-            font-size: 2.25rem;
-            transition: color 0.3s ease;
+        .file-item {
+            animation: slideIn 0.3s ease;
         }
-
-        .tab-container {
-            display: flex;
-            justify-content: center;
-            padding: 0.5rem;
-            background-color: transparent;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 1rem;
-            text-align: center;
-            color: var(--text-color);
-            cursor: pointer;
-            font-weight: 600;
-            border-bottom: 2px solid transparent;
-            transition: color 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
-            border-radius: var(--rounded-md) var(--rounded-md) 0 0;
-            background-color: var(--secondary-color);
-            margin: 0 0.25rem;
-        }
-
-        .tab-button:hover {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-            background-color: var(--secondary-hover);
-        }
-
-        .tab-button.active {
-            color: #fff;
-            border-bottom-color: var(--success-color);
-            background-color: var(--success-color);
-            font-weight: 700;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .tab-content {
-            display: none;
-            padding: 1.5rem;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .form-label {
-            display: block;
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--text-color);
-            font-size: 0.875rem;
-            transition: color 0.3s ease;
-        }
-
-        .input-text, .select-input {
-            padding: 0.75rem 1rem;
-            width: 100%;
-            border-radius: var(--rounded-md);
-            border: 2px solid var(--input-border);
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            margin-bottom: 1rem;
-            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-
-        .input-text:focus, .select-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
-        }
-
-        .button-primary {
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--rounded-md);
-            border: none;
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            width: 100%;
-            display: block;
-            margin: 1.5rem auto 1rem auto;
-            text-align: center;
-            font-size: 1rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .button-primary:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .button-primary:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
-
-        .status-message {
-            margin-top: 1.5rem;
-            font-size: 0.9rem;
-            color: var(--text-color);
-            text-align: center;
-            padding: 1rem;
-            background-color: var(--secondary-color);
-            border-radius: var(--rounded-md);
-            border: 1px solid var(--border-color);
-            word-wrap: break-word;
-            overflow-x: auto;
-            max-width: 100%;
-            font-family: var(--font-mono);
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-
-        .download-link {
-            display: inline-block;
-            margin-top: 1.5rem;
-            background-color: var(--success-color);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--rounded-md);
-            text-decoration: none;
-            font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            text-align: center;
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
-            font-size: 1rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .download-link:hover {
-            background-color: var(--success-hover);
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        #previewContainer {
-            margin-top: 1.5rem;
-            text-align: center;
-            border: 2px dashed var(--border-color);
-            padding: 1.5rem;
-            border-radius: var(--rounded-md);
-            background-color: var(--secondary-color);
-            overflow-x: auto;
-            max-width: 100%;
-            min-height: 100px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-        }
-
-        #previewContainer img, #previewContainer video {
-            max-width: 100%;
-            height: auto;
-            margin-top: 0.75rem;
-            border-radius: var(--rounded-md);
-            box-shadow: var(--box-shadow);
-            transition: transform 0.3s ease;
-        }
-        #previewContainer img:hover, #previewContainer video:hover {
-            transform: scale(1.02);
-        }
-
-        .settings-button {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            padding: 0.75rem;
-            border-radius: 9999px;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid var(--border-color);
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .settings-button:hover {
-            background-color: var(--secondary-hover);
-            color: var(--primary-color);
-            transform: rotate(45deg);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .settings-panel {
-            position: fixed;
-            top: 4.5rem;
-            right: 1.5rem;
-            background-color: var(--bg-color);
-            padding: 1.5rem;
-            border-radius: var(--rounded-md);
-            box-shadow: var(--box-shadow);
-            border: 1px solid var(--border-color);
-            width: 280px;
-            z-index: 10;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-20px);
-            transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-        }
-
-        .settings-panel.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .settings-panel label {
-            display: block;
-            margin-bottom: 0.75rem;
-            color: var(--text-color);
-            font-weight: 600;
-            font-size: 0.875rem;
-        }
-
-        .settings-panel input[type="number"],
-        .settings-panel select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border-radius: var(--rounded-md);
-            border: 1px solid var(--input-border);
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            margin-bottom: 1.25rem;
-            font-size: 0.9rem;
-            transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .settings-panel input[type="number"]:focus,
-        .settings-panel select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
-        }
-
-        .settings-panel button {
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--rounded-md);
-            border: none;
-            background-color: var(--primary-color);
-            color: white;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            width: 100%;
-            text-align: center;
-            font-size: 1rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .settings-panel button:hover {
-            background-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .settings-panel button:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
-
-        .error-message {
-            color: #ef4444;
-            font-weight: 600;
-            margin-top: 0.5rem;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .drop-zone {
-            border: 2px dashed var(--border-color);
-            border-radius: var(--rounded-md);
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            background-color: var(--input-bg);
-            margin-bottom: 1rem;
+        .thumbnail-container {
+            background: repeating-conic-gradient(#374151 0% 25%, #1f2937 0% 50%) 50% / 10px 10px;
         }
-
-        .drop-zone:hover, .drop-zone.dragover {
-            background-color: var(--secondary-hover);
-            border-color: var(--primary-color);
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-
-        .drop-zone input[type="file"] {
-            display: none;
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
         }
-
-        .file-name-display {
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--text-color);
+        ::-webkit-scrollbar-thumb {
+            background: rgba(147, 51, 234, 0.5);
+            border-radius: 4px;
         }
-
-        .copy-button {
-            background-color: #3b82f6;
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: var(--rounded-md);
-            border: none;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-left: 0.5rem;
-            transition: background-color 0.2s ease, transform 0.2s ease;
-        }
-        .copy-button:hover {
-            background-color: #2563eb;
-            transform: translateY(-1px);
-        }
-
-        @media (max-width: 640px) {
-            body {
-                align-items: flex-start;
-            }
-            .container {
-                padding: 1rem;
-                margin-top: 1rem;
-                border-radius: 0;
-            }
-
-            .heading-primary {
-                font-size: 1.75rem;
-            }
-
-            .tab-container {
-                flex-direction: column;
-                border-bottom: none;
-            }
-
-            .tab-button {
-                width: 100%;
-                border-bottom: 1px solid var(--border-color);
-                border-radius: 0;
-                margin: 0;
-            }
-
-            .tab-button:first-child {
-                border-top-left-radius: var(--rounded-md);
-                border-top-right-radius: var(--rounded-md);
-            }
-            .tab-button:last-child {
-                border-bottom-left-radius: var(--rounded-md);
-                border-bottom-right-radius: var(--rounded-md);
-            }
-
-            .tab-content {
-                padding: 1rem;
-            }
-
-            .input-text, .select-input {
-                width: 100%;
-            }
-
-            .settings-button {
-                top: 1rem;
-                right: 1rem;
-                padding: 0.6rem;
-            }
-
-            .settings-panel {
-                top: 3.5rem;
-                right: 1rem;
-                width: calc(100% - 2rem);
-            }
-
-            .md\:flex {
-                flex-direction: column;
-            }
-            .md\:w-1\/2 {
-                width: 100%;
-            }
-            .md\:space-x-8 > *:not(:last-child) {
-                margin-right: 0;
-                margin-bottom: 1rem;
-            }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(147, 51, 234, 0.8);
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900">
-    <button class="settings-button" id="settingsBtn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-2">
-            <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16z"/>
-            <path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
-            <path d="M12 2v2"/>
-            <path d="M12 22v-2"/>
-            <path d="M18 6l-1.4-1.4"/>
-            <path d="M7.4 16.6L6 18"/>
-            <path d="M22 12h-2"/>
-            <path d="M2 12h2"/>
-            <path d="M18 18l-1.4 1.4"/>
-            <path d="M7.4 7.4L6 6"/>
-        </svg>
-    </button>
-    <div class="settings-panel" id="settingsPanel">
-        <label for="keyLength">Panjang Kunci (bits):</label>
-        <input type="number" id="keyLength" value="256" class="input-text">
-        <label for="darkMode">Mode Gelap:</label>
-        <select id="darkMode" class="select-input">
-            <option value="auto">Otomatis</option>
-            <option value="dark">Aktif</option>
-            <option value="light">Nonaktif</option>
-        </select>
-        <button id="saveSettings" class="button-primary">Simpan Pengaturan</button>
-    </div>
-
-    <div class="container">
-        <h1 class="heading-primary">Enkripsi & Dekripsi File</h1>
-        <div class="tab-container">
-            <div class="tab-button active" data-tab="encryptTab">Enkripsi</div>
-            <div class="tab-button" data-tab="decryptTab">Dekripsi</div>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-3">
+                🔐 Enkripsi & Dekripsi Multi-File
+            </h1>
+            <p class="text-gray-400 text-lg">Amankan banyak gambar dan video sekaligus dengan enkripsi berbasis kunci</p>
         </div>
 
-        <div id="encryptTab" class="tab-content active">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Enkripsi File</h2>
-            
-            <label for="encryptionModeEnc" class="form-label">Mode Enkripsi:</label>
-            <select id="encryptionModeEnc" class="select-input mb-4">
-                <option value="hex">Kunci HEX</option>
-                <option value="password">Kata Sandi</option>
-            </select>
-
-            <label for="fileInputEnc" class="form-label">Pilih file:</label>
-            <div id="dropZoneEnc" class="drop-zone">
-                <input type="file" id="fileInputEncHidden">
-                <p>Seret & lepas file di sini, atau klik untuk memilih</p>
-                <p id="fileNameDisplayEnc" class="file-name-display"></p>
+        <!-- Tab Navigation -->
+        <div class="max-w-6xl mx-auto mb-6">
+            <div class="flex bg-white/10 rounded-xl p-1 max-w-md mx-auto">
+                <button id="tabImage" class="flex-1 py-3 px-6 rounded-lg font-semibold transition tab-active text-white">
+                    🖼️ Gambar
+                </button>
+                <button id="tabVideo" class="flex-1 py-3 px-6 rounded-lg font-semibold transition text-gray-400 hover:text-white">
+                    🎬 Video
+                </button>
             </div>
-            
-            <div id="hexKeySectionEnc" class="mt-4">
-            </div>
-
-            <div id="passwordSectionEnc" class="mt-4 hidden">
-                <label for="passwordInputEnc" class="form-label">Masukkan Kata Sandi:</label>
-                <input type="password" id="passwordInputEnc" placeholder="Kata Sandi Aman" class="input-text">
-                <label for="confirmPasswordInputEnc" class="form-label">Konfirmasi Kata Sandi:</label>
-                <input type="password" id="confirmPasswordInputEnc" placeholder="Konfirmasi Kata Sandi" class="input-text">
-            </div>
-
-            <button id="encryptBtn" class="button-primary">Enkripsi</button>
-            <p id="statusEnc" class="status-message flex items-center justify-center gap-2"></p>
-            <a id="downloadLinkEnc" class="download-link mx-auto" style="display:none;">Download Enkripsi</a>
         </div>
 
-        <div id="decryptTab" class="tab-content">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Dekripsi File</h2>
-            <div class="md:flex md:space-x-8">
-                <div class="md:w-1/2">
-                    <label for="encryptionModeDec" class="form-label">Mode Dekripsi:</label>
-                    <select id="encryptionModeDec" class="select-input mb-4">
-                        <option value="hex">Kunci HEX</option>
-                        <option value="password">Kata Sandi</option>
-                    </select>
-
-                    <label for="fileInputDec" class="form-label">Pilih file terenkripsi:</label>
-                    <div id="dropZoneDec" class="drop-zone">
-                        <input type="file" id="fileInputDecHidden">
-                        <p>Seret & lepas file di sini, atau klik untuk memilih</p>
-                        <p id="fileNameDisplayDec" class="file-name-display"></p>
+        <!-- Image Section -->
+        <div id="imageSection" class="max-w-6xl mx-auto">
+            <!-- Upload & Key Section -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Upload Area -->
+                    <div>
+                        <label class="block text-sm font-medium text-purple-300 mb-2">Upload Gambar (Multiple)</label>
+                        <div id="imageDropZone" class="drop-zone rounded-xl p-8 text-center cursor-pointer">
+                            <div class="text-5xl mb-3">📁</div>
+                            <p class="text-gray-300 mb-2">Drag & drop gambar di sini</p>
+                            <p class="text-gray-500 text-sm">atau klik untuk memilih file (bisa pilih banyak)</p>
+                            <input type="file" id="imageInput" accept="image/*" multiple class="hidden">
+                        </div>
                     </div>
 
-                    <div id="hexKeySectionDec" class="mt-4">
-                        <label for="keyInput" class="form-label">Kunci HEX:</label>
-                        <input type="text" id="keyInput" placeholder="Masukkan kunci HEX" class="input-text">
+                    <!-- Key Input & Actions -->
+                    <div class="flex flex-col justify-center">
+                        <label class="block text-sm font-medium text-purple-300 mb-2">Kunci Enkripsi</label>
+                        <input type="text" id="imageEncryptionKey" placeholder="Masukkan kunci rahasia..."
+                            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4">
+                        
+                        <div class="flex gap-3 mb-3">
+                            <button id="imageEncryptAllBtn" disabled
+                                class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                🔒 Enkripsi Semua
+                            </button>
+                            <button id="imageDecryptAllBtn" disabled
+                                class="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-semibold hover:from-cyan-700 hover:to-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                🔓 Dekripsi Semua
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button id="imageDownloadAllBtn" disabled
+                                class="flex-1 px-4 py-2 bg-green-600 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                💾 Download Semua (ZIP)
+                            </button>
+                            <button id="imageClearAllBtn" disabled
+                                class="flex-1 px-4 py-2 bg-red-600 rounded-lg font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                🗑️ Hapus Semua
+                            </button>
+                        </div>
+                        
+                        <p class="text-gray-400 text-sm mt-3">
+                            ⚠️ Gunakan kunci yang sama untuk enkripsi dan dekripsi
+                        </p>
                     </div>
-
-                    <div id="passwordSectionDec" class="mt-4 hidden">
-                        <label for="passwordInputDec" class="form-label">Masukkan Kata Sandi:</label>
-                        <input type="password" id="passwordInputDec" placeholder="Masukkan Kata Sandi" class="input-text">
-                    </div>
-
-                    <label for="fileTypeSelect" class="form-label">Pilih ekstensi hasil dekripsi:</label>
-                    <select id="fileTypeSelect" class="select-input">
-                        <option value="txt">.txt</option>
-                        <option value="png">.png</option>
-                        <option value="jpg">.jpg</option>
-                        <option value="mp4">.mp4</option>
-                        <option value="zip">.zip</option>
-                        <option value="rar">.rar</option>
-                        <option value="pdf">.pdf</option>
-                        <option value="docx">.docx</option>
-                    </select>
-                    <button id="decryptBtn" class="button-primary">Dekripsi</button>
                 </div>
-                <div class="md:w-1/2 flex flex-col items-center">
-                    <p id="statusDec" class="status-message w-full flex items-center justify-center gap-2"></p>
-                    <a id="downloadLinkDec" class="download-link" style="display:none;">Download Dekripsi</a>
-                    <div id="previewContainer" class="w-full mt-4"></div>
+
+                <!-- Image Progress -->
+                <div id="imageProgress" class="hidden mt-6">
+                    <div class="flex justify-between text-sm text-gray-400 mb-2">
+                        <span id="imageProgressText">Memproses...</span>
+                        <span id="imageProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-white/20 rounded-full h-3">
+                        <div id="imageProgressBar" class="progress-bar bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File List -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-purple-300 flex items-center gap-2">
+                        <span>🖼️</span> Daftar Gambar
+                        <span id="imageCount" class="text-sm bg-purple-600 px-2 py-1 rounded-full">0</span>
+                    </h3>
+                </div>
+                
+                <div id="imageFileList" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                    <p id="imageEmptyState" class="text-gray-500 text-center py-8">Belum ada gambar yang diupload</p>
                 </div>
             </div>
         </div>
+
+        <!-- Video Section -->
+        <div id="videoSection" class="max-w-6xl mx-auto hidden">
+            <!-- Upload & Key Section -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Upload Area -->
+                    <div>
+                        <label class="block text-sm font-medium text-purple-300 mb-2">Upload Video (Multiple)</label>
+                        <div id="videoDropZone" class="drop-zone rounded-xl p-8 text-center cursor-pointer">
+                            <div class="text-5xl mb-3">🎬</div>
+                            <p class="text-gray-300 mb-2">Drag & drop video di sini</p>
+                            <p class="text-gray-500 text-sm">atau klik untuk memilih file (bisa pilih banyak)</p>
+                            <input type="file" id="videoInput" accept="video/mp4,video/webm,video/*" multiple class="hidden">
+                        </div>
+                    </div>
+
+                    <!-- Key Input & Actions -->
+                    <div class="flex flex-col justify-center">
+                        <label class="block text-sm font-medium text-purple-300 mb-2">Kunci Enkripsi (ChaCha20-like)</label>
+                        <input type="text" id="videoEncryptionKey" placeholder="Masukkan kunci rahasia..."
+                            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4">
+                        
+                        <div class="flex gap-3 mb-3">
+                            <button id="videoEncryptAllBtn" disabled
+                                class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                🔒 Enkripsi Semua
+                            </button>
+                            <button id="videoDecryptAllBtn" disabled
+                                class="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl font-semibold hover:from-cyan-700 hover:to-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                🔓 Dekripsi Semua
+                            </button>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button id="videoDownloadAllBtn" disabled
+                                class="flex-1 px-4 py-2 bg-green-600 rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                💾 Download Semua (ZIP)
+                            </button>
+                            <button id="videoClearAllBtn" disabled
+                                class="flex-1 px-4 py-2 bg-red-600 rounded-lg font-medium hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                🗑️ Hapus Semua
+                            </button>
+                        </div>
+                        
+                        <p class="text-gray-400 text-sm mt-3">
+                            🔐 Menggunakan enkripsi ChaCha20-like pada byte data video
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Video Progress -->
+                <div id="videoProgress" class="hidden mt-6">
+                    <div class="flex justify-between text-sm text-gray-400 mb-2">
+                        <span id="videoProgressText">Memproses...</span>
+                        <span id="videoProgressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-white/20 rounded-full h-3">
+                        <div id="videoProgressBar" class="progress-bar bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File List -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold text-purple-300 flex items-center gap-2">
+                        <span>🎬</span> Daftar Video
+                        <span id="videoCount" class="text-sm bg-purple-600 px-2 py-1 rounded-full">0</span>
+                    </h3>
+                </div>
+                
+                <div id="videoFileList" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                    <p id="videoEmptyState" class="text-gray-500 text-center py-8">Belum ada video yang diupload</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="max-w-6xl mx-auto mt-8 bg-white/5 rounded-2xl p-6 border border-white/10">
+            <h3 class="text-lg font-semibold text-purple-300 mb-3">📖 Cara Penggunaan</h3>
+            <div class="grid md:grid-cols-2 gap-4 text-gray-400 text-sm">
+                <div>
+                    <h4 class="text-white font-medium mb-2">Untuk Mengenkripsi:</h4>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Pilih tab Gambar atau Video</li>
+                        <li>Upload satu atau lebih file</li>
+                        <li>Masukkan kunci enkripsi (ingat kunci ini!)</li>
+                        <li>Klik "Enkripsi Semua" atau enkripsi per file</li>
+                        <li>Download hasil atau download semua sebagai ZIP</li>
+                    </ol>
+                </div>
+                <div>
+                    <h4 class="text-white font-medium mb-2">Untuk Mendekripsi:</h4>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Upload file yang sudah terenkripsi</li>
+                        <li>Masukkan kunci yang sama saat enkripsi</li>
+                        <li>Klik "Dekripsi Semua" atau dekripsi per file</li>
+                        <li>File asli akan muncul kembali</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="mt-4 p-4 bg-purple-500/20 rounded-xl">
+                <h4 class="text-purple-300 font-medium mb-2">🔐 Metode Enkripsi:</h4>
+                <ul class="text-gray-400 text-sm space-y-1">
+                    <li><strong>Gambar:</strong> XOR dengan pixel shuffling menggunakan PRNG seeded key</li>
+                    <li><strong>Video:</strong> ChaCha20-like stream cipher pada byte data mentah</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <script src="https://unpkg.com/lucide-react@latest/umd/lucide-react.min.js"></script>
+    <!-- JSZip Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <script>
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        // ==================== TAB NAVIGATION ====================
+        const tabImage = document.getElementById('tabImage');
+        const tabVideo = document.getElementById('tabVideo');
+        const imageSection = document.getElementById('imageSection');
+        const videoSection = document.getElementById('videoSection');
 
-        function showStatusMessage(element, message, isError = false) {
-            element.innerHTML = message;
-            element.classList.remove('error-message');
-            if (isError) {
-                element.classList.add('error-message');
-            }
-        }
-
-        function showLoading(element) {
-            element.innerHTML = '<svg class="animate-spin h-5 w-5 text-current" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Memproses...';
-            element.classList.remove('error-message');
-        }
-
-        function generateRandomFileName(length = 24) {
-            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let randomName = '';
-            for (let i = 0; i < length; i++) {
-                randomName += characters.charAt(Math.floor(Math.random() * characters.length));
-            }
-            return randomName;
-        }
-
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', () => {
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-                button.classList.add('active');
-                document.getElementById(button.dataset.tab).classList.add('active');
-            });
+        tabImage.addEventListener('click', () => {
+            tabImage.classList.add('tab-active', 'text-white');
+            tabImage.classList.remove('text-gray-400');
+            tabVideo.classList.remove('tab-active', 'text-white');
+            tabVideo.classList.add('text-gray-400');
+            imageSection.classList.remove('hidden');
+            videoSection.classList.add('hidden');
         });
+
+        tabVideo.addEventListener('click', () => {
+            tabVideo.classList.add('tab-active', 'text-white');
+            tabVideo.classList.remove('text-gray-400');
+            tabImage.classList.remove('tab-active', 'text-white');
+            tabImage.classList.add('text-gray-400');
+            videoSection.classList.remove('hidden');
+            imageSection.classList.add('hidden');
+        });
+
+        // ==================== IMAGE MULTI-FILE HANDLER ====================
+        const imageDropZone = document.getElementById('imageDropZone');
+        const imageInput = document.getElementById('imageInput');
+        const imageEncryptionKey = document.getElementById('imageEncryptionKey');
+        const imageEncryptAllBtn = document.getElementById('imageEncryptAllBtn');
+        const imageDecryptAllBtn = document.getElementById('imageDecryptAllBtn');
+        const imageDownloadAllBtn = document.getElementById('imageDownloadAllBtn');
+        const imageClearAllBtn = document.getElementById('imageClearAllBtn');
+        const imageFileList = document.getElementById('imageFileList');
+        const imageEmptyState = document.getElementById('imageEmptyState');
+        const imageCount = document.getElementById('imageCount');
+        const imageProgress = document.getElementById('imageProgress');
+        const imageProgressBar = document.getElementById('imageProgressBar');
+        const imageProgressText = document.getElementById('imageProgressText');
+        const imageProgressPercent = document.getElementById('imageProgressPercent');
+
+        let imageFiles = []; // { id, name, originalData, processedData, status, width, height }
+
+        imageDropZone.addEventListener('click', () => imageInput.click());
         
-        function readFileAsArrayBuffer(file) {
-            return new Promise((resolve, reject) => {
+        imageDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageDropZone.classList.add('dragover');
+        });
+
+        imageDropZone.addEventListener('dragleave', () => {
+            imageDropZone.classList.remove('dragover');
+        });
+
+        imageDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageDropZone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+            loadMultipleImages(files);
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            loadMultipleImages(files);
+            imageInput.value = '';
+        });
+
+        async function loadMultipleImages(files) {
+            for (const file of files) {
+                await loadSingleImage(file);
+            }
+            updateImageUI();
+        }
+
+        function loadSingleImage(file) {
+            return new Promise((resolve) => {
                 const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        
+                        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+                        
+                        imageFiles.push({
+                            id: Date.now() + Math.random(),
+                            name: file.name,
+                            originalData: imageData,
+                            processedData: null,
+                            status: 'ready', // ready, encrypted, decrypted
+                            width: img.width,
+                            height: img.height,
+                            thumbnail: canvas.toDataURL('image/jpeg', 0.3)
+                        });
+                        
+                        resolve();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateImageUI() {
+            imageCount.textContent = imageFiles.length;
+            
+            if (imageFiles.length === 0) {
+                imageEmptyState.classList.remove('hidden');
+                imageFileList.innerHTML = '';
+                imageFileList.appendChild(imageEmptyState);
+            } else {
+                imageEmptyState.classList.add('hidden');
+                renderImageList();
+            }
+            
+            updateImageButtons();
+        }
+
+        function renderImageList() {
+            const fragment = document.createDocumentFragment();
+            
+            imageFiles.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'file-item bg-white/5 rounded-xl p-4 border border-white/10';
+                item.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="thumbnail-container w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src="${file.processedData ? getProcessedThumbnail(file) : file.thumbnail}" 
+                                 class="w-full h-full object-cover" alt="${file.name}">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-white truncate">${file.name}</p>
+                            <p class="text-sm text-gray-400">${file.width} x ${file.height} px</p>
+                            <span class="inline-block mt-1 text-xs px-2 py-1 rounded-full ${getStatusClass(file.status)}">
+                                ${getStatusText(file.status)}
+                            </span>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button onclick="encryptSingleImage('${file.id}')" 
+                                    class="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition" title="Enkripsi">
+                                🔒
+                            </button>
+                            <button onclick="decryptSingleImage('${file.id}')" 
+                                    class="p-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg transition" title="Dekripsi">
+                                🔓
+                            </button>
+                            <button onclick="downloadSingleImage('${file.id}')" 
+                                    class="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition ${file.processedData ? '' : 'opacity-50 cursor-not-allowed'}" 
+                                    title="Download" ${file.processedData ? '' : 'disabled'}>
+                                💾
+                            </button>
+                            <button onclick="removeImage('${file.id}')" 
+                                    class="p-2 bg-red-600 hover:bg-red-700 rounded-lg transition" title="Hapus">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+                fragment.appendChild(item);
+            });
+            
+            imageFileList.innerHTML = '';
+            imageFileList.appendChild(fragment);
+        }
+
+        function getProcessedThumbnail(file) {
+            if (!file.processedData) return file.thumbnail;
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = file.processedData.width;
+            canvas.height = file.processedData.height;
+            ctx.putImageData(file.processedData, 0, 0);
+            return canvas.toDataURL('image/jpeg', 0.3);
+        }
+
+        function getStatusClass(status) {
+            switch(status) {
+                case 'encrypted': return 'bg-purple-600';
+                case 'decrypted': return 'bg-cyan-600';
+                default: return 'bg-gray-600';
+            }
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'encrypted': return '🔒 Terenkripsi';
+                case 'decrypted': return '🔓 Terdekripsi';
+                default: return '📄 Siap';
+            }
+        }
+
+        function updateImageButtons() {
+            const hasFiles = imageFiles.length > 0;
+            const hasKey = imageEncryptionKey.value.trim().length > 0;
+            const hasProcessed = imageFiles.some(f => f.processedData);
+            
+            imageEncryptAllBtn.disabled = !(hasFiles && hasKey);
+            imageDecryptAllBtn.disabled = !(hasFiles && hasKey);
+            imageDownloadAllBtn.disabled = !hasProcessed;
+            imageClearAllBtn.disabled = !hasFiles;
+        }
+
+        imageEncryptionKey.addEventListener('input', updateImageButtons);
+
+        // Image encryption functions
+        function generateKeyStream(key, length) {
+            const keyBytes = [];
+            for (let i = 0; i < key.length; i++) {
+                keyBytes.push(key.charCodeAt(i));
+            }
+            
+            let seed = 0;
+            for (let i = 0; i < keyBytes.length; i++) {
+                seed = (seed * 31 + keyBytes[i]) & 0xFFFFFFFF;
+            }
+            
+            const stream = new Uint8Array(length);
+            for (let i = 0; i < length; i++) {
+                seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+                stream[i] = (seed >> 16) & 0xFF;
+            }
+            
+            return stream;
+        }
+
+        function processImageData(imageData, key, isEncrypt) {
+            const data = new Uint8ClampedArray(imageData.data);
+            const keyStream = generateKeyStream(key, data.length);
+            
+            const width = imageData.width;
+            const height = imageData.height;
+            const pixelCount = width * height;
+            
+            const indices = new Array(pixelCount);
+            for (let i = 0; i < pixelCount; i++) {
+                indices[i] = i;
+            }
+            
+            let shuffleSeed = 0;
+            for (let i = 0; i < key.length; i++) {
+                shuffleSeed = (shuffleSeed * 31 + key.charCodeAt(i)) & 0xFFFFFFFF;
+            }
+            
+            for (let i = pixelCount - 1; i > 0; i--) {
+                shuffleSeed = (shuffleSeed * 1103515245 + 12345) & 0x7FFFFFFF;
+                const j = shuffleSeed % (i + 1);
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            
+            const result = new Uint8ClampedArray(data.length);
+            
+            if (isEncrypt) {
+                for (let i = 0; i < data.length; i++) {
+                    if ((i + 1) % 4 !== 0) {
+                        data[i] = data[i] ^ keyStream[i];
+                    }
+                }
+                
+                for (let i = 0; i < pixelCount; i++) {
+                    const srcIdx = i * 4;
+                    const dstIdx = indices[i] * 4;
+                    result[dstIdx] = data[srcIdx];
+                    result[dstIdx + 1] = data[srcIdx + 1];
+                    result[dstIdx + 2] = data[srcIdx + 2];
+                    result[dstIdx + 3] = data[srcIdx + 3];
+                }
+            } else {
+                for (let i = 0; i < pixelCount; i++) {
+                    const srcIdx = indices[i] * 4;
+                    const dstIdx = i * 4;
+                    result[dstIdx] = data[srcIdx];
+                    result[dstIdx + 1] = data[srcIdx + 1];
+                    result[dstIdx + 2] = data[srcIdx + 2];
+                    result[dstIdx + 3] = data[srcIdx + 3];
+                }
+                
+                for (let i = 0; i < result.length; i++) {
+                    if ((i + 1) % 4 !== 0) {
+                        result[i] = result[i] ^ keyStream[i];
+                    }
+                }
+            }
+            
+            return new ImageData(result, imageData.width, imageData.height);
+        }
+
+        window.encryptSingleImage = function(id) {
+            const key = imageEncryptionKey.value.trim();
+            if (!key) {
+                showNotification('⚠️ Masukkan kunci enkripsi terlebih dahulu!', 'error');
+                return;
+            }
+            
+            const file = imageFiles.find(f => f.id == id);
+            if (file) {
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = processImageData(sourceData, key, true);
+                file.status = 'encrypted';
+                renderImageList();
+                updateImageButtons();
+                showNotification(`✅ ${file.name} berhasil dienkripsi!`, 'success');
+            }
+        };
+
+        window.decryptSingleImage = function(id) {
+            const key = imageEncryptionKey.value.trim();
+            if (!key) {
+                showNotification('⚠️ Masukkan kunci enkripsi terlebih dahulu!', 'error');
+                return;
+            }
+            
+            const file = imageFiles.find(f => f.id == id);
+            if (file) {
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = processImageData(sourceData, key, false);
+                file.status = 'decrypted';
+                renderImageList();
+                updateImageButtons();
+                showNotification(`✅ ${file.name} berhasil didekripsi!`, 'success');
+            }
+        };
+
+        window.downloadSingleImage = function(id) {
+            const file = imageFiles.find(f => f.id == id);
+            if (file && file.processedData) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = file.processedData.width;
+                canvas.height = file.processedData.height;
+                ctx.putImageData(file.processedData, 0, 0);
+                
+                const link = document.createElement('a');
+                const baseName = file.name.replace(/\.[^/.]+$/, '');
+                link.download = `${baseName}_${file.status}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showNotification(`💾 ${file.name} berhasil didownload!`, 'success');
+            }
+        };
+
+        window.removeImage = function(id) {
+            imageFiles = imageFiles.filter(f => f.id != id);
+            updateImageUI();
+        };
+
+        imageEncryptAllBtn.addEventListener('click', async () => {
+            const key = imageEncryptionKey.value.trim();
+            if (!key || imageFiles.length === 0) return;
+            
+            imageProgress.classList.remove('hidden');
+            imageEncryptAllBtn.disabled = true;
+            imageDecryptAllBtn.disabled = true;
+            
+            for (let i = 0; i < imageFiles.length; i++) {
+                const file = imageFiles[i];
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = processImageData(sourceData, key, true);
+                file.status = 'encrypted';
+                
+                const progress = ((i + 1) / imageFiles.length) * 100;
+                imageProgressBar.style.width = progress + '%';
+                imageProgressText.textContent = `Mengenkripsi ${i + 1}/${imageFiles.length}...`;
+                imageProgressPercent.textContent = Math.round(progress) + '%';
+                
+                await new Promise(r => setTimeout(r, 50));
+            }
+            
+            imageProgress.classList.add('hidden');
+            renderImageList();
+            updateImageButtons();
+            showNotification(`✅ ${imageFiles.length} gambar berhasil dienkripsi!`, 'success');
+        });
+
+        imageDecryptAllBtn.addEventListener('click', async () => {
+            const key = imageEncryptionKey.value.trim();
+            if (!key || imageFiles.length === 0) return;
+            
+            imageProgress.classList.remove('hidden');
+            imageEncryptAllBtn.disabled = true;
+            imageDecryptAllBtn.disabled = true;
+            
+            for (let i = 0; i < imageFiles.length; i++) {
+                const file = imageFiles[i];
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = processImageData(sourceData, key, false);
+                file.status = 'decrypted';
+                
+                const progress = ((i + 1) / imageFiles.length) * 100;
+                imageProgressBar.style.width = progress + '%';
+                imageProgressText.textContent = `Mendekripsi ${i + 1}/${imageFiles.length}...`;
+                imageProgressPercent.textContent = Math.round(progress) + '%';
+                
+                await new Promise(r => setTimeout(r, 50));
+            }
+            
+            imageProgress.classList.add('hidden');
+            renderImageList();
+            updateImageButtons();
+            showNotification(`✅ ${imageFiles.length} gambar berhasil didekripsi!`, 'success');
+        });
+
+        imageDownloadAllBtn.addEventListener('click', async () => {
+            const processedFiles = imageFiles.filter(f => f.processedData);
+            if (processedFiles.length === 0) return;
+            
+            const zip = new JSZip();
+            
+            for (const file of processedFiles) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = file.processedData.width;
+                canvas.height = file.processedData.height;
+                ctx.putImageData(file.processedData, 0, 0);
+                
+                const dataUrl = canvas.toDataURL('image/png');
+                const base64 = dataUrl.split(',')[1];
+                const baseName = file.name.replace(/\.[^/.]+$/, '');
+                zip.file(`${baseName}_${file.status}.png`, base64, {base64: true});
+            }
+            
+            const content = await zip.generateAsync({type: 'blob'});
+            const link = document.createElement('a');
+            link.download = 'gambar_hasil.zip';
+            link.href = URL.createObjectURL(content);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            showNotification(`💾 ${processedFiles.length} gambar berhasil didownload sebagai ZIP!`, 'success');
+        });
+
+        imageClearAllBtn.addEventListener('click', () => {
+            imageFiles = [];
+            updateImageUI();
+            showNotification('🗑️ Semua gambar telah dihapus!', 'info');
+        });
+
+        // ==================== VIDEO MULTI-FILE HANDLER ====================
+        const videoDropZone = document.getElementById('videoDropZone');
+        const videoInput = document.getElementById('videoInput');
+        const videoEncryptionKey = document.getElementById('videoEncryptionKey');
+        const videoEncryptAllBtn = document.getElementById('videoEncryptAllBtn');
+        const videoDecryptAllBtn = document.getElementById('videoDecryptAllBtn');
+        const videoDownloadAllBtn = document.getElementById('videoDownloadAllBtn');
+        const videoClearAllBtn = document.getElementById('videoClearAllBtn');
+        const videoFileList = document.getElementById('videoFileList');
+        const videoEmptyState = document.getElementById('videoEmptyState');
+        const videoCount = document.getElementById('videoCount');
+        const videoProgress = document.getElementById('videoProgress');
+        const videoProgressBar = document.getElementById('videoProgressBar');
+        const videoProgressText = document.getElementById('videoProgressText');
+        const videoProgressPercent = document.getElementById('videoProgressPercent');
+
+        let videoFiles = []; // { id, name, originalData, processedData, status, type, size }
+
+        videoDropZone.addEventListener('click', () => videoInput.click());
+        
+        videoDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            videoDropZone.classList.add('dragover');
+        });
+
+        videoDropZone.addEventListener('dragleave', () => {
+            videoDropZone.classList.remove('dragover');
+        });
+
+        videoDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            videoDropZone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('video/'));
+            loadMultipleVideos(files);
+        });
+
+        videoInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            loadMultipleVideos(files);
+            videoInput.value = '';
+        });
+
+        async function loadMultipleVideos(files) {
+            for (const file of files) {
+                await loadSingleVideo(file);
+            }
+            updateVideoUI();
+        }
+
+        function loadSingleVideo(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    videoFiles.push({
+                        id: Date.now() + Math.random(),
+                        name: file.name,
+                        originalData: new Uint8Array(e.target.result),
+                        processedData: null,
+                        status: 'ready',
+                        type: file.type || 'video/mp4',
+                        size: file.size
+                    });
+                    resolve();
+                };
                 reader.readAsArrayBuffer(file);
             });
         }
-        
-        function bufferToHex(buffer) {
-            return Array.from(new Uint8Array(buffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
 
-        function hexToBuffer(hex) {
-            if (hex.length % 2 !== 0) {
-                throw new Error("String HEX harus memiliki panjang genap.");
-            }
-            return new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))).buffer;
-        }
-        
-        async function getKey(mode, input, salt, keyLength = 256) {
-            if (keyLength !== 256 && keyLength !== 192 && keyLength !== 128) {
-                throw new Error("Panjang kunci harus 128, 192, atau 256 bits.");
-            }
-
-            if (mode === 'hex') {
-                return await crypto.subtle.importKey("raw", hexToBuffer(input), "AES-GCM", false, ["encrypt", "decrypt"]);
-            } else if (mode === 'password') {
-                if (!salt) {
-                    throw new Error("Salt diperlukan untuk dekripsi berbasis kata sandi.");
-                }
-                const passwordBuffer = new TextEncoder().encode(input);
-                const baseKey = await crypto.subtle.importKey(
-                    "raw",
-                    passwordBuffer,
-                    { name: "PBKDF2" },
-                    false,
-                    ["deriveBits", "deriveKey"]
-                );
-
-                return await crypto.subtle.deriveKey(
-                    {
-                        name: "PBKDF2",
-                        salt: salt,
-                        iterations: 100000,
-                        hash: "SHA-256",
-                    },
-                    baseKey,
-                    { name: "AES-GCM", length: keyLength },
-                    true,
-                    ["encrypt", "decrypt"]
-                );
-            }
-            throw new Error("Mode kunci tidak valid.");
-        }
-        
-        async function encryptFile(file, key) {
-            const buffer = await readFileAsArrayBuffer(file);
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, buffer);
-            return { encrypted, iv };
-        }
-        
-        async function decryptContent(contentBuffer, key, iv) {
-            return await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, contentBuffer);
-        }
-
-        function setupFileInput(inputElementId, dropZoneId, fileNameDisplayId) {
-            const inputElement = document.getElementById(inputElementId);
-            const dropZone = document.getElementById(dropZoneId);
-            const fileNameDisplay = document.getElementById(fileNameDisplayId);
-            let selectedFile = null;
-
-            dropZone.addEventListener('click', () => {
-                inputElement.click();
-            });
-
-            inputElement.addEventListener('change', (event) => {
-                if (event.target.files.length > 0) {
-                    selectedFile = event.target.files[0];
-                    fileNameDisplay.textContent = `File: ${selectedFile.name}`;
-                } else {
-                    selectedFile = null;
-                    fileNameDisplay.textContent = "";
-                }
-            });
-
-            dropZone.addEventListener('dragover', (event) => {
-                event.preventDefault();
-                dropZone.classList.add('dragover');
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('dragover');
-            });
-
-            dropZone.addEventListener('drop', (event) => {
-                event.preventDefault();
-                dropZone.classList.remove('dragover');
-                if (event.dataTransfer.files.length > 0) {
-                    inputElement.files = event.dataTransfer.files;
-                    selectedFile = event.dataTransfer.files[0];
-                    fileNameDisplay.textContent = `File: ${selectedFile.name}`;
-                } else {
-                    selectedFile = null;
-                    fileNameDisplay.textContent = "";
-                }
-            });
-
-            return {
-                getFile: () => selectedFile,
-                clearFile: () => {
-                    selectedFile = null;
-                    inputElement.value = '';
-                    fileNameDisplay.textContent = '';
-                }
-            };
-        }
-
-        const fileInputEncHandler = setupFileInput('fileInputEncHidden', 'dropZoneEnc', 'fileNameDisplayEnc');
-        const fileInputDecHandler = setupFileInput('fileInputDecHidden', 'dropZoneDec', 'fileNameDisplayDec');
-
-        const encryptionModeEnc = document.getElementById('encryptionModeEnc');
-        const hexKeySectionEnc = document.getElementById('hexKeySectionEnc');
-        const passwordSectionEnc = document.getElementById('passwordSectionEnc');
-        const passwordInputEnc = document.getElementById('passwordInputEnc');
-        const confirmPasswordInputEnc = document.getElementById('confirmPasswordInputEnc');
-        const encryptBtn = document.getElementById('encryptBtn');
-        const statusEnc = document.getElementById('statusEnc');
-        const downloadLinkEnc = document.getElementById('downloadLinkEnc');
-
-        encryptionModeEnc.addEventListener('change', () => {
-            if (encryptionModeEnc.value === 'hex') {
-                hexKeySectionEnc.classList.remove('hidden');
-                passwordSectionEnc.classList.add('hidden');
+        function updateVideoUI() {
+            videoCount.textContent = videoFiles.length;
+            
+            if (videoFiles.length === 0) {
+                videoEmptyState.classList.remove('hidden');
+                videoFileList.innerHTML = '';
+                videoFileList.appendChild(videoEmptyState);
             } else {
-                hexKeySectionEnc.classList.add('hidden');
-                passwordSectionEnc.classList.remove('hidden');
+                videoEmptyState.classList.add('hidden');
+                renderVideoList();
             }
-            showStatusMessage(statusEnc, "");
-            downloadLinkEnc.style.display = "none";
-        });
-        
-        encryptBtn.addEventListener('click', async () => {
-            const file = fileInputEncHandler.getFile();
-            if (!file) {
-                showStatusMessage(statusEnc, "Pilih file terlebih dahulu.", true);
-                return;
+            
+            updateVideoButtons();
+        }
+
+        function renderVideoList() {
+            const fragment = document.createDocumentFragment();
+            
+            videoFiles.forEach(file => {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                const item = document.createElement('div');
+                item.className = 'file-item bg-white/5 rounded-xl p-4 border border-white/10';
+                item.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-lg bg-gray-700 flex items-center justify-center flex-shrink-0">
+                            <span class="text-3xl">${file.status === 'encrypted' ? '🔒' : '🎬'}</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-medium text-white truncate">${file.name}</p>
+                            <p class="text-sm text-gray-400">${sizeMB} MB | ${file.type}</p>
+                            <span class="inline-block mt-1 text-xs px-2 py-1 rounded-full ${getStatusClass(file.status)}">
+                                ${getStatusText(file.status)}
+                            </span>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <button onclick="encryptSingleVideo('${file.id}')" 
+                                    class="p-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition" title="Enkripsi">
+                                🔒
+                            </button>
+                            <button onclick="decryptSingleVideo('${file.id}')" 
+                                    class="p-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg transition" title="Dekripsi">
+                                🔓
+                            </button>
+                            <button onclick="downloadSingleVideo('${file.id}')" 
+                                    class="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition ${file.processedData ? '' : 'opacity-50 cursor-not-allowed'}" 
+                                    title="Download" ${file.processedData ? '' : 'disabled'}>
+                                💾
+                            </button>
+                            <button onclick="removeVideo('${file.id}')" 
+                                    class="p-2 bg-red-600 hover:bg-red-700 rounded-lg transition" title="Hapus">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+                fragment.appendChild(item);
+            });
+            
+            videoFileList.innerHTML = '';
+            videoFileList.appendChild(fragment);
+        }
+
+        function updateVideoButtons() {
+            const hasFiles = videoFiles.length > 0;
+            const hasKey = videoEncryptionKey.value.trim().length > 0;
+            const hasProcessed = videoFiles.some(f => f.processedData);
+            
+            videoEncryptAllBtn.disabled = !(hasFiles && hasKey);
+            videoDecryptAllBtn.disabled = !(hasFiles && hasKey);
+            videoDownloadAllBtn.disabled = !hasProcessed;
+            videoClearAllBtn.disabled = !hasFiles;
+        }
+
+        videoEncryptionKey.addEventListener('input', updateVideoButtons);
+
+        // ChaCha20-like cipher
+        class ChaCha20Like {
+            constructor(key) {
+                this.state = new Uint32Array(16);
+                this.initState(key);
             }
 
-            showLoading(statusEnc);
-            downloadLinkEnc.style.display = "none";
-            hexKeySectionEnc.innerHTML = "";
+            initState(key) {
+                this.state[0] = 0x61707865;
+                this.state[1] = 0x3320646e;
+                this.state[2] = 0x79622d32;
+                this.state[3] = 0x6b206574;
 
-            const mode = encryptionModeEnc.value;
-            const keyLength = parseInt(document.getElementById('keyLength').value);
-            let finalKey;
-            let exportedKeyHex = '';
-            let salt = null;
+                const keyBytes = new Uint8Array(32);
+                for (let i = 0; i < key.length && i < 32; i++) {
+                    keyBytes[i] = key.charCodeAt(i);
+                }
+                for (let i = 0; i < 32; i++) {
+                    keyBytes[i] ^= keyBytes[(i + 7) % 32] ^ (i * 31);
+                }
 
-            try {
-                if (mode === 'password') {
-                    const password = passwordInputEnc.value;
-                    const confirmPassword = confirmPasswordInputEnc.value;
+                for (let i = 0; i < 8; i++) {
+                    this.state[4 + i] = (keyBytes[i * 4] | (keyBytes[i * 4 + 1] << 8) | 
+                                         (keyBytes[i * 4 + 2] << 16) | (keyBytes[i * 4 + 3] << 24)) >>> 0;
+                }
 
-                    if (!password || password.length < 8) {
-                        showStatusMessage(statusEnc, "Kata sandi minimal 8 karakter.", true);
-                        return;
-                    }
-                    if (password !== confirmPassword) {
-                        showStatusMessage(statusEnc, "Kata sandi tidak cocok.", true);
-                        return;
+                this.state[12] = 0;
+                this.state[13] = 0;
+                this.state[14] = 0x12345678;
+                this.state[15] = 0x9abcdef0;
+            }
+
+            rotl(a, b) {
+                return ((a << b) | (a >>> (32 - b))) >>> 0;
+            }
+
+            quarterRound(a, b, c, d, state) {
+                state[a] = (state[a] + state[b]) >>> 0; state[d] ^= state[a]; state[d] = this.rotl(state[d], 16);
+                state[c] = (state[c] + state[d]) >>> 0; state[b] ^= state[c]; state[b] = this.rotl(state[b], 12);
+                state[a] = (state[a] + state[b]) >>> 0; state[d] ^= state[a]; state[d] = this.rotl(state[d], 8);
+                state[c] = (state[c] + state[d]) >>> 0; state[b] ^= state[c]; state[b] = this.rotl(state[b], 7);
+            }
+
+            block() {
+                const working = new Uint32Array(this.state);
+                
+                for (let i = 0; i < 10; i++) {
+                    this.quarterRound(0, 4, 8, 12, working);
+                    this.quarterRound(1, 5, 9, 13, working);
+                    this.quarterRound(2, 6, 10, 14, working);
+                    this.quarterRound(3, 7, 11, 15, working);
+                    this.quarterRound(0, 5, 10, 15, working);
+                    this.quarterRound(1, 6, 11, 12, working);
+                    this.quarterRound(2, 7, 8, 13, working);
+                    this.quarterRound(3, 4, 9, 14, working);
+                }
+
+                const output = new Uint8Array(64);
+                for (let i = 0; i < 16; i++) {
+                    const val = (working[i] + this.state[i]) >>> 0;
+                    output[i * 4] = val & 0xff;
+                    output[i * 4 + 1] = (val >> 8) & 0xff;
+                    output[i * 4 + 2] = (val >> 16) & 0xff;
+                    output[i * 4 + 3] = (val >> 24) & 0xff;
+                }
+
+                this.state[12]++;
+                if (this.state[12] === 0) this.state[13]++;
+
+                return output;
+            }
+        }
+
+        async function processVideoData(data, key, onProgress) {
+            return new Promise((resolve) => {
+                const cipher = new ChaCha20Like(key);
+                const result = new Uint8Array(data.length);
+                const chunkSize = 65536;
+                let processed = 0;
+
+                function processChunk() {
+                    const end = Math.min(processed + chunkSize, data.length);
+                    
+                    let keystream = new Uint8Array(0);
+                    let keystreamPos = 64;
+                    
+                    for (let i = processed; i < end; i++) {
+                        if (keystreamPos >= 64) {
+                            keystream = cipher.block();
+                            keystreamPos = 0;
+                        }
+                        result[i] = data[i] ^ keystream[keystreamPos++];
                     }
                     
-                    salt = crypto.getRandomValues(new Uint8Array(16));
-                    finalKey = await getKey('password', password, salt, keyLength);
-                    const rawDerivedKey = await crypto.subtle.exportKey("raw", finalKey);
-                    exportedKeyHex = bufferToHex(rawDerivedKey);
+                    processed = end;
+                    if (onProgress) onProgress((processed / data.length) * 100);
 
-                } else {
-                    finalKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: keyLength }, true, ["encrypt", "decrypt"]);
-                    const rawKey = await crypto.subtle.exportKey("raw", finalKey);
-                    exportedKeyHex = bufferToHex(rawKey);
+                    if (processed < data.length) {
+                        setTimeout(processChunk, 0);
+                    } else {
+                        resolve(result);
+                    }
                 }
 
-                const { encrypted, iv } = await encryptFile(file, finalKey);
+                processChunk();
+            });
+        }
 
-                let combined;
-                if (mode === 'password') {
-                    combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
-                    combined.set(salt, 0);
-                    combined.set(iv, salt.length);
-                    combined.set(new Uint8Array(encrypted), salt.length + iv.length);
-                } else {
-                    combined = new Uint8Array(iv.length + encrypted.byteLength);
-                    combined.set(iv, 0);
-                    combined.set(new Uint8Array(encrypted), iv.length);
-                }
-                
-                const blob = new Blob([combined], { type: 'application/octet-stream' });
-                const url = URL.createObjectURL(blob);
-                const fileName = generateRandomFileName() + ".enc";
-                downloadLinkEnc.href = url;
-                downloadLinkEnc.download = fileName;
-                downloadLinkEnc.style.display = "inline-block";
-
-                let statusMessageHtml = `Enkripsi selesai.<br>`;
-                if (mode === 'hex') {
-                    statusMessageHtml += `<strong class="font-semibold">Kunci HEX (Simpan baik-baik!):</strong> <span class="font-mono text-sm break-all">${exportedKeyHex}</span>`;
-                    const copyButton = document.createElement('button');
-                    copyButton.textContent = 'Salin Kunci';
-                    copyButton.classList.add('copy-button');
-                    copyButton.onclick = () => {
-                        const keyToCopy = exportedKeyHex;
-                        const tempInput = document.createElement('textarea');
-                        tempInput.value = keyToCopy;
-                        document.body.appendChild(tempInput);
-                        tempInput.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(tempInput);
-                        copyButton.textContent = 'Tersalin!';
-                        setTimeout(() => { copyButton.textContent = 'Salin Kunci'; }, 2000);
-                    };
-                    const statusSpan = document.createElement('span');
-                    statusSpan.innerHTML = statusMessageHtml;
-                    statusEnc.innerHTML = '';
-                    statusEnc.appendChild(statusSpan);
-                    statusEnc.appendChild(copyButton);
-
-                } else {
-                    statusMessageHtml += `File berhasil dienkripsi menggunakan kata sandi Anda. Tidak ada kunci HEX yang perlu disimpan.`;
-                    showStatusMessage(statusEnc, statusMessageHtml);
-                }
-                fileInputEncHandler.clearFile();
-                passwordInputEnc.value = '';
-                confirmPasswordInputEnc.value = '';
-
-            } catch (error) {
-                 showStatusMessage(statusEnc, "Error: " + error.message, true);
-            }
-        });
-
-        const encryptionModeDec = document.getElementById('encryptionModeDec');
-        const hexKeySectionDec = document.getElementById('hexKeySectionDec');
-        const passwordSectionDec = document.getElementById('passwordSectionDec');
-        const passwordInputDec = document.getElementById('passwordInputDec');
-        const keyInput = document.getElementById('keyInput');
-        const fileTypeSelect = document.getElementById('fileTypeSelect');
-        const decryptBtn = document.getElementById('decryptBtn');
-        const statusDec = document.getElementById('statusDec');
-        const downloadLinkDec = document.getElementById('downloadLinkDec');
-        const previewContainer = document.getElementById('previewContainer');
-
-        encryptionModeDec.addEventListener('change', () => {
-            if (encryptionModeDec.value === 'hex') {
-                hexKeySectionDec.classList.remove('hidden');
-                passwordSectionDec.classList.add('hidden');
-            } else {
-                hexKeySectionDec.classList.add('hidden');
-                passwordSectionDec.classList.remove('hidden');
-            }
-            showStatusMessage(statusDec, "");
-            downloadLinkDec.style.display = "none";
-            previewContainer.innerHTML = "";
-        });
-
-        decryptBtn.addEventListener('click', async () => {
-            const file = fileInputDecHandler.getFile();
-            if (!file) {
-                showStatusMessage(statusDec, "Pilih file terenkripsi terlebih dahulu.", true);
+        window.encryptSingleVideo = async function(id) {
+            const key = videoEncryptionKey.value.trim();
+            if (!key) {
+                showNotification('⚠️ Masukkan kunci enkripsi terlebih dahulu!', 'error');
                 return;
             }
-
-            showLoading(statusDec);
-            previewContainer.innerHTML = "";
-            downloadLinkDec.style.display = "none";
-
-            const mode = encryptionModeDec.value;
-            const keyLength = parseInt(document.getElementById('keyLength').value);
-            let finalKey;
-            let ivBytes;
-            let saltBytes;
-            let encryptedContentBuffer;
-
-            try {
-                const buffer = await readFileAsArrayBuffer(file);
-                const data = new Uint8Array(buffer);
-
-                if (mode === 'password') {
-                    const password = passwordInputDec.value;
-                    if (!password) {
-                        showStatusMessage(statusDec, "Masukkan kata sandi.", true);
-                        return;
-                    }
-                    saltBytes = data.slice(0, 16);
-                    ivBytes = data.slice(16, 16 + 12);
-                    encryptedContentBuffer = data.slice(16 + 12); 
-                    finalKey = await getKey('password', password, saltBytes, keyLength);
-                } else {
-                    const keyHex = keyInput.value.trim();
-                    if (!keyHex) {
-                        showStatusMessage(statusDec, "Masukkan kunci HEX.", true);
-                        return;
-                    }
-                    ivBytes = data.slice(0, 12);
-                    encryptedContentBuffer = data.slice(12);
-                    finalKey = await getKey('hex', keyHex, null, keyLength);
-                }
-
-                const decryptedBuffer = await decryptContent(encryptedContentBuffer, finalKey, ivBytes);
-                const ext = fileTypeSelect.value;
-                
-                let mimeType;
-                switch (ext) {
-                    case 'txt': mimeType = 'text/plain'; break;
-                    case 'png': mimeType = 'image/png'; break;
-                    case 'jpg':
-                    case 'jpeg': mimeType = 'image/jpeg'; break;
-                    case 'mp4': mimeType = 'video/mp4'; break;
-                    case 'zip': mimeType = 'application/zip'; break;
-                    case 'rar': mimeType = 'application/x-rar-compressed'; break;
-                    case 'pdf': mimeType = 'application/pdf'; break;
-                    case 'docx': mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'; break;
-                    default: mimeType = 'application/octet-stream';
-                }
-
-                const blob = new Blob([decryptedBuffer], { type: mimeType });
-                const url = URL.createObjectURL(blob);
-                downloadLinkDec.href = url;
-                downloadLinkDec.download = `hasil_dekripsi.${ext}`;
-                downloadLinkDec.style.display = "inline-block";
-                showStatusMessage(statusDec, "Dekripsi berhasil.");
-
-                if (["jpg", "jpeg", "png"].includes(ext)) {
-                    const img = document.createElement("img");
-                    img.src = url;
-                    img.alt = "Pratinjau Gambar";
-                    img.classList.add("w-auto", "max-h-64", "object-contain", "rounded-md", "shadow-md");
-                    previewContainer.appendChild(img);
-                } else if (ext === "mp4") {
-                    const video = document.createElement("video");
-                    video.src = url;
-                    video.controls = true;
-                    video.classList.add("w-auto", "max-h-64", "object-contain", "rounded-md", "shadow-md");
-                    previewContainer.appendChild(video);
-                } else if (ext === "pdf") {
-                    const pdfLink = document.createElement("a");
-                    pdfLink.href = url;
-                    pdfLink.textContent = "Lihat PDF (Buka di tab baru)";
-                    pdfLink.target = "_blank";
-                    pdfLink.classList.add("text-primary", "underline", "hover:text-primary-hover", "mt-4");
-                    previewContainer.appendChild(pdfLink);
-                    showStatusMessage(statusDec, "Dekripsi berhasil. Klik link untuk melihat PDF.");
-                } else {
-                    const textNode = document.createElement("p");
-                    textNode.textContent = "Tidak ada pratinjau yang tersedia untuk jenis file ini. Silakan unduh file.";
-                    textNode.classList.add("text-gray-500", "dark:text-gray-400");
-                    previewContainer.appendChild(textNode);
-                }
-                fileInputDecHandler.clearFile();
-                keyInput.value = '';
-                passwordInputDec.value = '';
-
-            } catch (e) {
-                showStatusMessage(statusDec, `Gagal dekripsi: Pastikan kunci/kata sandi dan file benar. Error: ${e.message}`, true);
-            }
-        });
-
-        const settingsBtn = document.getElementById('settingsBtn');
-        const settingsPanel = document.getElementById('settingsPanel');
-        const saveSettingsBtn = document.getElementById('saveSettings');
-        const darkModeSelect = document.getElementById('darkMode');
-        const keyLengthInput = document.getElementById('keyLength');
-        const statusElements = [statusEnc, statusDec];
-
-        let isSettingsOpen = false;
-        
-        settingsBtn.addEventListener('click', () => {
-            isSettingsOpen = !isSettingsOpen;
-            settingsPanel.classList.toggle('active', isSettingsOpen);
-            settingsBtn.classList.toggle('rotate-[45deg]', isSettingsOpen);
-        });
-        
-        document.addEventListener('click', (event) => {
-            if (isSettingsOpen && !settingsPanel.contains(event.target) && !settingsBtn.contains(event.target)) {
-                isSettingsOpen = false;
-                settingsPanel.classList.remove('active');
-                settingsBtn.classList.remove('rotate-[45deg]');
-            }
-        });
-
-        saveSettingsBtn.addEventListener('click', () => {
-            const darkModeValue = darkModeSelect.value;
-            localStorage.setItem('darkMode', darkModeValue);
             
-            const keyLength = parseInt(keyLengthInput.value);
-
-            applyTheme(darkModeValue);
-
-            if (keyLength !== 128 && keyLength !== 192 && keyLength !== 256) {
-                showStatusMessage(statusEnc, "Panjang kunci harus 128, 192, atau 256 bits. Menggunakan 256 sebagai default.", true);
-                showStatusMessage(statusDec, "Panjang kunci harus 128, 192, atau 256 bits. Menggunakan 256 sebagai default.", true);
-                keyLengthInput.value = 256;
+            const file = videoFiles.find(f => f.id == id);
+            if (file) {
+                videoProgress.classList.remove('hidden');
+                videoProgressText.textContent = `Mengenkripsi ${file.name}...`;
+                
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = await processVideoData(sourceData, key, (p) => {
+                    videoProgressBar.style.width = p + '%';
+                    videoProgressPercent.textContent = Math.round(p) + '%';
+                });
+                file.status = 'encrypted';
+                
+                videoProgress.classList.add('hidden');
+                renderVideoList();
+                updateVideoButtons();
+                showNotification(`✅ ${file.name} berhasil dienkripsi!`, 'success');
             }
+        };
 
-            isSettingsOpen = false;
-            settingsPanel.classList.remove('active');
-            settingsBtn.classList.remove('rotate-[45deg]');
+        window.decryptSingleVideo = async function(id) {
+            const key = videoEncryptionKey.value.trim();
+            if (!key) {
+                showNotification('⚠️ Masukkan kunci enkripsi terlebih dahulu!', 'error');
+                return;
+            }
+            
+            const file = videoFiles.find(f => f.id == id);
+            if (file) {
+                videoProgress.classList.remove('hidden');
+                videoProgressText.textContent = `Mendekripsi ${file.name}...`;
+                
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = await processVideoData(sourceData, key, (p) => {
+                    videoProgressBar.style.width = p + '%';
+                    videoProgressPercent.textContent = Math.round(p) + '%';
+                });
+                file.status = 'decrypted';
+                
+                videoProgress.classList.add('hidden');
+                renderVideoList();
+                updateVideoButtons();
+                showNotification(`✅ ${file.name} berhasil didekripsi!`, 'success');
+            }
+        };
+
+        window.downloadSingleVideo = function(id) {
+            const file = videoFiles.find(f => f.id == id);
+            if (file && file.processedData) {
+                const blob = new Blob([file.processedData], { type: 'application/octet-stream' });
+                const link = document.createElement('a');
+                const ext = file.type.includes('webm') ? 'webm' : 'mp4';
+                const baseName = file.name.replace(/\.[^/.]+$/, '');
+                link.download = `${baseName}_${file.status}.${ext}`;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+                showNotification(`💾 ${file.name} berhasil didownload!`, 'success');
+            }
+        };
+
+        window.removeVideo = function(id) {
+            videoFiles = videoFiles.filter(f => f.id != id);
+            updateVideoUI();
+        };
+
+        videoEncryptAllBtn.addEventListener('click', async () => {
+            const key = videoEncryptionKey.value.trim();
+            if (!key || videoFiles.length === 0) return;
+            
+            videoProgress.classList.remove('hidden');
+            videoEncryptAllBtn.disabled = true;
+            videoDecryptAllBtn.disabled = true;
+            
+            for (let i = 0; i < videoFiles.length; i++) {
+                const file = videoFiles[i];
+                videoProgressText.textContent = `Mengenkripsi ${i + 1}/${videoFiles.length}: ${file.name}`;
+                
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = await processVideoData(sourceData, key, (p) => {
+                    const overallProgress = ((i + p/100) / videoFiles.length) * 100;
+                    videoProgressBar.style.width = overallProgress + '%';
+                    videoProgressPercent.textContent = Math.round(overallProgress) + '%';
+                });
+                file.status = 'encrypted';
+            }
+            
+            videoProgress.classList.add('hidden');
+            renderVideoList();
+            updateVideoButtons();
+            showNotification(`✅ ${videoFiles.length} video berhasil dienkripsi!`, 'success');
         });
 
-        function applyTheme(mode) {
-            if (mode === 'dark') {
-                document.body.classList.add('dark');
-            } else if (mode === 'light') {
-                document.body.classList.remove('dark');
-            } else {
-                const jam = new Date().getHours();
-                if (jam >= 18 || jam < 6) {
-                    document.body.classList.add('dark');
-                } else {
-                    document.body.classList.remove('dark');
-                }
+        videoDecryptAllBtn.addEventListener('click', async () => {
+            const key = videoEncryptionKey.value.trim();
+            if (!key || videoFiles.length === 0) return;
+            
+            videoProgress.classList.remove('hidden');
+            videoEncryptAllBtn.disabled = true;
+            videoDecryptAllBtn.disabled = true;
+            
+            for (let i = 0; i < videoFiles.length; i++) {
+                const file = videoFiles[i];
+                videoProgressText.textContent = `Mendekripsi ${i + 1}/${videoFiles.length}: ${file.name}`;
+                
+                const sourceData = file.processedData || file.originalData;
+                file.processedData = await processVideoData(sourceData, key, (p) => {
+                    const overallProgress = ((i + p/100) / videoFiles.length) * 100;
+                    videoProgressBar.style.width = overallProgress + '%';
+                    videoProgressPercent.textContent = Math.round(overallProgress) + '%';
+                });
+                file.status = 'decrypted';
             }
-        }
+            
+            videoProgress.classList.add('hidden');
+            renderVideoList();
+            updateVideoButtons();
+            showNotification(`✅ ${videoFiles.length} video berhasil didekripsi!`, 'success');
+        });
 
-        function initializeTheme() {
-            const savedDarkMode = localStorage.getItem('darkMode') || 'auto';
-            darkModeSelect.value = savedDarkMode;
-            applyTheme(savedDarkMode);
-        }
-        
-        initializeTheme();
+        videoDownloadAllBtn.addEventListener('click', async () => {
+            const processedFiles = videoFiles.filter(f => f.processedData);
+            if (processedFiles.length === 0) return;
+            
+            videoProgress.classList.remove('hidden');
+            videoProgressText.textContent = 'Membuat file ZIP...';
+            
+            const zip = new JSZip();
+            
+            for (let i = 0; i < processedFiles.length; i++) {
+                const file = processedFiles[i];
+                const ext = file.type.includes('webm') ? 'webm' : 'mp4';
+                const baseName = file.name.replace(/\.[^/.]+$/, '');
+                zip.file(`${baseName}_${file.status}.${ext}`, file.processedData);
+                
+                const progress = ((i + 1) / processedFiles.length) * 100;
+                videoProgressBar.style.width = progress + '%';
+                videoProgressPercent.textContent = Math.round(progress) + '%';
+            }
+            
+            const content = await zip.generateAsync({type: 'blob'}, (metadata) => {
+                videoProgressBar.style.width = metadata.percent + '%';
+                videoProgressPercent.textContent = Math.round(metadata.percent) + '%';
+            });
+            
+            const link = document.createElement('a');
+            link.download = 'video_hasil.zip';
+            link.href = URL.createObjectURL(content);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            
+            videoProgress.classList.add('hidden');
+            showNotification(`💾 ${processedFiles.length} video berhasil didownload sebagai ZIP!`, 'success');
+        });
 
-        encryptionModeEnc.dispatchEvent(new Event('change'));
-        encryptionModeDec.dispatchEvent(new Event('change'));
+        videoClearAllBtn.addEventListener('click', () => {
+            videoFiles = [];
+            updateVideoUI();
+            showNotification('🗑️ Semua video telah dihapus!', 'info');
+        });
+
+        // ==================== NOTIFICATION ====================
+        function showNotification(message, type) {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const colors = {
+                success: 'bg-green-600',
+                error: 'bg-red-600',
+                info: 'bg-blue-600'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-4 right-4 px-6 py-3 rounded-xl font-medium z-50 transform transition-all duration-300 ${colors[type] || colors.info}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
+<style></style><script></script>
