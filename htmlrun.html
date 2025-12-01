@@ -1,212 +1,694 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Advanced HTML Runner</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-darker.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/eclipse.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Code Editor with Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
     <style>
-        body { background-color: #f8f9fa; padding-top: 20px; }
-        .CodeMirror { height: 300px; }
-        .nav-tabs .nav-link { font-weight: bold; }
-        #preview { border: 1px solid #ced4da; border-radius: 0.25rem; width: 100%; height: 400px; background-color: white; }
-        #loading { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px; background-color: rgba(255,255,255,0.8); border-radius: 5px; font-size: 20px; z-index: 1000; }
+        .CodeMirror {
+            height: 450px;
+            border: 1px solid #374151;
+            border-radius: 0.375rem;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .CodeMirror.fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            z-index: 9999 !important;
+            border-radius: 0 !important;
+        }
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 10000;
+        }
+        .fullscreen-overlay.active {
+            display: flex;
+            gap: 10px;
+        }
+        /* Custom Toggle Switch Style */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-left: 10px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4b5563; /* Gray-600 */
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #10b981; /* Green-500 */
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-blue-400 mb-2">🖥️ HTML Code Editor</h1>
+            <p class="text-gray-400">Write, Run, Save & Load HTML Code</p>
+        </div>
+
+        <!-- Supabase Config -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-6">
+            <h2 class="text-lg font-semibold mb-3 text-yellow-400">⚙️ Supabase Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Supabase URL</label>
+                    <input type="text" id="supabaseUrl" value="https://vlrglwotjlfamnpzaeir.supabase.co"
+                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Supabase Anon Key</label>
+                    <input type="password" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZscmdsd290amxmYW1ucHphZWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNjYzMzYsImV4cCI6MjA3MDg0MjMzNn0.cwHu4vQlulKZQwNHD7ENT2zN_rZG4LkEQxJTjlIT12Q"
+                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+            <button onclick="connectSupabase()" class="mt-3 bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-sm font-medium transition">
+                🔗 Connect to Supabase
+            </button>
+            <span id="connectionStatus" class="ml-3 text-sm"></span>
+        </div>
+
+        <!-- HTML Code Editor -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-6" id="editorContainer">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="font-semibold text-orange-400">📄 HTML Code</h3>
+                <div class="flex gap-2">
+                    <button onclick="toggleDarkMode()" id="darkModeBtn" class="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-sm font-medium transition">
+                        🌙 Dark Mode
+                    </button>
+                    <button onclick="toggleFullscreen()" id="fullscreenBtn" class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm font-medium transition">
+                        ⛶ Fullscreen
+                    </button>
+                    <button onclick="resetAll()" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm font-medium transition">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+            <textarea id="htmlCode"></textarea>
+        </div>
+
+        <!-- Fullscreen Overlay Buttons -->
+        <div id="fullscreenOverlay" class="fullscreen-overlay">
+            <button onclick="toggleDarkMode()" id="darkModeBtnFS" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm font-medium transition text-white">
+                🌙 Dark Mode
+            </button>
+            <button onclick="toggleFullscreen()" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm font-medium transition text-white">
+                ✕ Exit Fullscreen
+            </button>
+        </div>
+
+        <!-- Action Buttons and Auto-Run Toggle -->
+        <div class="flex flex-wrap gap-3 mb-6 justify-center">
+            
+            <!-- Auto-Run Toggle and Manual Run Button -->
+            <div class="bg-gray-700 p-3 rounded-lg flex items-center shadow-lg">
+                <label for="autoRunToggle" class="text-sm font-medium text-white mr-3 whitespace-nowrap">
+                    ⚡ Auto-Run Code
+                </label>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="autoRunToggle" onchange="toggleAutoRun()">
+                    <span class="slider"></span>
+                </div>
+            </div>
+
+            <button onclick="runCode()" id="runBtn" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+                ▶️ Run Code
+            </button>
+            <button onclick="stopCode()" id="stopBtn" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2 hidden">
+                ⏹️ Stop Code
+            </button>
+            
+            <button onclick="openInNewTab()" class="bg-orange-600 hover:bg-orange-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+                🔗 Open in New Tab
+            </button>
+            <button onclick="downloadCode()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+                📥 Download
+            </button>
+            <label class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2 cursor-pointer">
+                📤 Import File
+                <input type="file" accept=".html,.htm" onchange="importFile(event)" class="hidden">
+            </label>
+        </div>
+
+        <!-- Supabase Operations -->
+        <div class="bg-gray-800 rounded-lg p-4 mb-6">
+            <h2 class="text-lg font-semibold mb-3 text-cyan-400">💾 Supabase Operations</h2>
+            <div class="flex flex-wrap gap-3 items-end">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Code ID</label>
+                    <input type="number" id="codeId" placeholder="Enter ID" min="1"
+                        class="w-32 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                </div>
+                <button onclick="saveToSupabase()" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded font-medium transition">
+                    💾 Save to Supabase
+                </button>
+                <button onclick="loadFromSupabase()" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded font-medium transition">
+                    📂 Load from Supabase
+                </button>
+                <button onclick="loadAllFromSupabase()" class="bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded font-medium transition">
+                    📋 Load All Records
+                </button>
+                <button onclick="deleteFromSupabase()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-medium transition">
+                    🗑️ Delete Record
+                </button>
+            </div>
+        </div>
+
+        <!-- Saved Records List -->
+        <div id="recordsList" class="bg-gray-800 rounded-lg p-4 mb-6 hidden">
+            <h2 class="text-lg font-semibold mb-3 text-pink-400">📋 Saved Records</h2>
+            <div id="recordsContainer" class="space-y-2 max-h-48 overflow-y-auto"></div>
+        </div>
+
+        <!-- Preview -->
+        <div class="bg-gray-800 rounded-lg p-4">
+            <h2 class="text-lg font-semibold mb-3 text-green-400">👁️ Preview</h2>
+            <div class="bg-white rounded-lg overflow-hidden" style="min-height: 400px;">
+                <iframe id="preview" class="w-full h-96 border-0"></iframe>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg font-medium transform translate-y-20 opacity-0 transition-all duration-300"></div>
+    </div>
+
+    <script>
+        let htmlEditor;
+        let supabase = null;
+        let isDarkMode = false;
+        let isFullscreen = false;
+        let isRunning = false;
+        let isAutoRunEnabled = false; // New state for Auto-Run
+        let autoRunTimer; // Timer for debouncing
+
+        const defaultCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Page</title>
+    <style>
+        .container {
+            text-align: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #3b82f6;
+        }
+        button {
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #059669;
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="mb-4 text-center">
-        <h1>Advanced HTML Runner</h1>
-        <p>Editor dengan preview real-time, Supabase, dan impor kode</p>
+    <div class="container">
+        <h1>Hello World!</h1>
+        <p>Start coding...</p>
+        <button onclick="sayHello()">Click Me</button>
     </div>
+    <script>
+        function sayHello() {
+            // Mengganti alert() dengan console.log() atau notifikasi custom
+            console.log('Hello from JavaScript!'); 
+            // alert('Hello from JavaScript!'); // Dihapus karena masalah iFrame
+        }
+    <\/script>
+</body>
+</html>`;
 
-    <ul class="nav nav-tabs" id="editorTab">
-        <li class="nav-item"><button class="nav-link active" id="html-tab" data-bs-toggle="tab" data-bs-target="#html">HTML</button></li>
-        <li class="nav-item"><button class="nav-link" id="css-tab" data-bs-toggle="tab" data-bs-target="#css">CSS</button></li>
-        <li class="nav-item"><button class="nav-link" id="js-tab" data-bs-toggle="tab" data-bs-target="#js">JavaScript</button></li>
-    </ul>
+        // Save settings to localStorage
+        function saveSettings() {
+            const settings = {
+                code: htmlEditor.getValue(),
+                isDarkMode: isDarkMode,
+                isAutoRunEnabled: isAutoRunEnabled, // Save auto-run state
+                codeId: document.getElementById('codeId').value
+            };
+            localStorage.setItem('htmlEditorSettings', JSON.stringify(settings));
+        }
 
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="html"><textarea id="htmlEditor"></textarea></div>
-        <div class="tab-pane fade" id="css"><textarea id="cssEditor"></textarea></div>
-        <div class="tab-pane fade" id="js"><textarea id="jsEditor"></textarea></div>
-    </div>
-
-    <div class="mt-3 d-flex flex-wrap gap-2">
-        <button class="btn btn-success flex-fill" onclick="downloadCode()">Download Kode</button>
-        <button class="btn btn-secondary flex-fill" onclick="resetCode()">Reset Editor</button>
-        <button class="btn btn-warning flex-fill" onclick="clearAutosave()">Hapus Autosave</button>
-        <button class="btn btn-success flex-fill" onclick="saveToSupabase()">Simpan ke Supabase</button>
-        <button class="btn btn-primary flex-fill" onclick="loadFromSupabase()">Load dari Supabase</button>
-        <!-- Impor Kode -->
-        <label class="btn btn-info flex-fill mb-0">
-            Impor Kode
-            <input type="file" id="importCodeFile" accept=".txt,.html" style="display:none" onchange="importCodeFromFile(event)">
-        </label>
-    </div>
-
-    <div class="mt-4">
-        <h4>Preview</h4>
-        <iframe id="preview" title="Preview Output"></iframe>
-    </div>
-
-    <!-- Tombol Buka Tab Baru di paling bawah -->
-    <div class="mt-3">
-        <button class="btn btn-dark w-100" onclick="openMenuInNewTab()">Buka di Tab Baru</button>
-    </div>
-</div>
-
-<div id="loading">Loading...</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js"></script>
-<script>
-    // Inisialisasi editor
-    var htmlEditor = CodeMirror.fromTextArea(document.getElementById("htmlEditor"), {mode: "htmlmixed", theme: "material-darker", lineNumbers: true});
-    var cssEditor = CodeMirror.fromTextArea(document.getElementById("cssEditor"), {mode: "css", theme: "material-darker", lineNumbers: true});
-    var jsEditor = CodeMirror.fromTextArea(document.getElementById("jsEditor"), {mode: "javascript", theme: "material-darker", lineNumbers: true});
-
-    // Fungsi debounce agar tidak double run
-    function debounce(func, delay) {
-        let timer;
-        return function(...args) {
-            clearTimeout(timer);
-            timer = setTimeout(() => func.apply(this, args), delay);
-        };
-    }
-
-    // Jalankan otomatis setiap ada perubahan di editor (1 listener saja)
-    const autoRun = debounce(() => runCode(), 500);
-    htmlEditor.on("change", autoRun);
-    cssEditor.on("change", autoRun);
-    jsEditor.on("change", autoRun);
-
-    function runCode() {
-        showLoading();
-        const htmlContent = htmlEditor.getValue();
-        const cssContent = "<style>" + cssEditor.getValue() + "</style>";
-        const jsContent = "<script>" + jsEditor.getValue() + "<\/script>";
-        document.getElementById("preview").srcdoc = htmlContent + cssContent + jsContent;
-        autosaveCode();
-        hideLoading();
-    }
-
-    function downloadCode() {
-        const blob = new Blob([htmlEditor.getValue() + "<style>" + cssEditor.getValue() + "</style>" + "<script>" + jsEditor.getValue() + "<\/script>"], { type: 'text/html' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'kode.html';
-        a.click();
-        showToast('Kode berhasil diunduh!', 'success');
-    }
-
-    function resetCode() {
-        Swal.fire({title: 'Reset Editor?', text: "Semua kode akan dihapus.", icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, Reset!'})
-        .then((result) => {
-            if (result.isConfirmed) {
-                htmlEditor.setValue("");
-                cssEditor.setValue("");
-                jsEditor.setValue("");
-                document.getElementById("preview").srcdoc = "";
-                autosaveCode();
-                showToast('Editor telah direset.', 'success');
+        // Load settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('htmlEditorSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    
+                    // Load code
+                    if (settings.code) {
+                        htmlEditor.setValue(settings.code);
+                    } else {
+                        htmlEditor.setValue(defaultCode);
+                    }
+                    
+                    // Load dark mode
+                    if (settings.isDarkMode) {
+                        isDarkMode = false; // Will be toggled to true
+                        toggleDarkMode();
+                    }
+                    
+                    // Load Auto-Run state
+                    if (settings.isAutoRunEnabled) {
+                        isAutoRunEnabled = true;
+                        document.getElementById('autoRunToggle').checked = true;
+                    }
+                    
+                    // Load code ID
+                    if (settings.codeId) {
+                        document.getElementById('codeId').value = settings.codeId;
+                    }
+                    
+                    showToast('Pengaturan dipulihkan dari browser');
+                } catch (e) {
+                    htmlEditor.setValue(defaultCode);
+                }
+            } else {
+                htmlEditor.setValue(defaultCode);
             }
+        }
+
+        // Initialize CodeMirror editor
+        document.addEventListener('DOMContentLoaded', () => {
+            htmlEditor = CodeMirror.fromTextArea(document.getElementById('htmlCode'), {
+                mode: 'htmlmixed',
+                theme: 'default',
+                lineNumbers: true,
+                lineWrapping: true
+            });
+
+            // Load saved settings
+            loadSettings();
+
+            // Initial run if Auto-Run is enabled
+            if (isAutoRunEnabled) {
+                runCode();
+            }
+
+            // Auto-save and Auto-run on code change
+            htmlEditor.on('change', () => {
+                saveSettings();
+                if (isAutoRunEnabled) {
+                    // Debounce the runCode function to avoid performance issues while typing
+                    clearTimeout(autoRunTimer);
+                    autoRunTimer = setTimeout(runCode, 300); // Wait 300ms after last change
+                }
+            });
+
+            // ESC key to exit fullscreen
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && isFullscreen) {
+                    toggleFullscreen();
+                }
+            });
+
+            // Auto-connect to Supabase on load
+            connectSupabase();
         });
-    }
 
-    function autosaveCode() {
-        localStorage.setItem("advancedHtmlRunnerCode", JSON.stringify({ html: htmlEditor.getValue(), css: cssEditor.getValue(), js: jsEditor.getValue() }));
-    }
+        // Toggle Auto-Run feature
+        function toggleAutoRun() {
+            isAutoRunEnabled = document.getElementById('autoRunToggle').checked;
+            saveSettings();
 
-    function loadAutosave() {
-        const saved = localStorage.getItem("advancedHtmlRunnerCode");
-        if (saved) {
-            const codeData = JSON.parse(saved);
-            htmlEditor.setValue(codeData.html || "");
-            cssEditor.setValue(codeData.css || "");
-            jsEditor.setValue(codeData.js || "");
-            runCode();
+            if (isAutoRunEnabled) {
+                runCode(); // Run immediately when enabled
+                document.getElementById('runBtn').classList.add('hidden');
+                showToast('Auto-Run diaktifkan!');
+            } else {
+                // Keep the last run code visible, but hide the stop button if running
+                document.getElementById('runBtn').classList.remove('hidden');
+                document.getElementById('stopBtn').classList.add('hidden');
+                isRunning = false; // Reset isRunning state
+                showToast('Auto-Run dinonaktifkan.');
+            }
         }
-    }
 
-    function clearAutosave() {
-        localStorage.removeItem("advancedHtmlRunnerCode");
-        showToast('Autosave dihapus.', 'success');
-    }
-
-    function showToast(message, type = 'success') {
-        Toastify({ text: message, duration: 3000, close: true, backgroundColor: type === 'success' ? "#4caf50" : "#f44336"}).showToast();
-    }
-
-    function showLoading() { document.getElementById('loading').style.display = 'block'; }
-    function hideLoading() { document.getElementById('loading').style.display = 'none'; }
-
-    const SUPABASE_URL = "https://vlrglwotjlfamnpzaeir.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZscmdsd290amxmYW1ucHphZWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNjYzMzYsImV4cCI6MjA3MDg0MjMzNn0.cwHu4vQlulKZQwNHD7ENT2zN_rZG4LkEQxJTjlIT12Q";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const TABLE_NAME = "html_codes";
-
-    async function saveToSupabase() {
-        showLoading();
-        const { error } = await supabase.from(TABLE_NAME).upsert([{ id: 1, html: htmlEditor.getValue(), css: cssEditor.getValue(), js: jsEditor.getValue() }], { onConflict: ['id'] });
-        hideLoading();
-        if (error) { showToast("Gagal menyimpan ke Supabase", "error"); console.error(error); }
-        else { showToast("Kode berhasil disimpan ke Supabase", "success"); }
-    }
-
-    async function loadFromSupabase() {
-        showLoading();
-        const { data, error } = await supabase.from(TABLE_NAME).select("*").eq("id", 1).single();
-        hideLoading();
-        if (error || !data) { showToast("Gagal memuat dari Supabase", "error"); console.error(error); }
-        else {
-            htmlEditor.setValue(data.html || "");
-            cssEditor.setValue(data.css || "");
-            jsEditor.setValue(data.js || "");
-            runCode();
-            showToast("Kode berhasil dimuat dari Supabase", "success");
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg font-medium transform transition-all duration-300 ${
+                type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+            }`;
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.transform = 'translateY(20px)';
+                toast.style.opacity = '0';
+            }, 3000);
         }
-    }
 
-    function openMenuInNewTab() {
-        const combinedCode = htmlEditor.getValue() + "<style>" + cssEditor.getValue() + "</style>" + "<script>" + jsEditor.getValue() + "<\/script>";
-        const newTab = window.open();
-        newTab.document.open();
-        newTab.document.write(combinedCode);
-        newTab.document.close();
-    }
+        // Run code in preview
+        function runCode() {
+            const html = htmlEditor.getValue();
 
-    function importCodeFromFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            htmlEditor.setValue(e.target.result);
-            runCode();
-            showToast("Kode berhasil diimpor!", "success");
-        };
-        reader.readAsText(file);
-    }
+            const iframe = document.getElementById('preview');
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(html);
+            iframeDoc.close();
 
-    window.addEventListener("load", loadAutosave);
-</script>
+            isRunning = true;
+            
+            // Manage run/stop buttons based on Auto-Run state
+            if (isAutoRunEnabled) {
+                document.getElementById('runBtn').classList.add('hidden');
+                document.getElementById('stopBtn').classList.add('hidden');
+            } else {
+                document.getElementById('runBtn').classList.add('hidden');
+                document.getElementById('stopBtn').classList.remove('hidden');
+            }
+
+            // Show toast only for manual runs
+            if (!isAutoRunEnabled) {
+                showToast('Kode dieksekusi dengan sukses!');
+            }
+        }
+
+        // Stop code execution (Manual Stop)
+        function stopCode() {
+            const iframe = document.getElementById('preview');
+            
+            // Clear the iframe by loading a blank page
+            iframe.srcdoc = '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:Arial,sans-serif;color:#666;"><p>⏹️ Eksekusi kode dihentikan</p></body></html>';
+            
+            isRunning = false;
+            document.getElementById('runBtn').classList.remove('hidden');
+            document.getElementById('stopBtn').classList.add('hidden');
+
+            showToast('Eksekusi kode dihentikan!');
+        }
+
+        // Open code in new tab
+        function openInNewTab() {
+            const html = htmlEditor.getValue();
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            showToast('Dibuka di tab baru!');
+        }
+
+        // Download code as HTML file
+        function downloadCode() {
+            const html = htmlEditor.getValue();
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'code.html';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast('Kode diunduh!');
+        }
+
+        // Import HTML file
+        function importFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const content = e.target.result;
+                htmlEditor.setValue(content);
+                showToast('File berhasil diimpor!');
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // Reset all editors
+        function resetAll() {
+            // Mengganti confirm() dengan notifikasi custom
+            if (window.confirm('Apakah Anda yakin ingin mengatur ulang semua kode?')) {
+                htmlEditor.setValue(defaultCode);
+                document.getElementById('preview').srcdoc = '';
+                document.getElementById('codeId').value = '';
+                showToast('Semua kode telah diatur ulang!');
+            }
+        }
+
+        // Toggle Dark Mode
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            const theme = isDarkMode ? 'dracula' : 'default';
+            htmlEditor.setOption('theme', theme);
+            
+            const darkModeBtn = document.getElementById('darkModeBtn');
+            const darkModeBtnFS = document.getElementById('darkModeBtnFS');
+            
+            if (isDarkMode) {
+                darkModeBtn.innerHTML = '☀️ Light Mode';
+                darkModeBtnFS.innerHTML = '☀️ Light Mode';
+                showToast('Mode gelap diaktifkan');
+            } else {
+                darkModeBtn.innerHTML = '🌙 Dark Mode';
+                darkModeBtnFS.innerHTML = '🌙 Dark Mode';
+                showToast('Mode terang diaktifkan');
+            }
+            
+            // Save dark mode setting
+            saveSettings();
+        }
+
+        // Toggle Fullscreen
+        function toggleFullscreen() {
+            isFullscreen = !isFullscreen;
+            const cmElement = document.querySelector('.CodeMirror');
+            const overlay = document.getElementById('fullscreenOverlay');
+            
+            if (isFullscreen) {
+                cmElement.classList.add('fullscreen');
+                overlay.classList.add('active');
+                showToast('Mode Layar Penuh - Tekan ESC untuk keluar');
+            } else {
+                cmElement.classList.remove('fullscreen');
+                overlay.classList.remove('active');
+                showToast('Keluar dari mode layar penuh');
+            }
+            
+            // Refresh editor to fix any display issues
+            setTimeout(() => htmlEditor.refresh(), 100);
+        }
+
+        // Connect to Supabase
+        function connectSupabase() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+
+            if (!url || !key) {
+                showToast('Mohon masukkan URL dan Kunci Supabase', 'error');
+                return;
+            }
+
+            try {
+                supabase = window.supabase.createClient(url, key);
+                
+                document.getElementById('connectionStatus').innerHTML = '<span class="text-green-400">✓ Terhubung</span>';
+                showToast('Terhubung ke Supabase!');
+            } catch (error) {
+                document.getElementById('connectionStatus').innerHTML = '<span class="text-red-400">✗ Gagal</span>';
+                showToast('Koneksi gagal: ' + error.message, 'error');
+            }
+        }
+
+        // Save to Supabase
+        async function saveToSupabase() {
+            if (!supabase) {
+                showToast('Mohon hubungkan ke Supabase terlebih dahulu', 'error');
+                return;
+            }
+
+            const id = parseInt(document.getElementById('codeId').value);
+            if (!id || id < 1) {
+                showToast('Mohon masukkan ID yang valid', 'error');
+                return;
+            }
+
+            const html = htmlEditor.getValue();
+
+            try {
+                const { data, error } = await supabase
+                    .from('html_codes')
+                    .upsert({ id, html, css: '', js: '' }, { onConflict: 'id' });
+
+                if (error) throw error;
+                showToast(`Kode disimpan dengan ID: ${id}`);
+            } catch (error) {
+                showToast('Gagal menyimpan: ' + error.message, 'error');
+            }
+        }
+
+        // Load from Supabase
+        async function loadFromSupabase() {
+            if (!supabase) {
+                showToast('Mohon hubungkan ke Supabase terlebih dahulu', 'error');
+                return;
+            }
+
+            const id = parseInt(document.getElementById('codeId').value);
+            if (!id || id < 1) {
+                showToast('Mohon masukkan ID yang valid', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('html_codes')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+                if (!data) {
+                    showToast('Tidak ada catatan yang ditemukan dengan ID ini', 'error');
+                    return;
+                }
+
+                htmlEditor.setValue(data.html || '');
+                showToast(`Kode dimuat dari ID: ${id}`);
+            } catch (error) {
+                showToast('Gagal memuat: ' + error.message, 'error');
+            }
+        }
+
+        // Load all records from Supabase
+        async function loadAllFromSupabase() {
+            if (!supabase) {
+                showToast('Mohon hubungkan ke Supabase terlebih dahulu', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('html_codes')
+                    .select('id, html')
+                    .order('id', { ascending: true });
+
+                if (error) throw error;
+
+                const recordsList = document.getElementById('recordsList');
+                const container = document.getElementById('recordsContainer');
+
+                if (!data || data.length === 0) {
+                    recordsList.classList.add('hidden');
+                    showToast('Tidak ada catatan ditemukan', 'info');
+                    return;
+                }
+
+                container.innerHTML = data.map(record => `
+                    <div class="flex items-center justify-between bg-gray-700 rounded px-3 py-2">
+                        <span class="text-sm">
+                            <strong class="text-cyan-400">ID: ${record.id}</strong>
+                            <span class="text-gray-400 ml-2">
+                                HTML: ${(record.html || '').length} chars
+                            </span>
+                        </span>
+                        <button onclick="loadRecordById(${record.id})" class="bg-cyan-600 hover:bg-cyan-700 px-3 py-1 rounded text-xs">
+                            Muat
+                        </button>
+                    </div>
+                `).join('');
+
+                recordsList.classList.remove('hidden');
+                showToast(`Ditemukan ${data.length} catatan`);
+            } catch (error) {
+                showToast('Gagal memuat: ' + error.message, 'error');
+            }
+        }
+
+        // Load specific record by ID
+        async function loadRecordById(id) {
+            document.getElementById('codeId').value = id;
+            await loadFromSupabase();
+        }
+
+        // Delete from Supabase
+        async function deleteFromSupabase() {
+            if (!supabase) {
+                showToast('Mohon hubungkan ke Supabase terlebih dahulu', 'error');
+                return;
+            }
+
+            const id = parseInt(document.getElementById('codeId').value);
+            if (!id || id < 1) {
+                showToast('Mohon masukkan ID yang valid', 'error');
+                return;
+            }
+
+            // Mengganti confirm() dengan notifikasi custom
+            if (window.confirm(`Apakah Anda yakin ingin menghapus catatan ID: ${id}?`)) {
+                try {
+                    const { error } = await supabase
+                        .from('html_codes')
+                        .delete()
+                        .eq('id', id);
+
+                    if (error) throw error;
+                    showToast(`Catatan ${id} dihapus`);
+                    loadAllFromSupabase();
+                } catch (error) {
+                    showToast('Gagal menghapus: ' + error.message, 'error');
+                }
+            }
+        }
+    </script>
 </body>
 </html>
-
-
-
-
-
-
-
