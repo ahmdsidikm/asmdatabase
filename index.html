@@ -1,467 +1,1312 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title></title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Variabel untuk warna dan font */
-    :root {
-      --primary-color: #3b82f6; /* Warna biru yang modern */
-      --secondary-color: #6366f1; /* Warna ungu-biru */
-      --accent-color: #ef4444; /* Warna merah aksen */
-      --text-color-dark: #1f2937; /* Teks gelap */
-      --text-color-light: #f9fafb; /* Teks terang */
-      --bg-color-light: #f3f4f6; /* Latar belakang terang */
-      --bg-color-dark: #111827; /* Latar belakang gelap */
-      --card-bg-light: #ffffff; /* Latar belakang kartu terang */
-      --card-bg-dark: #1f2937; /* Latar belakang kartu gelap */
-      --border-color: #e5e7eb; /* Warna border */
-      --font-family: 'Inter', sans-serif;
-    }
-
-    body {
-      font-family: var(--font-family);
-      color: var(--text-color-dark);
-      background-color: var(--bg-color-light);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 24px;
-      overflow: hidden;
-      transition: background-color 0.3s ease;
-    }
-
-    /* Mode gelap */
-    body.dark-mode {
-      color: var(--text-color-light);
-      background-color: var(--bg-color-dark);
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Ukuran kartu yang lebih fleksibel */
-      gap: 16px; /* Jarak antar kartu */
-      width: 100%;
-      max-width: 1000px; /* Lebar maksimum yang lebih besar */
-      animation: fadeIn 1s ease-out forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      font-size: 1.1rem;
-      text-align: center;
-      color: var(--text-color-dark);
-      background-color: var(--card-bg-light);
-      cursor: pointer;
-      overflow: hidden;
-      border-radius: 12px; /* Sudut membulat yang lebih modern */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Bayangan lembut */
-      transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease;
-    }
-
-    /* Mode gelap untuk kartu */
-    body.dark-mode .card {
-      background-color: var(--card-bg-dark);
-      color: var(--text-color-light);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .card:hover {
-      transform: translateY(-5px) scale(1.02); /* Sedikit naik dan membesar */
-      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15); /* Bayangan lebih dalam */
-    }
-
-    body.dark-mode .card:hover {
-      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.4);
-    }
-
-    .card .icon {
-      font-size: 3.5rem; /* Ukuran ikon lebih besar */
-      margin-bottom: 12px;
-      transition: transform 0.3s ease;
-    }
-
-    .card:hover .icon {
-      transform: rotate(5deg) scale(1.1); /* Rotasi dan membesar saat hover */
-    }
-
-    .card .label {
-      font-size: 1rem;
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    /* Efek ripple */
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.7); /* Warna ripple lebih lembut */
-      animation: ripple-animation 0.6s ease-out forwards;
-      transform: scale(0);
-      pointer-events: none;
-      z-index: 0; /* Pastikan ripple di bawah konten kartu */
-    }
-
-    @keyframes ripple-animation {
-      to {
-        transform: scale(2.5); /* Ripple mengisi area yang lebih luas */
-        opacity: 0;
-      }
-    }
-
-    /* Tombol mode gelap */
-    .dark-mode-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background-color: var(--primary-color);
-      color: var(--text-color-light);
-      border: none;
-      padding: 10px 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .dark-mode-toggle:hover {
-      background-color: var(--secondary-color);
-      transform: translateY(-2px);
-    }
-
-    /* Icon untuk mode gelap */
-    .dark-mode-toggle .icon {
-      font-size: 1.2rem;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .container {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 12px;
-        padding: 16px;
-      }
-      .card {
-        padding: 15px;
-      }
-      .card .icon {
-        font-size: 3rem;
-        margin-bottom: 8px;
-      }
-      .card .label {
-        font-size: 0.9rem;
-      }
-      .dark-mode-toggle {
-        top: 15px;
-        right: 15px;
-        padding: 8px 12px;
-        font-size: 0.8rem;
-      }
-    }
-
-    @media (max-width: 480px) {
-      body {
-        padding: 12px;
-      }
-      .container {
-        grid-template-columns: 1fr 1fr; /* 2 kolom untuk layar sangat kecil */
-        gap: 10px;
-      }
-      .card {
-        padding: 10px;
-        border-radius: 10px;
-      }
-      .card .icon {
-        font-size: 2.5rem;
-      }
-      .card .label {
-        font-size: 0.85rem;
-      }
-      .dark-mode-toggle {
-        top: 10px;
-        right: 10px;
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <button id="darkModeToggle" class="dark-mode-toggle">
-    <span class="icon">💡</span> Mode Gelap
-  </button>
-
-  <div class="container">
-    <div class="card" data-href="htmlrun.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-code-2">
-          <path d="m18 16 4-4-4-4"/>
-          <path d="m6 8-4 4 4 4"/>
-          <path d="m14.5 4-5 16"/>
-        </svg>
-      </div>
-      <div class="label">HTML Run</div>
-    </div>
-    <div class="card" data-href="enkripsi.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock">
-          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </div>
-      <div class="label">Enkripsi File</div>
-    </div>
-    <div class="card" data-href="TingkatkanGambar.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-up">
-          <path d="M12 6v6"/>
-          <path d="M15 9l-3-3-3 3"/>
-          <path d="M11 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/>
-          <circle cx="9" cy="9" r="2"/>
-          <path d="m22 15-3.24-3.24a1 1 0 0 0-1.1-.12L9 22"/>
-        </svg>
-      </div>
-      <div class="label">Tingkatkan Gambar</div>
-    </div>
-    <div class="card" data-href="Steganografi.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dna">
-          <path d="M2 12c.6 0 1.2-.4 1.4-1 2-4 5-5 8-5 4.5 0 7.5 2.5 8 5.5"/>
-          <path d="M22 12c-.6 0-1.2.4-1.4 1-2 4-5 5-8 5-4.5 0-7.5-2.5-8-5.5"/>
-          <path d="M11.5 5c-.3 0-.5.2-.5.5v13c0 .3.2.5.5.5h1c.3 0 .5-.2.5-.5V5.5c0-.3-.2-.5-.5-.5h-1Z"/>
-        </svg>
-      </div>
-      <div class="label">Steganografi</div>
-    </div>
-    <div class="card" data-href="SteganografiWav.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-waveform">
-          <path d="M2 10v3"/>
-          <path d="M6 6v11"/>
-          <path d="M10 10v3"/>
-          <path d="M14 4v15"/>
-          <path d="M18 8v7"/>
-          <path d="M22 10v3"/>
-        </svg>
-      </div>
-      <div class="label">Steganografi WAV</div>
-    </div>
-    <div class="card" data-href="VideoFrame.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video">
-          <path d="m22 8-6 4 6 4V8Z"/>
-          <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
-        </svg>
-      </div>
-      <div class="label">Video Frame</div>
-    </div>
-    <div class="card" data-href="EnkripsiKata.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-key">
-          <path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778Z"/>
-          <path d="m15.5 5.5 3.5 3.5L8 20l-3.5-3.5L15.5 5.5Z"/>
-        </svg>
-      </div>
-      <div class="label">Enkripsi Kata</div>
-    </div>
-    <div class="card" data-href="QrCode.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-qr-code">
-          <rect width="4" height="4" x="2" y="2" rx="1"/>
-          <rect width="4" height="4" x="18" y="2" rx="1"/>
-          <rect width="4" height="4" x="2" y="18" rx="1"/>
-          <path d="M8 6h.01"/>
-          <path d="M16 6h.01"/>
-          <path d="M6 18h.01"/>
-          <path d="M18 18h.01"/>
-          <path d="M18 13h.01"/>
-          <path d="M18 9h.01"/>
-          <path d="M13 18h.01"/>
-          <path d="M13 22h.01"/>
-          <path d="M13 13h.01"/>
-          <path d="M13 9h.01"/>
-          <path d="M9 13h.01"/>
-          <path d="M6 14h.01"/>
-          <path d="M9 18h.01"/>
-          <path d="M12 18h.01"/>
-          <path d="M12 14h.01"/>
-          <path d="M16 14h.01"/>
-          <path d="M22 6h.01"/>
-          <path d="M22 10h.01"/>
-        </svg>
-      </div>
-      <div class="label">QR Code</div>
-    </div>
-    <!-- Tombol Pecah File baru ditambahkan di sini -->
-    <div class="card" data-href="PartFile.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-hard-drive">
-          <line x1="22" x2="2" y1="12" y2="12"/>
-          <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-          <line x1="6" x2="6.01" y1="16" y2="16"/>
-          <line x1="10" x2="10.01" y1="16" y2="16"/>
-        </svg>
-      </div>
-      <div class="label">Pecah File</div>
-    </div>
-    <!-- Tombol Analisis Kata baru ditambahkan di sini -->
-    <div class="card" data-href="AnalisisKata.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-text-cursor">
-          <path d="M6 12h12"/>
-          <path d="M10 6v12"/>
-          <path d="M14 6v12"/>
-        </svg>
-      </div>
-      <div class="label">Analisis Kata</div>
-    </div>
-    <!-- Tombol Scan Teks baru ditambahkan di sini -->
-    <div class="card" data-href="ScanTeks.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scan-text">
-          <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
-          <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
-          <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
-          <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
-          <path d="M7 12h10"/>
-          <path d="M7 18h6"/>
-          <path d="M10 6h4"/>
-        </svg>
-      </div>
-      <div class="label">Scan Teks</div>
-    </div>
-    <!-- Tombol KirimFile Edit Gambar baru ditambahkan di sini -->
-    <div class="card" data-href="KirimFile.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-image-check">
-          <path d="M12 5V2"/>
-          <path d="M15 7l-3-3-3 3"/>
-          <path d="M11 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/>
-          <circle cx="9" cy="9" r="2"/>
-          <path d="m22 15-3.24-3.24a1 1 0 0 0-1.1-.12L9 22"/>
-        </svg>
-      </div>
-      <div class="label">Kirim File</div>
-    </div>
-    <!-- Tombol Pemandai Kendaraan baru ditambahkan di sini -->
-    <div class="card" data-href="PemindaiKendaraan.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-car">
-          <path d="M19 17H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2Z"/>
-          <circle cx="7" cy="17" r="2"/>
-          <circle cx="17" cy="17" r="2"/>
-        </svg>
-      </div>
-      <div class="label">Pemandai Kendaraan</div>
-    </div>
-    <!-- Tombol Terjemah baru ditambahkan di sini -->
-    <div class="card" data-href="Terjemah.html">
-      <div class="icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages">
-          <path d="m5 8 6 6"/>
-          <path d="m4 14 6-6 2-3"/>
-          <path d="M2 5h12"/>
-          <path d="M7 2h1"/>
-          <path d="M22 22 15 15"/>
-          <path d="M17 22l5-5-3-3"/>
-          <path d="M14 15h8"/>
-          <path d="M17 18v1"/>
-        </svg>
-      </div>
-      <div class="label">Terjemah</div>
-    </div>
-  </div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Mendapatkan semua elemen kartu
-      const cards = document.querySelectorAll('.card');
-      const darkModeToggle = document.getElementById('darkModeToggle');
-      const body = document.body;
-
-      // Fungsi untuk mengatur atau mengambil mode gelap dari localStorage
-      const enableDarkMode = () => {
-        body.classList.add('dark-mode');
-        darkModeToggle.innerHTML = '<span class="icon">💡</span> Mode Terang';
-        localStorage.setItem('theme', 'dark');
-      };
-
-      const disableDarkMode = () => {
-        body.classList.remove('dark-mode');
-        darkModeToggle.innerHTML = '<span class="icon">🌙</span> Mode Gelap';
-        localStorage.setItem('theme', 'light');
-      };
-
-      const toggleDarkMode = () => {
-        if (body.classList.contains('dark-mode')) {
-          disableDarkMode();
-        } else {
-          enableDarkMode();
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Pribadi Saya</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
         }
-      };
+        
+        .btn-custom {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-custom:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .btn-custom:active {
+            transform: translateY(-1px);
+        }
+        
+        .modal-overlay {
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+        }
+        
+        .card-glass {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .button-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .button-card:hover::before {
+            left: 100%;
+        }
+        
+        .button-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .shape:nth-child(1) {
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+        
+        .shape:nth-child(2) {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            bottom: -50px;
+            left: -50px;
+            animation-delay: -5s;
+        }
+        
+        .shape:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            top: 50%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(20px, -20px) rotate(5deg); }
+            50% { transform: translate(-10px, 20px) rotate(-5deg); }
+            75% { transform: translate(-20px, -10px) rotate(3deg); }
+        }
+        
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        .input-modern {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .input-modern:focus {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #a855f7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .toast {
+            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .status-indicator {
+            transition: all 0.3s ease;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
 
-      // Memeriksa preferensi mode gelap saat halaman dimuat
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        enableDarkMode();
-      } else {
-        disableDarkMode();
-      }
+        .color-option {
+            transition: all 0.2s ease;
+        }
 
-      darkModeToggle.addEventListener('click', toggleDarkMode);
+        .color-option:hover {
+            transform: scale(1.15);
+        }
 
-      cards.forEach(card => {
-        card.addEventListener('click', function(e) {
-          // Membuat elemen ripple baru
-          const ripple = document.createElement('span');
-          ripple.classList.add('ripple');
+        .color-option.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px white, 0 0 0 5px rgba(139, 92, 246, 0.5);
+        }
 
-          // Menentukan posisi ripple di tengah klik
-          const rect = this.getBoundingClientRect();
-          const size = Math.max(rect.width, rect.height);
-          const x = e.clientX - rect.left - size / 2;
-          const y = e.clientY - rect.top - size / 2;
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+        }
 
-          ripple.style.width = ripple.style.height = `${size}px`;
-          ripple.style.left = `${x}px`;
-          ripple.style.top = `${y}px`;
+        .icon-option {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
 
-          // Menambahkan ripple ke dalam kartu
-          this.appendChild(ripple);
+        .icon-option:hover {
+            background: rgba(255,255,255,0.15);
+            transform: scale(1.1);
+        }
 
-          // Menghapus ripple setelah animasi selesai
-          ripple.addEventListener('animationend', () => {
-            ripple.remove();
-          });
+        .icon-option.selected {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: #a855f7;
+        }
 
-          // Mengarahkan ke halaman yang dituju setelah efek ripple terlihat
-          const targetHref = this.dataset.href;
-          if (targetHref) {
-            setTimeout(() => {
-              window.location.href = targetHref;
-            }, 200); // Penundaan lebih lama untuk efek ripple yang lebih baik
-          }
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 min-h-screen">
+    <!-- Floating Background Shapes -->
+    <div class="floating-shapes">
+        <div class="shape"></div>
+        <div class="shape"></div>
+        <div class="shape"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/90 flex items-center justify-center z-[90] hidden">
+        <div class="text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-white font-medium">Memuat data...</p>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="card-glass sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="relative">
+                        <div class="w-12 h-12 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-purple-500/30">
+                            ⚡
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-950 pulse-dot"></div>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white">LinkHub Pro</h1>
+                        <div class="flex items-center gap-2">
+                            <div id="statusIndicator" class="w-2 h-2 rounded-full bg-yellow-500 status-indicator"></div>
+                            <p class="text-gray-400 text-xs" id="statusText">Menghubungkan...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openSettingsModal()" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all border border-white/10">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                    <button onclick="openAddModal()" class="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-purple-500/25 btn-custom">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Tambah Link</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="card-glass rounded-2xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white">
+                        📊
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-white" id="totalButtons">0</p>
+                        <p class="text-xs text-gray-400">Total Link</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-glass rounded-2xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-white">
+                        🌐
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-white" id="externalLinks">0</p>
+                        <p class="text-xs text-gray-400">Link External</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-glass rounded-2xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white">
+                        📄
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-white" id="internalLinks">0</p>
+                        <p class="text-xs text-gray-400">Link Internal</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-glass rounded-2xl p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
+                        ☁️
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-white" id="syncStatus">-</p>
+                        <p class="text-xs text-gray-400">Status Sync</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="card-glass rounded-2xl p-4 mb-8">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1 relative">
+                    <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Cari link..." 
+                        class="w-full input-modern rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="filterButtons('all')" class="tab-btn active px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10" data-filter="all">
+                        Semua
+                    </button>
+                    <button onclick="filterButtons('external')" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10" data-filter="external">
+                        External
+                    </button>
+                    <button onclick="filterButtons('internal')" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10" data-filter="internal">
+                        Internal
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons Grid -->
+        <div class="card-glass rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span class="text-2xl">🔗</span> Koleksi Link
+                </h2>
+                <span class="text-purple-400 text-sm font-medium px-3 py-1 bg-purple-500/10 rounded-full" id="buttonCount">0 link</span>
+            </div>
+            
+            <div id="buttonContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Skeleton Loading -->
+                <div class="skeleton-item">
+                    <div class="skeleton rounded-2xl h-32"></div>
+                </div>
+                <div class="skeleton-item">
+                    <div class="skeleton rounded-2xl h-32"></div>
+                </div>
+                <div class="skeleton-item">
+                    <div class="skeleton rounded-2xl h-32"></div>
+                </div>
+                <div class="skeleton-item">
+                    <div class="skeleton rounded-2xl h-32"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Modal -->
+    <div id="modal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4">
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 id="modalTitle" class="text-xl font-bold text-white">Tambah Link Baru</h3>
+                        <p class="text-gray-400 text-sm mt-1">Isi detail link yang ingin ditambahkan</p>
+                    </div>
+                    <button onclick="closeModal()" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="buttonForm" onsubmit="saveButton(event)">
+                    <input type="hidden" id="editId" value="">
+                    
+                    <div class="space-y-5">
+                        <!-- Name Input -->
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-medium text-sm">Nama Link</label>
+                            <input type="text" id="buttonName" required placeholder="Contoh: Portfolio Saya" 
+                                class="w-full input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- URL Input -->
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-medium text-sm">URL / Alamat Tujuan</label>
+                            <input type="text" id="buttonUrl" required placeholder="https://contoh.com atau halaman.html" 
+                                class="w-full input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none">
+                            <p class="text-gray-500 text-xs mt-2">💡 Link akan dibuka di tab baru secara otomatis</p>
+                        </div>
+                        
+                        <!-- Description Input -->
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-medium text-sm">Deskripsi (Opsional)</label>
+                            <input type="text" id="buttonDesc" placeholder="Deskripsi singkat tentang link ini" 
+                                class="w-full input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none">
+                        </div>
+                        
+                        <!-- Color Picker -->
+                        <div>
+                            <label class="block text-gray-300 mb-3 font-medium text-sm">Pilih Warna</label>
+                            <div class="grid grid-cols-6 gap-3" id="colorPicker">
+                                <button type="button" onclick="selectColor('from-blue-500 to-blue-600')" data-color="from-blue-500 to-blue-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600"></button>
+                                <button type="button" onclick="selectColor('from-violet-500 to-purple-600')" data-color="from-violet-500 to-purple-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600"></button>
+                                <button type="button" onclick="selectColor('from-fuchsia-500 to-pink-600')" data-color="from-fuchsia-500 to-pink-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600"></button>
+                                <button type="button" onclick="selectColor('from-rose-500 to-red-600')" data-color="from-rose-500 to-red-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600"></button>
+                                <button type="button" onclick="selectColor('from-orange-500 to-amber-600')" data-color="from-orange-500 to-amber-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600"></button>
+                                <button type="button" onclick="selectColor('from-yellow-500 to-orange-600')" data-color="from-yellow-500 to-orange-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600"></button>
+                                <button type="button" onclick="selectColor('from-emerald-500 to-green-600')" data-color="from-emerald-500 to-green-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600"></button>
+                                <button type="button" onclick="selectColor('from-teal-500 to-cyan-600')" data-color="from-teal-500 to-cyan-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600"></button>
+                                <button type="button" onclick="selectColor('from-cyan-500 to-blue-600')" data-color="from-cyan-500 to-blue-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600"></button>
+                                <button type="button" onclick="selectColor('from-indigo-500 to-violet-600')" data-color="from-indigo-500 to-violet-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600"></button>
+                                <button type="button" onclick="selectColor('from-slate-500 to-slate-700')" data-color="from-slate-500 to-slate-700" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-700"></button>
+                                <button type="button" onclick="selectColor('from-stone-500 to-stone-700')" data-color="from-stone-500 to-stone-700" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-stone-500 to-stone-700"></button>
+                            </div>
+                            <input type="hidden" id="selectedColor" value="from-violet-500 to-purple-600">
+                        </div>
+                        
+                        <!-- Icon Picker -->
+                        <div>
+                            <label class="block text-gray-300 mb-3 font-medium text-sm">Pilih Ikon</label>
+                            <div class="icon-grid" id="iconPicker">
+                                <button type="button" onclick="selectIcon('🔗')" data-icon="🔗" class="icon-option">🔗</button>
+                                <button type="button" onclick="selectIcon('🌐')" data-icon="🌐" class="icon-option">🌐</button>
+                                <button type="button" onclick="selectIcon('🏠')" data-icon="🏠" class="icon-option">🏠</button>
+                                <button type="button" onclick="selectIcon('📄')" data-icon="📄" class="icon-option">📄</button>
+                                <button type="button" onclick="selectIcon('📁')" data-icon="📁" class="icon-option">📁</button>
+                                <button type="button" onclick="selectIcon('⭐')" data-icon="⭐" class="icon-option">⭐</button>
+                                <button type="button" onclick="selectIcon('💼')" data-icon="💼" class="icon-option">💼</button>
+                                <button type="button" onclick="selectIcon('📧')" data-icon="📧" class="icon-option">📧</button>
+                                <button type="button" onclick="selectIcon('📱')" data-icon="📱" class="icon-option">📱</button>
+                                <button type="button" onclick="selectIcon('💻')" data-icon="💻" class="icon-option">💻</button>
+                                <button type="button" onclick="selectIcon('🎮')" data-icon="🎮" class="icon-option">🎮</button>
+                                <button type="button" onclick="selectIcon('🎵')" data-icon="🎵" class="icon-option">🎵</button>
+                                <button type="button" onclick="selectIcon('📷')" data-icon="📷" class="icon-option">📷</button>
+                                <button type="button" onclick="selectIcon('🎬')" data-icon="🎬" class="icon-option">🎬</button>
+                                <button type="button" onclick="selectIcon('📚')" data-icon="📚" class="icon-option">📚</button>
+                                <button type="button" onclick="selectIcon('🛒')" data-icon="🛒" class="icon-option">🛒</button>
+                                <button type="button" onclick="selectIcon('💰')" data-icon="💰" class="icon-option">💰</button>
+                                <button type="button" onclick="selectIcon('🚀')" data-icon="🚀" class="icon-option">🚀</button>
+                                <button type="button" onclick="selectIcon('💡')" data-icon="💡" class="icon-option">💡</button>
+                                <button type="button" onclick="selectIcon('🔧')" data-icon="🔧" class="icon-option">🔧</button>
+                                <button type="button" onclick="selectIcon('📊')" data-icon="📊" class="icon-option">📊</button>
+                                <button type="button" onclick="selectIcon('🎯')" data-icon="🎯" class="icon-option">🎯</button>
+                                <button type="button" onclick="selectIcon('❤️')" data-icon="❤️" class="icon-option">❤️</button>
+                                <button type="button" onclick="selectIcon('✨')" data-icon="✨" class="icon-option">✨</button>
+                            </div>
+                            <input type="hidden" id="selectedIcon" value="🔗">
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-8">
+                        <button type="button" onclick="closeModal()" class="flex-1 bg-white/5 hover:bg-white/10 text-white py-3.5 rounded-xl font-semibold btn-custom border border-white/10">
+                            Batal
+                        </button>
+                        <button type="submit" id="submitBtn" class="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white py-3.5 rounded-xl font-semibold btn-custom shadow-lg shadow-purple-500/25">
+                            <span id="submitText">Simpan</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4">
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-4xl">🗑️</span>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Hapus Link?</h3>
+                <p class="text-gray-400 mb-6">Link ini akan dihapus secara permanen dari database.</p>
+                
+                <div class="flex gap-3">
+                    <button onclick="closeDeleteModal()" class="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-semibold btn-custom border border-white/10">
+                        Batal
+                    </button>
+                    <button onclick="confirmDelete()" id="deleteBtn" class="flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white py-3 rounded-xl font-semibold btn-custom">
+                        <span id="deleteText">Hapus</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-white">⚙️ Pengaturan Supabase</h3>
+                        <p class="text-gray-400 text-sm mt-1">Konfigurasi koneksi database</p>
+                    </div>
+                    <button onclick="closeSettingsModal()" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <form id="settingsForm" onsubmit="saveSettings(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-medium text-sm">Supabase URL</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co" 
+                                    class="flex-1 input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none text-sm">
+                                <button type="button" onclick="openQRScanner('url')" class="px-4 py-3 bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 rounded-xl transition-all flex items-center justify-center group" title="Scan QR Code">
+                                    <svg class="w-5 h-5 text-violet-400 group-hover:text-violet-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 mb-2 font-medium text-sm">Supabase Anon Key</label>
+                            <div class="flex gap-2">
+                                <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+                                    class="flex-1 input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none text-sm">
+                                <button type="button" onclick="openQRScanner('key')" class="px-4 py-3 bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 rounded-xl transition-all flex items-center justify-center group" title="Scan QR Code">
+                                    <svg class="w-5 h-5 text-violet-400 group-hover:text-violet-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- SQL Code Box -->
+                        <div class="bg-slate-950/50 border border-white/10 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <p class="text-emerald-400 text-sm font-medium">
+                                    <strong>📋 SQL untuk membuat tabel:</strong>
+                                </p>
+                                <button onclick="copySQLCode()" class="text-xs bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
+                                    <span id="copyIcon">📋</span>
+                                    <span id="copyText">Copy</span>
+                                </button>
+                            </div>
+                            <pre id="sqlCode" class="text-xs text-gray-300 bg-black/40 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">-- Buat tabel buttons
+CREATE TABLE buttons (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  url TEXT NOT NULL,
+  description TEXT,
+  color TEXT DEFAULT 'from-violet-500 to-purple-600',
+  icon TEXT DEFAULT '🔗',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE buttons ENABLE ROW LEVEL SECURITY;
+
+-- Policy untuk akses publik (development)
+CREATE POLICY "Enable all access" ON buttons
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Index untuk performa
+CREATE INDEX idx_buttons_created_at 
+  ON buttons(created_at DESC);</pre>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="closeSettingsModal()" class="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-semibold btn-custom border border-white/10">
+                            Batal
+                        </button>
+                        <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white py-3 rounded-xl font-semibold btn-custom">
+                            Simpan & Hubungkan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div id="qrScannerModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-[60] p-4">
+        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                            📷 Scan QR Code
+                        </h3>
+                        <p class="text-gray-400 text-sm mt-1" id="qrScannerLabel">Arahkan kamera ke QR Code</p>
+                    </div>
+                    <button onclick="closeQRScanner()" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Camera Preview -->
+                <div class="relative rounded-2xl overflow-hidden bg-black mb-4">
+                    <div id="qrReader" class="w-full" style="min-height: 300px;"></div>
+                    <div id="qrScannerLoading" class="absolute inset-0 flex items-center justify-center bg-slate-900">
+                        <div class="text-center">
+                            <div class="loading-spinner mx-auto mb-3"></div>
+                            <p class="text-gray-400 text-sm">Memulai kamera...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scan Result Preview -->
+                <div id="scanResultPreview" class="hidden bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-emerald-400">✓</span>
+                        <span class="text-emerald-400 font-medium text-sm">QR Code Terdeteksi!</span>
+                    </div>
+                    <p id="scanResultText" class="text-white text-sm font-mono bg-black/30 p-2 rounded-lg break-all"></p>
+                </div>
+                
+                <!-- Instructions -->
+                <div class="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4">
+                    <p class="text-violet-300 text-sm">
+                        💡 <strong>Tips:</strong> Pastikan QR Code terlihat jelas dalam bingkai kamera. Hasil scan akan otomatis dimasukkan ke kolom input.
+                    </p>
+                </div>
+                
+                <button onclick="closeQRScanner()" class="w-full mt-4 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-semibold btn-custom border border-white/10">
+                    Tutup Scanner
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="card-glass mt-10">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <p class="text-gray-400 text-sm">&copy; 2024 LinkHub Pro. Dibuat dengan ❤️ & Supabase</p>
+                <div class="flex items-center gap-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Bantuan</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Privasi</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Tentang</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Supabase Configuration
+        let supabase = null;
+        let buttons = [];
+        let selectedColor = 'from-violet-500 to-purple-600';
+        let selectedIcon = '🔗';
+        let deleteId = null;
+        let currentFilter = 'all';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            initializeApp();
+            
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', debounce(handleSearch, 300));
         });
-      });
-    });
-  </script>
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Load Supabase settings
+        function loadSettings() {
+            const url = localStorage.getItem('supabaseUrl');
+            const key = localStorage.getItem('supabaseKey');
+            
+            if (url && key) {
+                document.getElementById('supabaseUrl').value = url;
+                document.getElementById('supabaseKey').value = key;
+                initSupabase(url, key);
+            }
+        }
+
+        // Initialize Supabase
+        function initSupabase(url, key) {
+            try {
+                supabase = window.supabase.createClient(url, key);
+                updateStatus('connected', 'Terhubung');
+                return true;
+            } catch (error) {
+                console.error('Supabase init error:', error);
+                updateStatus('error', 'Error koneksi');
+                return false;
+            }
+        }
+
+        // Initialize app
+        async function initializeApp() {
+            if (supabase) {
+                await loadButtonsFromSupabase();
+            } else {
+                // Load from localStorage as fallback
+                loadButtonsFromLocalStorage();
+                updateStatus('local', 'Mode Lokal');
+            }
+        }
+
+        // Update connection status
+        function updateStatus(status, text) {
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            statusText.textContent = text;
+            
+            if (status === 'connected') {
+                indicator.className = 'w-2 h-2 rounded-full bg-emerald-500 status-indicator';
+                syncStatus.textContent = '✓';
+            } else if (status === 'error') {
+                indicator.className = 'w-2 h-2 rounded-full bg-red-500 status-indicator';
+                syncStatus.textContent = '✗';
+            } else if (status === 'syncing') {
+                indicator.className = 'w-2 h-2 rounded-full bg-yellow-500 status-indicator pulse-dot';
+                syncStatus.textContent = '...';
+            } else {
+                indicator.className = 'w-2 h-2 rounded-full bg-gray-500 status-indicator';
+                syncStatus.textContent = 'Lokal';
+            }
+        }
+
+        // Load buttons from Supabase
+        async function loadButtonsFromSupabase() {
+            updateStatus('syncing', 'Menyinkronkan...');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('buttons')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                buttons = data || [];
+                renderButtons();
+                updateStats();
+                updateStatus('connected', 'Terhubung');
+                showToast('Data berhasil dimuat dari Supabase', 'success');
+            } catch (error) {
+                console.error('Load error:', error);
+                showToast('Gagal memuat data: ' + error.message, 'error');
+                updateStatus('error', 'Error koneksi');
+                loadButtonsFromLocalStorage();
+            }
+        }
+
+        // Load from localStorage
+        function loadButtonsFromLocalStorage() {
+            const saved = localStorage.getItem('personalButtons');
+            if (saved) {
+                buttons = JSON.parse(saved);
+            }
+            renderButtons();
+            updateStats();
+        }
+
+        // Save to localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('personalButtons', JSON.stringify(buttons));
+        }
+
+        // Render buttons
+        function renderButtons() {
+            const container = document.getElementById('buttonContainer');
+            const buttonCount = document.getElementById('buttonCount');
+            
+            // Remove skeleton
+            container.querySelectorAll('.skeleton-item').forEach(el => el.remove());
+            
+            // Filter buttons
+            let filteredButtons = buttons;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (searchTerm) {
+                filteredButtons = filteredButtons.filter(btn => 
+                    btn.name.toLowerCase().includes(searchTerm) || 
+                    btn.url.toLowerCase().includes(searchTerm) ||
+                    (btn.description && btn.description.toLowerCase().includes(searchTerm))
+                );
+            }
+            
+            if (currentFilter === 'external') {
+                filteredButtons = filteredButtons.filter(btn => btn.url.startsWith('http'));
+            } else if (currentFilter === 'internal') {
+                filteredButtons = filteredButtons.filter(btn => !btn.url.startsWith('http'));
+            }
+            
+            container.innerHTML = '';
+            
+            if (filteredButtons.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-16">
+                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-4xl">${searchTerm ? '🔍' : '📭'}</span>
+                        </div>
+                        <h3 class="text-white font-semibold mb-2">${searchTerm ? 'Tidak ditemukan' : 'Belum ada link'}</h3>
+                        <p class="text-gray-400 text-sm">${searchTerm ? 'Coba kata kunci lain' : 'Klik "Tambah Link" untuk memulai!'}</p>
+                    </div>
+                `;
+            } else {
+                filteredButtons.forEach((btn) => {
+                    const isExternal = btn.url.startsWith('http');
+                    const buttonEl = document.createElement('div');
+                    buttonEl.className = 'relative group';
+                    buttonEl.innerHTML = `
+                        <a href="${btn.url}" target="_blank" rel="noopener noreferrer" 
+                           class="button-card block bg-gradient-to-br ${btn.color} text-white rounded-2xl p-5 shadow-lg">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="text-3xl">${btn.icon || '🔗'}</div>
+                                <div class="flex items-center gap-1 text-xs bg-white/20 px-2 py-1 rounded-full">
+                                    ${isExternal ? '🌐 External' : '📄 Internal'}
+                                </div>
+                            </div>
+                            <div class="font-bold text-lg truncate mb-1">${btn.name}</div>
+                            <div class="text-sm opacity-80 truncate">${btn.description || btn.url}</div>
+                            <div class="flex items-center gap-1 mt-3 text-xs opacity-60">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                                Buka di tab baru
+                            </div>
+                        </a>
+                        <div class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-2">
+                            <button onclick="event.preventDefault(); event.stopPropagation(); editButton('${btn.id}')" 
+                                class="bg-white/30 hover:bg-white/50 backdrop-blur-sm text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-110 shadow-lg">
+                                ✏️
+                            </button>
+                            <button onclick="event.preventDefault(); event.stopPropagation(); deleteButton('${btn.id}')" 
+                                class="bg-white/30 hover:bg-red-500 backdrop-blur-sm text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-110 shadow-lg">
+                                🗑️
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(buttonEl);
+                });
+            }
+            
+            buttonCount.textContent = `${filteredButtons.length} link`;
+        }
+
+        // Update stats
+        function updateStats() {
+            const total = buttons.length;
+            const external = buttons.filter(btn => btn.url.startsWith('http')).length;
+            const internal = total - external;
+            
+            document.getElementById('totalButtons').textContent = total;
+            document.getElementById('externalLinks').textContent = external;
+            document.getElementById('internalLinks').textContent = internal;
+        }
+
+        // Handle search
+        function handleSearch() {
+            renderButtons();
+        }
+
+        // Filter buttons
+        function filterButtons(filter) {
+            currentFilter = filter;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === filter) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            renderButtons();
+        }
+
+        // Open add modal
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Tambah Link Baru';
+            document.getElementById('editId').value = '';
+            document.getElementById('buttonForm').reset();
+            document.getElementById('buttonDesc').value = '';
+            selectColor('from-violet-500 to-purple-600');
+            selectIcon('🔗');
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal').classList.remove('flex');
+        }
+
+        // Select color
+        function selectColor(color) {
+            selectedColor = color;
+            document.getElementById('selectedColor').value = color;
+            
+            document.querySelectorAll('.color-option').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.color === color) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        // Select icon
+        function selectIcon(icon) {
+            selectedIcon = icon;
+            document.getElementById('selectedIcon').value = icon;
+            
+            document.querySelectorAll('.icon-option').forEach(btn => {
+                btn.classList.remove('selected');
+                if (btn.dataset.icon === icon) {
+                    btn.classList.add('selected');
+                }
+            });
+        }
+
+        // Save button
+        async function saveButton(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('buttonName').value.trim();
+            const url = document.getElementById('buttonUrl').value.trim();
+            const description = document.getElementById('buttonDesc').value.trim();
+            const color = document.getElementById('selectedColor').value;
+            const icon = document.getElementById('selectedIcon').value;
+            const editId = document.getElementById('editId').value;
+            
+            const buttonData = { 
+                name, 
+                url, 
+                description,
+                color, 
+                icon
+            };
+            
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitText').textContent = 'Menyimpan...';
+            
+            try {
+                if (supabase) {
+                    if (editId) {
+                        // Update existing
+                        const { error } = await supabase
+                            .from('buttons')
+                            .update(buttonData)
+                            .eq('id', editId);
+                        
+                        if (error) throw error;
+                        showToast('Link berhasil diperbarui!', 'success');
+                    } else {
+                        // Insert new
+                        const { error } = await supabase
+                            .from('buttons')
+                            .insert([buttonData]);
+                        
+                        if (error) throw error;
+                        showToast('Link berhasil ditambahkan!', 'success');
+                    }
+                    
+                    await loadButtonsFromSupabase();
+                } else {
+                    // Local storage fallback
+                    if (editId) {
+                        const index = buttons.findIndex(b => b.id === editId);
+                        if (index >= 0) {
+                            buttons[index] = { ...buttons[index], ...buttonData };
+                        }
+                    } else {
+                        buttonData.id = Date.now().toString();
+                        buttonData.created_at = new Date().toISOString();
+                        buttons.unshift(buttonData);
+                    }
+                    saveToLocalStorage();
+                    renderButtons();
+                    updateStats();
+                    showToast('Link berhasil disimpan (mode lokal)', 'success');
+                }
+                
+                closeModal();
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('Gagal menyimpan: ' + error.message, 'error');
+            } finally {
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitText').textContent = 'Simpan';
+            }
+        }
+
+        // Edit button
+        function editButton(id) {
+            const btn = buttons.find(b => b.id === id);
+            if (!btn) return;
+            
+            document.getElementById('modalTitle').textContent = 'Edit Link';
+            document.getElementById('editId').value = id;
+            document.getElementById('buttonName').value = btn.name;
+            document.getElementById('buttonUrl').value = btn.url;
+            document.getElementById('buttonDesc').value = btn.description || '';
+            selectColor(btn.color);
+            selectIcon(btn.icon || '🔗');
+            
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+
+        // Delete button
+        function deleteButton(id) {
+            deleteId = id;
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.getElementById('deleteModal').classList.add('flex');
+        }
+
+        // Close delete modal
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.getElementById('deleteModal').classList.remove('flex');
+            deleteId = null;
+        }
+
+        // Confirm delete
+        async function confirmDelete() {
+            if (!deleteId) return;
+            
+            document.getElementById('deleteBtn').disabled = true;
+            document.getElementById('deleteText').textContent = 'Menghapus...';
+            
+            try {
+                if (supabase) {
+                    const { error } = await supabase
+                        .from('buttons')
+                        .delete()
+                        .eq('id', deleteId);
+                    
+                    if (error) throw error;
+                    
+                    await loadButtonsFromSupabase();
+                    showToast('Link berhasil dihapus!', 'success');
+                } else {
+                    buttons = buttons.filter(b => b.id !== deleteId);
+                    saveToLocalStorage();
+                    renderButtons();
+                    updateStats();
+                    showToast('Link berhasil dihapus (mode lokal)', 'success');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showToast('Gagal menghapus: ' + error.message, 'error');
+            } finally {
+                document.getElementById('deleteBtn').disabled = false;
+                document.getElementById('deleteText').textContent = 'Hapus';
+                closeDeleteModal();
+            }
+        }
+
+        // Settings modal
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+            document.getElementById('settingsModal').classList.add('flex');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.add('hidden');
+            document.getElementById('settingsModal').classList.remove('flex');
+        }
+
+        // Save settings
+        async function saveSettings(event) {
+            event.preventDefault();
+            
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            
+            if (!url || !key) {
+                showToast('Mohon isi URL dan Key Supabase', 'error');
+                return;
+            }
+            
+            localStorage.setItem('supabaseUrl', url);
+            localStorage.setItem('supabaseKey', key);
+            
+            if (initSupabase(url, key)) {
+                closeSettingsModal();
+                showToast('Pengaturan tersimpan, menghubungkan...', 'success');
+                await loadButtonsFromSupabase();
+            }
+        }
+
+        // Show toast
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const bgColor = type === 'success' ? 'from-emerald-600 to-green-600' : 
+                           type === 'error' ? 'from-red-600 to-rose-600' : 
+                           'from-blue-600 to-indigo-600';
+            
+            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+            
+            toast.className = `toast bg-gradient-to-r ${bgColor} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3`;
+            toast.innerHTML = `
+                <span class="text-lg">${icon}</span>
+                <span class="font-medium">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Close modals on outside click
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+        
+        document.getElementById('settingsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeSettingsModal();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeDeleteModal();
+                closeSettingsModal();
+                closeQRScanner();
+            }
+        });
+
+        // ============================================
+        // QR Scanner Functions
+        // ============================================
+        let html5QrCode = null;
+        let currentScanTarget = null;
+
+        function openQRScanner(target) {
+            currentScanTarget = target;
+            const labelText = target === 'url' ? 'Scan QR untuk Supabase URL' : 'Scan QR untuk Anon Key';
+            document.getElementById('qrScannerLabel').textContent = labelText;
+            document.getElementById('scanResultPreview').classList.add('hidden');
+            document.getElementById('qrScannerLoading').classList.remove('hidden');
+            
+            document.getElementById('qrScannerModal').classList.remove('hidden');
+            document.getElementById('qrScannerModal').classList.add('flex');
+            
+            // Initialize QR Scanner
+            setTimeout(() => {
+                startQRScanner();
+            }, 300);
+        }
+
+        function closeQRScanner() {
+            document.getElementById('qrScannerModal').classList.add('hidden');
+            document.getElementById('qrScannerModal').classList.remove('flex');
+            
+            // Stop and cleanup scanner
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                }).catch(err => {
+                    console.log('Error stopping scanner:', err);
+                });
+            }
+            
+            currentScanTarget = null;
+        }
+
+        async function startQRScanner() {
+            try {
+                html5QrCode = new Html5Qrcode("qrReader");
+                
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0
+                };
+                
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                );
+                
+                document.getElementById('qrScannerLoading').classList.add('hidden');
+                
+            } catch (err) {
+                console.error('Failed to start scanner:', err);
+                document.getElementById('qrScannerLoading').innerHTML = `
+                    <div class="text-center p-6">
+                        <div class="text-4xl mb-3">📷</div>
+                        <p class="text-red-400 font-medium mb-2">Tidak dapat mengakses kamera</p>
+                        <p class="text-gray-400 text-sm">Pastikan Anda memberikan izin akses kamera pada browser.</p>
+                    </div>
+                `;
+                showToast('Gagal mengakses kamera: ' + err.message, 'error');
+            }
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            // Show result preview
+            document.getElementById('scanResultPreview').classList.remove('hidden');
+            document.getElementById('scanResultText').textContent = decodedText.length > 100 
+                ? decodedText.substring(0, 100) + '...' 
+                : decodedText;
+            
+            // Set the value to the appropriate input
+            if (currentScanTarget === 'url') {
+                document.getElementById('supabaseUrl').value = decodedText;
+            } else if (currentScanTarget === 'key') {
+                document.getElementById('supabaseKey').value = decodedText;
+            }
+            
+            showToast('QR Code berhasil discan!', 'success');
+            
+            // Auto close after short delay
+            setTimeout(() => {
+                closeQRScanner();
+            }, 1500);
+        }
+
+        function onScanFailure(error) {
+            // Silent fail - scanning continuously until success
+        }
+
+        // ============================================
+        // Copy SQL Code Function
+        // ============================================
+        function copySQLCode() {
+            const sqlCode = document.getElementById('sqlCode').textContent;
+            
+            navigator.clipboard.writeText(sqlCode).then(() => {
+                // Update button appearance
+                document.getElementById('copyIcon').textContent = '✓';
+                document.getElementById('copyText').textContent = 'Copied!';
+                
+                showToast('Kode SQL berhasil disalin!', 'success');
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    document.getElementById('copyIcon').textContent = '📋';
+                    document.getElementById('copyText').textContent = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showToast('Gagal menyalin kode', 'error');
+            });
+        }
+
+        // Close QR Scanner modal on outside click
+        document.getElementById('qrScannerModal').addEventListener('click', function(e) {
+            if (e.target === this) closeQRScanner();
+        });
+    </script>
 </body>
 </html>
