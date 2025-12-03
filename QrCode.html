@@ -5,12 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>QR & Barcode Scanner Pro</title>
 
-<!-- Libraries -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
-<!-- Fonts & Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
 
@@ -71,7 +69,6 @@ body {
     position: relative;
 }
 
-/* Background Effects */
 .bg-effects {
     position: fixed;
     inset: 0;
@@ -130,7 +127,6 @@ body {
     background-size: 50px 50px;
 }
 
-/* Main Container */
 .app-container {
     position: relative;
     z-index: 1;
@@ -141,7 +137,6 @@ body {
     gap: 20px;
 }
 
-/* Card Component */
 .card {
     background: var(--dark-card);
     border: 1px solid var(--dark-border);
@@ -151,7 +146,6 @@ body {
     -webkit-backdrop-filter: blur(20px);
 }
 
-/* Header */
 .header {
     text-align: center;
     padding-bottom: 8px;
@@ -201,7 +195,6 @@ body {
     font-weight: 400;
 }
 
-/* Scanner Section */
 .scanner-section {
     position: relative;
     aspect-ratio: 4/3;
@@ -238,7 +231,6 @@ body {
     font-size: 0.875rem;
 }
 
-/* Scanner Overlay Animation */
 .scanner-overlay {
     position: absolute;
     inset: 0;
@@ -289,7 +281,6 @@ body {
     50% { top: 90%; }
 }
 
-/* Buttons */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -361,7 +352,6 @@ body {
     color: white;
 }
 
-/* Button Grid */
 .btn-grid {
     display: grid;
     gap: 12px;
@@ -380,7 +370,6 @@ body {
     flex: 0 0 48px;
 }
 
-/* Toggle Switch */
 .toggle-container {
     display: flex;
     align-items: center;
@@ -442,7 +431,6 @@ body {
     background: white;
 }
 
-/* Output Display */
 .output-section {
     margin-top: 4px;
 }
@@ -490,7 +478,6 @@ body {
     color: var(--primary-light);
 }
 
-/* Action Buttons */
 .action-buttons {
     display: none;
     gap: 12px;
@@ -507,12 +494,6 @@ body {
     min-width: calc(50% - 6px);
 }
 
-.action-buttons .btn-full {
-    flex: 1 1 100%;
-    background: var(--gradient-accent);
-}
-
-/* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -531,7 +512,6 @@ body {
     background: var(--text-secondary);
 }
 
-/* File Input Hidden */
 #fileInput {
     display: none;
 }
@@ -540,7 +520,6 @@ body {
     display: none;
 }
 
-/* Toast Notification */
 .toast-container {
     position: fixed;
     bottom: 24px;
@@ -586,7 +565,6 @@ body {
     font-size: 20px;
 }
 
-/* Modal Base */
 .modal {
     position: fixed;
     inset: 0;
@@ -671,7 +649,6 @@ body {
     gap: 16px;
 }
 
-/* QR Modal */
 .qr-input {
     width: 100%;
     padding: 14px 16px;
@@ -716,7 +693,6 @@ body {
     flex: 1;
 }
 
-/* Result Modal - Fullscreen */
 #resultModal {
     padding: 0;
 }
@@ -787,7 +763,6 @@ body {
     gap: 12px;
 }
 
-/* PC Optimization for Result Modal */
 @media (min-width: 768px) {
     #resultModal .modal-header {
         padding: 20px 32px;
@@ -817,7 +792,6 @@ body {
     }
 }
 
-/* Responsive Design */
 @media (min-width: 768px) {
     .app-container {
         max-width: 480px;
@@ -875,7 +849,6 @@ body {
     }
 }
 
-/* Animations */
 @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -885,7 +858,6 @@ body {
     animation: pulse 2s ease-in-out infinite;
 }
 
-/* Loading Spinner */
 .spinner {
     width: 20px;
     height: 20px;
@@ -899,7 +871,6 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* Disable body scroll when modal open */
 body.modal-open {
     overflow: hidden;
 }
@@ -907,7 +878,6 @@ body.modal-open {
 </head>
 <body>
 
-<!-- Background Effects -->
 <div class="bg-effects">
     <div class="bg-gradient bg-gradient-1"></div>
     <div class="bg-gradient bg-gradient-2"></div>
@@ -915,10 +885,8 @@ body.modal-open {
     <div class="bg-grid"></div>
 </div>
 
-<!-- Main App -->
 <div class="app-container">
     <div class="card">
-        <!-- Header -->
         <div class="header">
             <div class="logo">
                 <span class="material-icons-round">qr_code_scanner</span>
@@ -927,7 +895,6 @@ body.modal-open {
             <p class="subtitle">Pindai QR & Barcode dengan mudah</p>
         </div>
 
-        <!-- Scanner -->
         <div class="scanner-section">
             <video id="liveVideo" autoplay playsinline></video>
             <div class="scanner-placeholder" id="scannerPlaceholder">
@@ -946,7 +913,6 @@ body.modal-open {
         </div>
         <canvas id="snapshot"></canvas>
 
-        <!-- Controls -->
         <div class="btn-grid" style="margin-top: 16px;">
             <div class="btn-row">
                 <button class="btn btn-primary" id="startCameraButton">
@@ -970,7 +936,6 @@ body.modal-open {
         </div>
         <input type="file" id="fileInput" accept="image/*">
 
-        <!-- Toggle -->
         <div class="toggle-container">
             <label class="toggle">
                 <input type="checkbox" id="luckyCheck">
@@ -980,7 +945,6 @@ body.modal-open {
             <span class="toggle-label" onclick="document.getElementById('luckyCheck').click()">Mode Dekripsi</span>
         </div>
 
-        <!-- Output -->
         <div class="output-section">
             <div class="output-box">
                 <div class="output-text info" id="output">✦ STATUS: SIAP</div>
@@ -994,19 +958,13 @@ body.modal-open {
                     <span class="material-icons-round">open_in_new</span>
                     <span class="label">Buka</span>
                 </button>
-                <button class="btn btn-full" id="scanAgainBtn">
-                    <span class="material-icons-round">qr_code_scanner</span>
-                    <span class="label">Scan Lagi</span>
-                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- QR Modal -->
 <div class="modal" id="qrModal">
     <div class="modal-backdrop" onclick="closeQRModal()"></div>
     <div class="modal-content">
@@ -1035,7 +993,6 @@ body.modal-open {
     </div>
 </div>
 
-<!-- Result Modal - Fullscreen -->
 <div class="modal" id="resultModal">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -1059,9 +1016,6 @@ body.modal-open {
 </div>
 
 <script>
-/* ============================================
-   DOM ELEMENTS
-============================================ */
 const liveVideo = document.getElementById('liveVideo');
 const snapshot = document.getElementById('snapshot');
 const output = document.getElementById('output');
@@ -1097,17 +1051,6 @@ let lastDecodedText = null;
 let track = null;
 let torchOn = false;
 
-// Scan history tracking for rescan capability
-let scanHistory = [];
-let lastScannedCode = null;
-let scanCooldown = false;
-const SCAN_COOLDOWN_MS = 1500; // Cooldown before same code can be scanned again
-
-const scanAgainBtn = document.getElementById('scanAgainBtn');
-
-/* ============================================
-   TOAST NOTIFICATIONS
-============================================ */
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
@@ -1136,9 +1079,6 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-/* ============================================
-   AUDIO FEEDBACK
-============================================ */
 function playBeep() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1157,9 +1097,6 @@ function playBeep() {
     }
 }
 
-/* ============================================
-   CAESAR CIPHER
-============================================ */
 function caesarDecipher(str, shift) {
     let result = '';
     for (let i = 0; i < str.length; i++) {
@@ -1175,17 +1112,11 @@ function caesarDecipher(str, shift) {
     return result;
 }
 
-/* ============================================
-   OUTPUT HELPERS
-============================================ */
 function setOutput(text, type = '') {
     output.textContent = text;
     output.className = 'output-text' + (type ? ' ' + type : '');
 }
 
-/* ============================================
-   MODAL HANDLERS
-============================================ */
 function openQRModal() {
     qrModal.classList.add('open');
     document.body.classList.add('modal-open');
@@ -1208,9 +1139,6 @@ function closeResultModal() {
     resultContainer.innerHTML = '';
 }
 
-/* ============================================
-   DECODED DATA DISPLAY
-============================================ */
 function showDecodedBase64(data) {
     setOutput('');
     resultContainer.innerHTML = '';
@@ -1243,15 +1171,12 @@ function showDecodedBase64(data) {
     }
 }
 
-/* ============================================
-   CAMERA FUNCTIONS
-============================================ */
 function stopCamera() {
     if (stream) {
         if (torchOn && track) {
             try {
                 track.applyConstraints({ advanced: [{ torch: false }] });
-            } catch (e) { /* ignore */ }
+            } catch (e) {}
             torchOn = false;
         }
         stream.getTracks().forEach(t => t.stop());
@@ -1290,7 +1215,6 @@ async function startCamera() {
         scannerPlaceholder.style.display = 'none';
         scannerOverlay.classList.add('active');
         
-        // Check torch capability
         try {
             const caps = track?.getCapabilities?.() || null;
             if (caps?.torch) {
@@ -1321,9 +1245,6 @@ function toggleCamera() {
     }
 }
 
-/* ============================================
-   FLASHLIGHT TOGGLE
-============================================ */
 flashlightBtn.addEventListener('click', async () => {
     if (!track) {
         showToast('Senter tidak tersedia', 'error');
@@ -1348,12 +1269,8 @@ flashlightBtn.addEventListener('click', async () => {
     }
 });
 
-/* ============================================
-   BARCODE DETECTION
-============================================ */
 function tryDecodeBarcodeFromCanvas(canvas) {
     return new Promise((resolve) => {
-        // Try native BarcodeDetector first
         if ('BarcodeDetector' in window) {
             try {
                 const formats = ["code_128", "code_39", "code_93", "ean_13", "ean_8", "upc_e", "upc_a", "itf", "codabar"];
@@ -1376,7 +1293,6 @@ function tryDecodeBarcodeFromCanvas(canvas) {
             }
         }
         
-        // Fallback to Quagga
         try {
             const src = canvas.toDataURL();
             if (window.Quagga?.decodeSingle) {
@@ -1408,9 +1324,6 @@ function tryDecodeBarcodeFromCanvas(canvas) {
     });
 }
 
-/* ============================================
-   QR SCANNING LOOP
-============================================ */
 function scanQRCode() {
     const ctx = snapshot.getContext('2d');
     
@@ -1442,7 +1355,6 @@ function scanQRCode() {
                 return;
             }
             
-            // Try barcode detection
             try {
                 const barcode = await tryDecodeBarcodeFromCanvas(snapshot);
                 if (barcode) {
@@ -1464,21 +1376,14 @@ function scanQRCode() {
     tick();
 }
 
-/* ============================================
-   PROCESS DECODED DATA
-============================================ */
 function processQRData(data) {
     lastDecodedData = null;
     actionButtons.classList.remove('show');
     lastDecodedDataLink = null;
     lastDecodedText = null;
     
-    // Add to scan history
-    addToScanHistory(data, data.length > 50 ? 'barcode' : 'qr');
-    
     const parts = data.split("||").map(p => p.trim());
     
-    // Check for decrypt mode
     if (luckyCheck.checked) {
         if (parts.length === 2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) {
             fetchAndDecrypt(parts[0], parseInt(parts[1]));
@@ -1499,9 +1404,6 @@ function processQRData(data) {
     }
 }
 
-/* ============================================
-   FETCH AND DECRYPT
-============================================ */
 async function fetchAndDecrypt(link, shift) {
     try {
         setOutput('⏳ Mengambil data...', 'info');
@@ -1516,9 +1418,6 @@ async function fetchAndDecrypt(link, shift) {
     }
 }
 
-/* ============================================
-   FILE INPUT HANDLING
-============================================ */
 fileInputBtn.addEventListener('click', () => fileInput.click());
 
 fileInput.addEventListener('change', (e) => {
@@ -1572,9 +1471,6 @@ fileInput.addEventListener('change', (e) => {
     reader.readAsDataURL(file);
 });
 
-/* ============================================
-   ACTION BUTTONS
-============================================ */
 copyTextBtn.addEventListener('click', async () => {
     if (lastDecodedText) {
         try {
@@ -1605,13 +1501,9 @@ downloadBtn.addEventListener('click', () => {
 });
 
 closePageBtn.addEventListener('click', () => {
-    // Refresh halaman saat tombol Tutup ditekan
     location.reload();
 });
 
-/* ============================================
-   QR GENERATOR
-============================================ */
 createQRBtn.addEventListener('click', openQRModal);
 
 qrText.addEventListener('input', generateQRFromInput);
@@ -1636,58 +1528,8 @@ downloadQRBtn.addEventListener('click', () => {
     showToast('QR Code diunduh!', 'success');
 });
 
-/* ============================================
-   SCAN AGAIN FUNCTIONALITY
-============================================ */
-scanAgainBtn.addEventListener('click', () => {
-    // Reset scan state to allow rescanning same code
-    lastScannedCode = null;
-    scanCooldown = false;
-    
-    // Clear current results but keep history
-    actionButtons.classList.remove('show');
-    
-    // Show ready message
-    setOutput('🔄 Siap scan ulang - Nyalakan kamera', 'info');
-    showToast('Siap untuk scan ulang!', 'info');
-    
-    // Auto start camera
-    startCamera();
-});
-
-/* ============================================
-   RESET SCAN STATE (for allowing same code rescan)
-============================================ */
-function resetScanState() {
-    lastScannedCode = null;
-    scanCooldown = false;
-}
-
-/* ============================================
-   ADD TO SCAN HISTORY
-============================================ */
-function addToScanHistory(code, type = 'qr') {
-    const timestamp = new Date().toLocaleTimeString('id-ID');
-    scanHistory.unshift({
-        code: code,
-        type: type,
-        time: timestamp
-    });
-    
-    // Keep only last 50 scans
-    if (scanHistory.length > 50) {
-        scanHistory.pop();
-    }
-    
-    lastScannedCode = code;
-}
-
-/* ============================================
-   EVENT LISTENERS
-============================================ */
 startCameraButton.addEventListener('click', toggleCamera);
 
-// Keyboard shortcuts
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (resultModal.classList.contains('open')) closeResultModal();
@@ -1695,7 +1537,6 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// Initialize
 setOutput('✦ STATUS: SIAP', 'info');
 </script>
 
