@@ -716,23 +716,105 @@ body {
     flex: 1;
 }
 
-/* Result Modal */
+/* Result Modal - Fullscreen */
+#resultModal {
+    padding: 0;
+}
+
+#resultModal .modal-backdrop {
+    background: var(--dark);
+}
+
+#resultModal .modal-content {
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background: var(--dark);
+}
+
+#resultModal .modal-header {
+    padding: 16px 20px;
+    margin: 0;
+    background: var(--dark-card);
+    border-bottom: 1px solid var(--dark-border);
+    flex-shrink: 0;
+}
+
+#resultModal .modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+}
+
 .result-container {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    max-height: 60vh;
     overflow: auto;
-    border-radius: var(--radius-md);
-    background: var(--dark-light);
+    background: var(--dark);
+    padding: 16px;
 }
 
 .result-container img,
 .result-container video {
     max-width: 100%;
-    max-height: 60vh;
+    max-height: 100%;
+    width: auto;
+    height: auto;
     object-fit: contain;
     border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+}
+
+#resultModal .modal-actions {
+    padding: 16px 20px;
+    margin: 0;
+    background: var(--dark-card);
+    border-top: 1px solid var(--dark-border);
+    flex-shrink: 0;
+    gap: 12px;
+}
+
+/* PC Optimization for Result Modal */
+@media (min-width: 768px) {
+    #resultModal .modal-header {
+        padding: 20px 32px;
+    }
+    
+    #resultModal .modal-actions {
+        padding: 20px 32px;
+    }
+    
+    .result-container {
+        padding: 32px;
+    }
+    
+    .result-container img,
+    .result-container video {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: var(--radius-lg);
+    }
+}
+
+@media (min-width: 1024px) {
+    .result-container img,
+    .result-container video {
+        max-width: 80%;
+        max-height: 85%;
+    }
 }
 
 /* Responsive Design */
@@ -953,22 +1035,19 @@ body.modal-open {
     </div>
 </div>
 
-<!-- Result Modal -->
+<!-- Result Modal - Fullscreen -->
 <div class="modal" id="resultModal">
-    <div class="modal-backdrop" onclick="closeResultModal()"></div>
+    <div class="modal-backdrop"></div>
     <div class="modal-content">
-        <button class="modal-close" onclick="closeResultModal()">
-            <span class="material-icons-round">close</span>
-        </button>
         <div class="modal-header">
             <h2 class="modal-title">Hasil Dekripsi</h2>
         </div>
         <div class="modal-body">
             <div class="result-container" id="resultContainer"></div>
             <div class="modal-actions" id="resultActions">
-                <button class="btn btn-secondary" id="closePageBtn" onclick="location.reload()">
-                    <span class="material-icons-round">refresh</span>
-                    <span class="label">Muat Ulang</span>
+                <button class="btn btn-secondary" id="closePageBtn">
+                    <span class="material-icons-round">close</span>
+                    <span class="label">Tutup</span>
                 </button>
                 <button class="btn btn-primary" id="downloadBtn">
                     <span class="material-icons-round">download</span>
@@ -1523,6 +1602,11 @@ downloadBtn.addEventListener('click', () => {
     a.download = lastDecodedData.startsWith('data:image/') ? 'hasil_dekripsi.png' : 'hasil_dekripsi';
     a.click();
     showToast('Mengunduh file...', 'success');
+});
+
+closePageBtn.addEventListener('click', () => {
+    // Refresh halaman saat tombol Tutup ditekan
+    location.reload();
 });
 
 /* ============================================
