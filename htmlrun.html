@@ -43,6 +43,46 @@
             display: flex;
             gap: 10px;
         }
+        .mobile-frame {
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 35px;
+            padding: 12px;
+            box-shadow: 
+                0 0 0 3px #0f0f23,
+                0 10px 40px rgba(0,0,0,0.5),
+                inset 0 0 20px rgba(255,255,255,0.05);
+            position: relative;
+        }
+        .mobile-frame::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 6px;
+            background: #0f0f23;
+            border-radius: 10px;
+        }
+        .mobile-frame::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 5px;
+            background: #0f0f23;
+            border-radius: 10px;
+        }
+        .mobile-screen {
+            border-radius: 25px;
+            overflow: hidden;
+            background: white;
+        }
+        .device-selector button.active {
+            background: #3b82f6 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen">
@@ -153,11 +193,42 @@
             <div id="recordsContainer" class="space-y-2 max-h-48 overflow-y-auto"></div>
         </div>
 
-        <!-- Preview -->
-        <div class="bg-gray-800 rounded-lg p-4">
-            <h2 class="text-lg font-semibold mb-3 text-green-400">👁️ Preview</h2>
-            <div class="bg-white rounded-lg overflow-hidden" style="min-height: 400px;">
-                <iframe id="preview" class="w-full h-96 border-0"></iframe>
+        <!-- Preview Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Desktop Preview -->
+            <div class="bg-gray-800 rounded-lg p-4">
+                <h2 class="text-lg font-semibold mb-3 text-green-400">🖥️ Desktop Preview</h2>
+                <div class="bg-white rounded-lg overflow-hidden" style="min-height: 500px;">
+                    <iframe id="preview" class="w-full border-0" style="height: 500px;"></iframe>
+                </div>
+            </div>
+
+            <!-- Mobile Preview -->
+            <div class="bg-gray-800 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-semibold text-purple-400">📱 Mobile Preview</h2>
+                    <div class="device-selector flex gap-2">
+                        <button onclick="setMobileSize('iphone')" id="btn-iphone" class="active bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-xs font-medium transition">
+                            iPhone (375px)
+                        </button>
+                        <button onclick="setMobileSize('android')" id="btn-android" class="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-xs font-medium transition">
+                            Android (360px)
+                        </button>
+                        <button onclick="setMobileSize('tablet')" id="btn-tablet" class="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-xs font-medium transition">
+                            Tablet (768px)
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-center items-start py-4 bg-gradient-to-b from-gray-700 to-gray-800 rounded-lg" style="min-height: 600px;">
+                    <div class="mobile-frame" id="mobileFrame">
+                        <div class="mobile-screen" id="mobileScreen" style="width: 375px; height: 667px;">
+                            <iframe id="previewMobile" class="w-full h-full border-0"></iframe>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-center text-gray-400 text-sm">
+                    <span id="deviceInfo">📱 iPhone SE - 375 x 667px</span>
+                </div>
             </div>
         </div>
 
@@ -171,6 +242,13 @@
         let isDarkMode = false;
         let isFullscreen = false;
         let isRunning = false;
+        let currentDevice = 'iphone';
+
+        const deviceSizes = {
+            iphone: { width: 375, height: 667, name: 'iPhone SE', icon: '📱' },
+            android: { width: 360, height: 740, name: 'Android', icon: '📱' },
+            tablet: { width: 768, height: 1024, name: 'iPad', icon: '📟' }
+        };
 
         const defaultCode = `<!DOCTYPE html>
 <html lang="en">
@@ -198,12 +276,22 @@
         button:hover {
             background: #059669;
         }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+                color: #8b5cf6;
+            }
+            .container {
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hello World!</h1>
         <p>Start coding...</p>
+        <p><small>Resize to see responsive design!</small></p>
         <button onclick="sayHello()">Click Me</button>
     </div>
     <script>
@@ -214,12 +302,39 @@
 </body>
 </html>`;
 
+        // Set mobile device size
+        function setMobileSize(device) {
+            currentDevice = device;
+            const size = deviceSizes[device];
+            const screen = document.getElementById('mobileScreen');
+            const frame = document.getElementById('mobileFrame');
+            
+            // Update screen size
+            screen.style.width = size.width + 'px';
+            screen.style.height = size.height + 'px';
+            
+            // Update device info
+            document.getElementById('deviceInfo').textContent = `${size.icon} ${size.name} - ${size.width} x ${size.height}px`;
+            
+            // Update button states
+            document.querySelectorAll('.device-selector button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('btn-' + device).classList.add('active');
+            
+            // Re-run code if already running
+            if (isRunning) {
+                runCode();
+            }
+        }
+
         // Save settings to localStorage
         function saveSettings() {
             const settings = {
                 code: htmlEditor.getValue(),
                 isDarkMode: isDarkMode,
-                codeId: document.getElementById('codeId').value
+                codeId: document.getElementById('codeId').value,
+                currentDevice: currentDevice
             };
             localStorage.setItem('htmlEditorSettings', JSON.stringify(settings));
         }
@@ -247,6 +362,11 @@
                     // Load code ID
                     if (settings.codeId) {
                         document.getElementById('codeId').value = settings.codeId;
+                    }
+                    
+                    // Load device size
+                    if (settings.currentDevice) {
+                        setMobileSize(settings.currentDevice);
                     }
                     
                     showToast('Settings restored from browser');
@@ -301,29 +421,40 @@
             }, 3000);
         }
 
-        // Run code in preview
+        // Run code in both previews
         function runCode() {
             const html = htmlEditor.getValue();
 
+            // Desktop preview
             const iframe = document.getElementById('preview');
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             iframeDoc.open();
             iframeDoc.write(html);
             iframeDoc.close();
 
+            // Mobile preview
+            const iframeMobile = document.getElementById('previewMobile');
+            const iframeMobileDoc = iframeMobile.contentDocument || iframeMobile.contentWindow.document;
+            iframeMobileDoc.open();
+            iframeMobileDoc.write(html);
+            iframeMobileDoc.close();
+
             isRunning = true;
             document.getElementById('runBtn').classList.add('hidden');
             document.getElementById('stopBtn').classList.remove('hidden');
 
-            showToast('Code executed successfully!');
+            showToast('Code executed in Desktop & Mobile!');
         }
 
         // Stop code execution
         function stopCode() {
-            const iframe = document.getElementById('preview');
+            const stopMessage = '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:Arial,sans-serif;color:#666;"><p>⏹️ Code execution stopped</p></body></html>';
             
-            // Clear the iframe by loading a blank page
-            iframe.srcdoc = '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:Arial,sans-serif;color:#666;"><p>⏹️ Code execution stopped</p></body></html>';
+            // Stop desktop preview
+            document.getElementById('preview').srcdoc = stopMessage;
+            
+            // Stop mobile preview
+            document.getElementById('previewMobile').srcdoc = stopMessage;
             
             isRunning = false;
             document.getElementById('runBtn').classList.remove('hidden');
@@ -376,7 +507,11 @@
             if (confirm('Are you sure you want to reset all code?')) {
                 htmlEditor.setValue('');
                 document.getElementById('preview').srcdoc = '';
+                document.getElementById('previewMobile').srcdoc = '';
                 document.getElementById('codeId').value = '';
+                isRunning = false;
+                document.getElementById('runBtn').classList.remove('hidden');
+                document.getElementById('stopBtn').classList.add('hidden');
                 showToast('All code has been reset!');
             }
         }
@@ -588,4 +723,4 @@
         }
     </script>
 </body>
-</html><style></style><script></script>
+</html>
