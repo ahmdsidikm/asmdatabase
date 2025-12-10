@@ -79,7 +79,7 @@
                     <span>🏷️</span> Kategori
                 </a>
                 <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-purple-100 transition" data-page="budget">
-                    <span>💸</span> Anggaran
+                    <span>🎯</span> Anggaran
                 </a>
                 <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-purple-100 transition" data-page="reports">
                     <span>📈</span> Laporan
@@ -1713,19 +1713,7 @@
                             <p class="text-right text-xs text-gray-500 mt-1">${percentage.toFixed(1)}% terpakai</p>
                         </div>
                         
-                        <!-- Daily Info -->
-                        ${!isExpired ? `
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <div class="bg-gray-50 p-3 rounded-xl text-center">
-                                <p class="text-xs text-gray-500">Budget/hari</p>
-                                <p class="font-bold text-purple-600">${formatCurrency(dailyBudget)}</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-xl text-center">
-                                <p class="text-xs text-gray-500">Sisa budget/hari</p>
-                                <p class="font-bold ${(b.amount - spent) / Math.max(remainingDays, 1) < 0 ? 'text-red-500' : 'text-green-600'}">${formatCurrency((b.amount - spent) / Math.max(remainingDays, 1))}</p>
-                            </div>
-                        </div>
-                        ` : ''}
+
                         
                         ${isOverBudget ? '<p class="text-red-500 text-sm font-medium mb-3">⚠️ Melebihi anggaran!</p>' : 
                           spendingStatus === 'over-pace' && !isExpired ? '<p class="text-yellow-600 text-sm font-medium mb-3">⚡ Pengeluaran lebih cepat dari target</p>' : 
