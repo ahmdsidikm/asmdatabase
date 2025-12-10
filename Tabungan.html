@@ -33,20 +33,10 @@
         .loading { pointer-events: none; opacity: 0.6; }
         .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #667eea; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .sync-indicator { position: fixed; bottom: 20px; left: 20px; z-index: 100; }
-        .online { background: #10b981; }
-        .offline { background: #ef4444; }
-        .syncing { background: #f59e0b; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
-    <!-- Sync Indicator -->
-    <div id="syncIndicator" class="sync-indicator flex items-center gap-2 bg-white px-3 py-2 rounded-full shadow-lg text-sm">
-        <div id="syncDot" class="w-3 h-3 rounded-full online"></div>
-        <span id="syncText">Terhubung</span>
-    </div>
-
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] hidden">
         <div class="bg-white p-6 rounded-2xl flex flex-col items-center gap-4">
@@ -892,14 +882,7 @@
         }
 
         function setSyncStatus(status) {
-            const dot = document.getElementById('syncDot');
-            const text = document.getElementById('syncText');
-            dot.className = 'w-3 h-3 rounded-full ' + status;
-            switch(status) {
-                case 'online': text.textContent = 'Terhubung'; break;
-                case 'offline': text.textContent = 'Offline'; break;
-                case 'syncing': text.textContent = 'Menyinkronkan...'; break;
-            }
+            // Status indicator removed - function kept for compatibility
         }
 
         // ===================== UTILITIES =====================
