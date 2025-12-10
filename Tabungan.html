@@ -336,20 +336,24 @@
                         <h2 class="text-2xl font-bold text-gray-800">Anggaran Bulanan</h2>
                         <p class="text-gray-500">Atur batas pengeluaran per kategori</p>
                     </div>
-                    <button onclick="openModal('budgetModal')" class="bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition flex items-center gap-2">
+                    <button onclick="openBudgetModal()" class="bg-purple-600 text-white px-6 py-3 rounded-xl hover:bg-purple-700 transition flex items-center gap-2">
                         <span>➕</span> Tambah Anggaran
                     </button>
                 </div>
 
                 <!-- Budget Overview -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm">
-                        <p class="text-gray-500 text-sm">Total Anggaran</p>
-                        <p id="totalBudget" class="text-2xl font-bold text-purple-600">Rp 0</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-purple-500 to-purple-700 p-6 rounded-2xl text-white shadow-lg">
+                        <p class="text-purple-200 text-sm">Total Anggaran</p>
+                        <p id="totalBudget" class="text-2xl font-bold mt-1">Rp 0</p>
                     </div>
-                    <div class="bg-white p-6 rounded-2xl shadow-sm">
-                        <p class="text-gray-500 text-sm">Sisa Anggaran</p>
-                        <p id="remainingBudget" class="text-2xl font-bold text-green-600">Rp 0</p>
+                    <div class="bg-gradient-to-br from-green-500 to-green-700 p-6 rounded-2xl text-white shadow-lg">
+                        <p class="text-green-200 text-sm">Sisa Anggaran</p>
+                        <p id="remainingBudget" class="text-2xl font-bold mt-1">Rp 0</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-700 p-6 rounded-2xl text-white shadow-lg">
+                        <p class="text-blue-200 text-sm">Anggaran Aktif</p>
+                        <p id="activeBudgetCount" class="text-2xl font-bold mt-1">0</p>
                     </div>
                 </div>
 
@@ -741,12 +745,13 @@
 
     <!-- Budget Modal -->
     <div id="budgetModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+        <div class="bg-white rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Tambah Anggaran</h3>
+                <h3 id="budgetModalTitle" class="text-lg font-semibold">Tambah Anggaran</h3>
                 <button onclick="closeModal('budgetModal')" class="text-gray-400 hover:text-gray-600">✕</button>
             </div>
             <form id="budgetForm" class="space-y-4">
+                <input type="hidden" id="budgetId">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
                     <select id="budgetCategory" class="w-full p-3 border rounded-xl" required>
@@ -754,8 +759,22 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Batas Anggaran Bulanan</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Batas Anggaran</label>
                     <input type="number" id="budgetAmount" class="w-full p-3 border rounded-xl" placeholder="0" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">📅 Tanggal Mulai</label>
+                        <input type="date" id="budgetStartDate" class="w-full p-3 border rounded-xl" required onchange="updateBudgetPreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">📅 Tanggal Selesai</label>
+                        <input type="date" id="budgetEndDate" class="w-full p-3 border rounded-xl" required onchange="updateBudgetPreview()">
+                    </div>
+                </div>
+                <div id="budgetPeriodInfo" class="bg-blue-50 p-4 rounded-xl">
+                    <p class="text-sm text-blue-700 mb-2">📊 Info Periode:</p>
+                    <p class="text-sm text-blue-600" id="budgetPeriodPreview">Pilih tanggal untuk melihat durasi</p>
                 </div>
                 <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition font-medium">
                     Simpan Anggaran
@@ -1027,6 +1046,10 @@
             if (form) form.reset();
             document.getElementById('accountId').value = '';
             document.getElementById('transactionId').value = '';
+            document.getElementById('budgetId').value = '';
+            // Re-enable budget category select
+            const budgetCatSelect = document.getElementById('budgetCategory');
+            if (budgetCatSelect) budgetCatSelect.disabled = false;
         }
 
         // ===================== ACCOUNTS =====================
@@ -1502,41 +1525,149 @@
         }
 
         // ===================== BUDGET =====================
-        async function renderBudgets() {
-            const container = document.getElementById('budgetList');
+        function formatDateShort(date) {
+            return new Date(date).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+        
+        function updateBudgetPreview() {
+            const startDate = document.getElementById('budgetStartDate').value;
+            const endDate = document.getElementById('budgetEndDate').value;
+            const preview = document.getElementById('budgetPeriodPreview');
+            
+            if (!startDate || !endDate) {
+                preview.innerHTML = 'Pilih tanggal untuk melihat durasi';
+                return;
+            }
+            
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = end - start;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays <= 0) {
+                preview.innerHTML = '<span class="text-red-500">⚠️ Tanggal selesai harus setelah tanggal mulai!</span>';
+                return;
+            }
+            
+            const amount = parseFloat(document.getElementById('budgetAmount').value) || 0;
+            const dailyBudget = amount > 0 ? amount / diffDays : 0;
+            
+            preview.innerHTML = `
+                <div class="space-y-1">
+                    <p><strong>${formatDateShort(start)}</strong> s/d <strong>${formatDateShort(end)}</strong></p>
+                    <p class="text-xs">📆 Durasi: <strong>${diffDays} hari</strong></p>
+                    ${amount > 0 ? `<p class="text-xs">💰 Budget per hari: <strong>${formatCurrency(dailyBudget)}</strong></p>` : ''}
+                </div>
+            `;
+        }
+        
+        function openBudgetModal(isEdit = false, budgetData = null) {
+            document.getElementById('budgetModalTitle').textContent = isEdit ? 'Edit Anggaran' : 'Tambah Anggaran';
+            document.getElementById('budgetId').value = budgetData?.id || '';
+            
             const budgetCategorySelect = document.getElementById('budgetCategory');
-
             budgetCategorySelect.innerHTML = '<option value="">Pilih kategori</option>' + 
                 cache.categories.expense.map(c => `<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+            
+            if (isEdit && budgetData) {
+                budgetCategorySelect.value = budgetData.category_id;
+                budgetCategorySelect.disabled = true;
+                document.getElementById('budgetAmount').value = budgetData.amount;
+                document.getElementById('budgetStartDate').value = budgetData.start_date;
+                document.getElementById('budgetEndDate').value = budgetData.end_date;
+            } else {
+                budgetCategorySelect.disabled = false;
+                document.getElementById('budgetAmount').value = '';
+                // Set default dates
+                const today = new Date();
+                const endDate = new Date(today);
+                endDate.setMonth(endDate.getMonth() + 1);
+                document.getElementById('budgetStartDate').value = today.toISOString().split('T')[0];
+                document.getElementById('budgetEndDate').value = endDate.toISOString().split('T')[0];
+            }
+            
+            updateBudgetPreview();
+            openModal('budgetModal');
+        }
+        
+        // Add event listener for budget amount change
+        document.getElementById('budgetAmount').addEventListener('input', updateBudgetPreview);
+        
+        async function renderBudgets() {
+            const container = document.getElementById('budgetList');
 
             if (cache.budgets.length === 0) {
                 container.innerHTML = '<div class="bg-white p-6 rounded-2xl shadow-sm text-center text-gray-400">Belum ada anggaran yang diatur</div>';
                 document.getElementById('totalBudget').textContent = formatCurrency(0);
                 document.getElementById('remainingBudget').textContent = formatCurrency(0);
+                document.getElementById('activeBudgetCount').textContent = '0';
                 return;
             }
 
-            const startOfMonth = new Date();
-            startOfMonth.setDate(1);
-            startOfMonth.setHours(0, 0, 0, 0);
-
             let totalBudget = 0;
             let totalSpent = 0;
+            let activeCount = 0;
 
             container.innerHTML = cache.budgets.map(b => {
                 const category = cache.categories.expense.find(c => c.id === b.category_id);
+                
+                // Calculate period based on start_date
+                const startDate = b.start_date ? new Date(b.start_date) : new Date(b.created_at);
+                const endDate = b.end_date ? new Date(b.end_date) : new Date(startDate);
+                if (!b.end_date) {
+                    endDate.setMonth(endDate.getMonth() + 1);
+                }
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const diffTime = endDate - today;
+                const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                const elapsedDays = Math.max(totalDays - remainingDays, 0);
+                
+                const isExpired = remainingDays <= 0;
+                
+                if (!isExpired) activeCount++;
+                
+                // Calculate spent within the budget period
                 const spent = cache.transactions
-                    .filter(t => t.type === 'expense' && t.category_id === b.category_id && new Date(t.transaction_date) >= startOfMonth)
+                    .filter(t => {
+                        const tDate = new Date(t.transaction_date);
+                        return t.type === 'expense' && 
+                               t.category_id === b.category_id && 
+                               tDate >= startDate && 
+                               tDate <= endDate;
+                    })
                     .reduce((sum, t) => sum + parseFloat(t.amount), 0);
                 
                 const percentage = Math.min((spent / b.amount) * 100, 100);
                 const isOverBudget = spent > b.amount;
+                
+                // Daily budget calculation
+                const dailyBudget = totalDays > 0 ? b.amount / totalDays : 0;
+                const idealSpent = dailyBudget * elapsedDays;
+                const spendingStatus = spent <= idealSpent ? 'on-track' : 'over-pace';
 
-                totalBudget += parseFloat(b.amount);
-                totalSpent += spent;
+                if (!isExpired) {
+                    totalBudget += parseFloat(b.amount);
+                    totalSpent += spent;
+                }
+
+                // Prepare budget data for reset/edit
+                const budgetDataStr = JSON.stringify({
+                    id: b.id,
+                    category_id: b.category_id,
+                    amount: b.amount,
+                    start_date: b.start_date,
+                    end_date: b.end_date
+                }).replace(/"/g, '&quot;');
 
                 return `
-                    <div class="bg-white p-6 rounded-2xl shadow-sm">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm ${isExpired ? 'border-2 border-orange-300 bg-orange-50' : ''}">
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex items-center gap-3">
                                 <span class="text-3xl">${category?.icon || '📦'}</span>
@@ -1545,9 +1676,33 @@
                                     <p class="text-sm text-gray-500">Anggaran: ${formatCurrency(b.amount)}</p>
                                 </div>
                             </div>
-                            <button onclick="deleteBudget('${b.id}')" class="text-gray-400 hover:text-red-500">🗑️</button>
+                            <div class="flex items-center gap-2">
+                                ${isExpired ? '<span class="bg-orange-200 text-orange-700 px-2 py-1 rounded-full text-xs font-medium">⏰ Berakhir</span>' : 
+                                  remainingDays <= 7 ? '<span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">⚡ Segera</span>' : 
+                                  '<span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">✅ Aktif</span>'}
+                                <button onclick="editBudget('${b.id}')" class="text-gray-400 hover:text-blue-500" title="Edit">✏️</button>
+                                <button onclick="deleteBudget('${b.id}')" class="text-gray-400 hover:text-red-500" title="Hapus">🗑️</button>
+                            </div>
                         </div>
-                        <div class="mb-2">
+                        
+                        <!-- Period Info -->
+                        <div class="bg-blue-50 p-3 rounded-xl mb-4">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-blue-600">📅 Periode:</span>
+                                <span class="font-medium text-blue-700">${formatDateShort(startDate)} - ${formatDateShort(endDate)}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm mt-1">
+                                <span class="text-blue-600">⏳ Sisa waktu:</span>
+                                <span class="font-bold ${isExpired ? 'text-orange-600' : remainingDays <= 7 ? 'text-red-600' : 'text-blue-700'}">${isExpired ? 'Sudah berakhir' : remainingDays + ' hari lagi'}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm mt-1">
+                                <span class="text-blue-600">📊 Durasi total:</span>
+                                <span class="text-blue-700">${totalDays} hari</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Budget Progress -->
+                        <div class="mb-3">
                             <div class="flex justify-between text-sm mb-1">
                                 <span>${formatCurrency(spent)} terpakai</span>
                                 <span class="${isOverBudget ? 'text-red-500' : 'text-green-600'}">${formatCurrency(b.amount - spent)} sisa</span>
@@ -1555,39 +1710,142 @@
                             <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
                                 <div class="h-full ${isOverBudget ? 'bg-red-500' : percentage > 80 ? 'bg-yellow-500' : 'bg-green-500'} rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                             </div>
+                            <p class="text-right text-xs text-gray-500 mt-1">${percentage.toFixed(1)}% terpakai</p>
                         </div>
-                        ${isOverBudget ? '<p class="text-red-500 text-sm font-medium">⚠️ Melebihi anggaran!</p>' : ''}
+                        
+                        <!-- Daily Info -->
+                        ${!isExpired ? `
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="bg-gray-50 p-3 rounded-xl text-center">
+                                <p class="text-xs text-gray-500">Budget/hari</p>
+                                <p class="font-bold text-purple-600">${formatCurrency(dailyBudget)}</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-xl text-center">
+                                <p class="text-xs text-gray-500">Sisa budget/hari</p>
+                                <p class="font-bold ${(b.amount - spent) / Math.max(remainingDays, 1) < 0 ? 'text-red-500' : 'text-green-600'}">${formatCurrency((b.amount - spent) / Math.max(remainingDays, 1))}</p>
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${isOverBudget ? '<p class="text-red-500 text-sm font-medium mb-3">⚠️ Melebihi anggaran!</p>' : 
+                          spendingStatus === 'over-pace' && !isExpired ? '<p class="text-yellow-600 text-sm font-medium mb-3">⚡ Pengeluaran lebih cepat dari target</p>' : 
+                          !isExpired ? '<p class="text-green-600 text-sm font-medium mb-3">✅ Pengeluaran sesuai target</p>' : ''}
+                        
+                        ${isExpired ? `
+                        <div class="bg-orange-100 p-4 rounded-xl mb-3">
+                            <p class="text-orange-700 text-sm font-medium mb-2">⏰ Periode anggaran telah berakhir!</p>
+                            <p class="text-orange-600 text-xs">Anda bisa memperpanjang atau reset anggaran ini.</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="resetBudget('${b.id}', ${b.amount})" class="bg-green-600 text-white py-2 px-3 rounded-xl hover:bg-green-700 transition text-sm font-medium flex items-center justify-center gap-1">
+                                🔄 Reset Baru
+                            </button>
+                            <button onclick="extendBudget('${b.id}')" class="bg-blue-600 text-white py-2 px-3 rounded-xl hover:bg-blue-700 transition text-sm font-medium flex items-center justify-center gap-1">
+                                ➕ Perpanjang
+                            </button>
+                        </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
 
             document.getElementById('totalBudget').textContent = formatCurrency(totalBudget);
             document.getElementById('remainingBudget').textContent = formatCurrency(totalBudget - totalSpent);
+            document.getElementById('activeBudgetCount').textContent = activeCount;
+        }
+        
+        async function editBudget(id) {
+            const budget = cache.budgets.find(b => b.id === id);
+            if (!budget) return;
+            
+            openBudgetModal(true, budget);
+        }
+        
+        async function resetBudget(id, amount) {
+            if (!confirm('Reset anggaran ini untuk periode baru mulai dari hari ini?')) return;
+            
+            const today = new Date();
+            const endDate = new Date(today);
+            endDate.setMonth(endDate.getMonth() + 1);
+            
+            setSyncStatus('syncing');
+            try {
+                const { error } = await supabase.from('budgets').update({
+                    amount: amount,
+                    start_date: today.toISOString().split('T')[0],
+                    end_date: endDate.toISOString().split('T')[0]
+                }).eq('id', id);
+                
+                if (error) throw error;
+                
+                await loadAllData();
+                renderBudgets();
+                showToast('Anggaran berhasil di-reset untuk periode baru!');
+            } catch (error) {
+                showToast('Error: ' + error.message, true);
+            }
+            setSyncStatus('online');
+        }
+        
+        async function extendBudget(id) {
+            const budget = cache.budgets.find(b => b.id === id);
+            if (!budget) return;
+            
+            // Open modal with current budget data, but set new dates starting from today
+            const today = new Date();
+            const endDate = new Date(today);
+            endDate.setMonth(endDate.getMonth() + 1);
+            
+            openBudgetModal(true, {
+                ...budget,
+                start_date: today.toISOString().split('T')[0],
+                end_date: endDate.toISOString().split('T')[0]
+            });
         }
 
         document.getElementById('budgetForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            const budgetId = document.getElementById('budgetId').value;
             const categoryId = document.getElementById('budgetCategory').value;
+            const startDate = document.getElementById('budgetStartDate').value;
+            const endDate = document.getElementById('budgetEndDate').value;
+            
+            // Validate dates
+            if (new Date(endDate) <= new Date(startDate)) {
+                showToast('Tanggal selesai harus setelah tanggal mulai!', true);
+                return;
+            }
 
-            if (cache.budgets.some(b => b.category_id === categoryId)) {
+            // Check duplicate category only for new budget
+            if (!budgetId && cache.budgets.some(b => b.category_id === categoryId)) {
                 showToast('Anggaran untuk kategori ini sudah ada!', true);
                 return;
             }
 
             const budgetData = {
                 category_id: categoryId,
-                amount: parseFloat(document.getElementById('budgetAmount').value)
+                amount: parseFloat(document.getElementById('budgetAmount').value),
+                start_date: startDate,
+                end_date: endDate
             };
 
             setSyncStatus('syncing');
             try {
-                const { error } = await supabase.from('budgets').insert([budgetData]);
-                if (error) throw error;
+                if (budgetId) {
+                    // Update existing budget
+                    const { error } = await supabase.from('budgets').update(budgetData).eq('id', budgetId);
+                    if (error) throw error;
+                    showToast('Anggaran berhasil diperbarui!');
+                } else {
+                    // Insert new budget
+                    const { error } = await supabase.from('budgets').insert([budgetData]);
+                    if (error) throw error;
+                    showToast('Anggaran berhasil ditambahkan!');
+                }
 
                 await loadAllData();
                 closeModal('budgetModal');
                 renderBudgets();
-                showToast('Anggaran berhasil ditambahkan!');
             } catch (error) {
                 showToast('Error: ' + error.message, true);
             }
