@@ -1,0 +1,23 @@
+-- Enable extensions if not already (Supabase biasanya punya pgcrypto)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE public.targets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NULL,                -- optional: referensi ke users jika multi-user
+  name text NOT NULL,
+  target_amount numeric(14,2) NOT NULL DEFAULT 0,   -- jumlah yang ingin dicapai
+  current_amount numeric(14,2) NOT NULL DEFAULT 0,  -- sudah terkumpul
+  daily_amount numeric(14,2) NULL,   -- dihitung pada client, boleh NULL
+  start_date date NOT NULL DEFAULT (current_date),
+  target_date date NOT NULL,
+  icon text NULL,
+  note text NULL,
+  status text NOT NULL DEFAULT 'active', -- 'active','completed','paused' etc.
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Indexes untuk query cepat
+CREATE INDEX idx_targets_user_id ON public.targets (user_id);
+CREATE INDEX idx_targets_status ON public.targets (status);
+CREATE INDEX idx_targets_target_date ON public.targets (target_date);
