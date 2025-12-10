@@ -698,7 +698,7 @@
 
     <!-- Category Modal -->
     <div id="categoryModal" class="modal fixed inset-0 bg-black/50 items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md p-6">
+        <div class="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">Tambah Kategori</h3>
                 <button onclick="closeModal('categoryModal')" class="text-gray-400 hover:text-gray-600">✕</button>
@@ -716,24 +716,337 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Icon</label>
-                    <div class="grid grid-cols-8 gap-2" id="iconPicker">
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍔" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🍔</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛒" class="hidden peer" checked><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🛒</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚗" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🚗</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏠" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🏠</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💡" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">💡</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📱" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">📱</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎮" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🎮</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👕" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">👕</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💊" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">💊</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="✈️" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">✈️</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎓" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🎓</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💼" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">💼</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💰" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">💰</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎁" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🎁</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💵" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">💵</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏦" class="hidden peer"><div class="text-2xl p-2 rounded-lg peer-checked:bg-purple-100">🏦</div></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Icon</label>
+                    <div class="max-h-80 overflow-y-auto border rounded-xl p-3">
+                        <!-- Makanan & Minuman -->
+                        <p class="text-xs text-gray-500 font-medium mb-2 mt-1">🍽️ Makanan & Minuman</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3" id="iconPicker">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍔" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍔</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍕" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍕</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍜" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍜</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍛" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍛</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍱" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍱</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍣" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍣</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍝" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍝</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍲" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍲</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍗" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍗</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍖" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍖</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥩" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥩</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥗" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥗</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥘" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥘</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍞" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍞</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥐" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥐</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍰" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍰</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎂" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎂</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍦" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍦</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍩" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍩</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍪" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍪</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="☕" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">☕</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍵" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍵</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥤" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥤</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧃" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧃</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍺" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍺</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍷" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍷</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥛" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥛</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧋" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧋</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍿" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍿</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥡" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥡</div></label>
+                        </div>
+
+                        <!-- Belanja & Toko -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">🛒 Belanja & Toko</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛒" class="hidden peer" checked><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛒</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛍️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛍️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏪" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏪</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏬" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏬</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏷️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏷️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💳" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💳</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧾" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧾</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📦" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📦</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎁" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎁</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎀" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎀</div></label>
+                        </div>
+
+                        <!-- Transportasi -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">🚗 Transportasi</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚗" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚗</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚕" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚕</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚙" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚙</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏍️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏍️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛵" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛵</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚌" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚌</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚎" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚎</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚂" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚂</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚇" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚇</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="✈️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">✈️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚁" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚁</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛳️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛳️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⛽" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⛽</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🅿️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🅿️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚲" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚲</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛴" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛴</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛞" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛞</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚦" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚦</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛣️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛣️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚏" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚏</div></label>
+                        </div>
+
+                        <!-- Rumah & Utilitas -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">🏠 Rumah & Utilitas</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏠" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏠</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏡" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏡</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏢" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏢</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏨" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏨</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💡" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💡</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔌" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔌</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💧" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💧</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔥" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔥</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="❄️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">❄️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛋️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛋️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛏️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛏️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚿" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚿</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛁" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛁</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧹" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧹</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧺" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧺</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🪣" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🪣</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔧" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔧</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔨" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔨</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🪴" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🪴</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🗑️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🗑️</div></label>
+                        </div>
+
+                        <!-- Kesehatan -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">🏥 Kesehatan</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏥" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏥</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💊" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💊</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💉" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💉</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🩺" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🩺</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🩹" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🩹</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏃" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏃</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧘" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧘</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🦷" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🦷</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👓" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👓</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🩻" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🩻</div></label>
+                        </div>
+
+                        <!-- Pendidikan & Kerja -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">🎓 Pendidikan & Kerja</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎓" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎓</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📚" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📚</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📖" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📖</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📝" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📝</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="✏️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">✏️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏫" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏫</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💼" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💼</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🗂️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🗂️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📋" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📋</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📊" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📊</div></label>
+                        </div>
+
+                        <!-- Teknologi & Gadget -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">📱 Teknologi & Gadget</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📱" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📱</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💻" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💻</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🖥️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🖥️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⌨️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⌨️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🖨️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🖨️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📷" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📷</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📹" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📹</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎧" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎧</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎤" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎤</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📺" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📺</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📻" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📻</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔋" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔋</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⌚" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⌚</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎮" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎮</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🕹️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🕹️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💾" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💾</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💿" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💿</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📡" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📡</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔦" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔦</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📠" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📠</div></label>
+                        </div>
+
+                        <!-- Hiburan & Liburan -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">🎬 Hiburan & Liburan</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎬" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎬</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎭" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎭</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎪" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎪</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎢" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎢</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎡" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎡</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎠" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎠</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏖️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏖️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏕️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏕️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏝️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏝️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⛱️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⛱️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎸" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎸</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎹" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎹</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎺" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎺</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎻" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎻</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥁" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥁</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎵" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎵</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎶" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎶</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎯" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎯</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎲" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎲</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧩" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧩</div></label>
+                        </div>
+
+                        <!-- Olahraga -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">⚽ Olahraga</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⚽" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⚽</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏀" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏀</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏈" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏈</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⚾" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⚾</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎾" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎾</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏐" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏐</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏓" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏓</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏸" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏸</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏊" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏊</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏋️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏋️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🚴" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🚴</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏌️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏌️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⛳" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⛳</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎿" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎿</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⛷️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⛷️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏂" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏂</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥊" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥊</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🥋" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🥋</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎣" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎣</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏆" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏆</div></label>
+                        </div>
+
+                        <!-- Fashion & Kecantikan -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">👗 Fashion & Kecantikan</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👕" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👕</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👔" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👔</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👗" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👗</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👖" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👖</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👠" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👠</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👟" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👟</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👞" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👞</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👜" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👜</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👛" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👛</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎒" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎒</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧢" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧢</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👒" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👒</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧣" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧣</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧤" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧤</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💄" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💄</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💅" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💅</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💍" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💍</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💎" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💎</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🕶️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🕶️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧴" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧴</div></label>
+                        </div>
+
+                        <!-- Keuangan & Bisnis -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">💰 Keuangan & Bisnis</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💰" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💰</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💵" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💵</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💴" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💴</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💶" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💶</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💷" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💷</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏦" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏦</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏧" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏧</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💹" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💹</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📈" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📈</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📉" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📉</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🪙" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🪙</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💎" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💎</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧾" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧾</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📑" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📑</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏛️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏛️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏗️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏗️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏭" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏭</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏢" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏢</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📊" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📊</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💼" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💼</div></label>
+                        </div>
+
+                        <!-- Keluarga & Anak -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">👨‍👩‍👧 Keluarga & Anak</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👶" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👶</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🍼" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🍼</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧒" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧒</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="👨‍👩‍👧" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">👨‍👩‍👧</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🧸" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🧸</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎈" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎈</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎂" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎂</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎉" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎉</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎊" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎊</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎁" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎁</div></label>
+                        </div>
+
+                        <!-- Hewan Peliharaan -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">🐾 Hewan Peliharaan</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐶" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐶</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐱" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐱</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐰" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐰</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐹" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐹</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐦" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐦</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐠" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐠</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐢" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐢</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🦎" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🦎</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🐾" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🐾</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🦴" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🦴</div></label>
+                        </div>
+
+                        <!-- Komunikasi -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">📞 Komunikasi</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📞" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📞</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📱" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📱</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📧" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📧</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📨" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📨</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📬" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📬</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📮" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📮</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🌐" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🌐</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📡" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📡</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📶" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📶</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💬" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💬</div></label>
+                        </div>
+
+                        <!-- Sosial & Donasi -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">❤️ Sosial & Donasi</p>
+                        <div class="grid grid-cols-10 gap-1 mb-3">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="❤️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">❤️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="💝" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">💝</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🤝" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🤝</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🙏" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🙏</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🕌" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🕌</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⛪" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⛪</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛕" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛕</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🎗️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🎗️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🌟" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🌟</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="✨" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">✨</div></label>
+                        </div>
+
+                        <!-- Lainnya -->
+                        <p class="text-xs text-gray-500 font-medium mb-2">📦 Lainnya</p>
+                        <div class="grid grid-cols-10 gap-1">
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📦" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📦</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔑" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔑</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🔒" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🔒</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⚙️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⚙️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🛠️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🛠️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="⏰" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">⏰</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📅" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📅</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="📌" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">📌</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="🏷️" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">🏷️</div></label>
+                            <label class="cursor-pointer"><input type="radio" name="categoryIcon" value="❓" class="hidden peer"><div class="text-xl p-1.5 rounded-lg peer-checked:bg-purple-100 hover:bg-gray-100 text-center">❓</div></label>
+                        </div>
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 transition font-medium">
