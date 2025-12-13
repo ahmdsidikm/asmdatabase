@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Studio - Generator Premium</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f0f23 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-card-light {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .neon-border {
+            position: relative;
+        }
+        
+        .neon-border::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(45deg, #00d4ff, #7c3aed, #f472b6, #00d4ff);
+            border-radius: inherit;
+            z-index: -1;
+            animation: neon-rotate 3s linear infinite;
+            background-size: 300% 300%;
+        }
+        
+        @keyframes neon-rotate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .tab-pill {
+            transition: all 0.3s ease;
+        }
+        
+        .tab-pill.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+        }
+        
+        .qr-frame {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 
+                0 0 0 1px rgba(0,0,0,0.05),
+                0 25px 50px -12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        
+        .input-dark {
+            background: rgba(15, 15, 35, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .input-dark:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+            outline: none;
+        }
+        
+        .input-dark::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.4);
+        }
+        
+        .btn-outline {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .color-box {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .color-box:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            border-radius: 12px;
+            overflow: hidden;
+            background: transparent;
+        }
+        
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 12px;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7c3aed 0%, #00d4ff 100%);
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.4);
+        }
+        
+        .floating-shapes {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(180deg); }
+        }
+        
+        .preset-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .preset-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .live-indicator {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px #10b981, 0 0 10px #10b981; }
+            50% { box-shadow: 0 0 10px #10b981, 0 0 20px #10b981, 0 0 30px #10b981; }
+        }
+        
+        .download-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .download-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.5s;
+        }
+        
+        .download-btn:hover::after {
+            transform: translateX(100%);
+        }
+
+        .frame-option {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .frame-option.active {
+            border-color: #7c3aed !important;
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .frame-option:hover {
+            border-color: rgba(124, 58, 237, 0.5);
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Floating Background Shapes -->
+    <div class="floating-shapes">
+        <div class="shape" style="width: 600px; height: 600px; background: #7c3aed; top: -200px; left: -200px;"></div>
+        <div class="shape" style="width: 500px; height: 500px; background: #00d4ff; bottom: -150px; right: -150px; animation-delay: -10s;"></div>
+        <div class="shape" style="width: 400px; height: 400px; background: #f472b6; top: 50%; left: 50%; animation-delay: -5s;"></div>
+    </div>
+
+    <div class="relative z-10">
+        <!-- Header -->
+        <header class="py-8 px-4">
+            <div class="container mx-auto text-center">
+                <div class="inline-flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center text-2xl">
+                        ⚡
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-white via-purple-200 to-cyan-200 bg-clip-text text-transparent">
+                        QR Studio
+                    </h1>
+                </div>
+                <p class="text-gray-400 text-lg">Generator QR Code Premium dengan Live Preview</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 pb-12">
+            <div class="grid lg:grid-cols-5 gap-8">
+                
+                <!-- Left Panel - Input & Options -->
+                <div class="lg:col-span-3 space-y-6">
+                    
+                    <!-- Tab Navigation -->
+                    <div class="glass-card rounded-2xl p-2 flex flex-wrap gap-2">
+                        <button onclick="switchTab('text')" id="tab-text" class="tab-pill active px-4 py-2.5 rounded-xl font-medium text-sm">📝 Teks/URL</button>
+                        <button onclick="switchTab('wifi')" id="tab-wifi" class="tab-pill px-4 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white">📶 WiFi</button>
+                        <button onclick="switchTab('vcard')" id="tab-vcard" class="tab-pill px-4 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white">👤 vCard</button>
+                        <button onclick="switchTab('email')" id="tab-email" class="tab-pill px-4 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white">📧 Email</button>
+                        <button onclick="switchTab('sms')" id="tab-sms" class="tab-pill px-4 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white">💬 SMS</button>
+                        <button onclick="switchTab('phone')" id="tab-phone" class="tab-pill px-4 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white">📞 Telepon</button>
+                        <button onclick="switchTab('location')" id="tab-location" class="tab-pill px-4 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white">📍 Lokasi</button>
+                        <button onclick="switchTab('event')" id="tab-event" class="tab-pill px-4 py-2.5 rounded-xl font-medium text-sm text-gray-300 hover:text-white">📅 Event</button>
+                    </div>
+
+                    <!-- Input Forms -->
+                    <div class="glass-card rounded-2xl p-6">
+                        
+                        <!-- Text/URL Form -->
+                        <div id="form-text" class="form-panel">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">📝</span>
+                                Teks atau URL
+                            </h3>
+                            <textarea id="input-text" rows="4" class="w-full input-dark rounded-xl p-4" placeholder="Masukkan teks atau URL...">https://example.com</textarea>
+                        </div>
+
+                        <!-- WiFi Form -->
+                        <div id="form-wifi" class="form-panel hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">📶</span>
+                                Konfigurasi WiFi
+                            </h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Nama WiFi (SSID)</label>
+                                    <input type="text" id="wifi-ssid" class="w-full input-dark rounded-xl p-3" placeholder="Nama WiFi">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                                    <input type="text" id="wifi-password" class="w-full input-dark rounded-xl p-3" placeholder="Password WiFi">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Tipe Keamanan</label>
+                                    <select id="wifi-encryption" class="w-full input-dark rounded-xl p-3">
+                                        <option value="WPA">WPA/WPA2</option>
+                                        <option value="WEP">WEP</option>
+                                        <option value="nopass">Tanpa Password</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="wifi-hidden" class="w-5 h-5 mr-3 accent-violet-500">
+                                    <label class="text-sm font-medium text-gray-300">Jaringan Tersembunyi</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- vCard Form -->
+                        <div id="form-vcard" class="form-panel hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center">👤</span>
+                                Kartu Kontak (vCard)
+                            </h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Nama Lengkap</label>
+                                    <input type="text" id="vcard-name" class="w-full input-dark rounded-xl p-3" placeholder="John Doe">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Perusahaan</label>
+                                    <input type="text" id="vcard-company" class="w-full input-dark rounded-xl p-3" placeholder="PT. Contoh">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Jabatan</label>
+                                    <input type="text" id="vcard-title" class="w-full input-dark rounded-xl p-3" placeholder="Manager">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Telepon</label>
+                                    <input type="tel" id="vcard-phone" class="w-full input-dark rounded-xl p-3" placeholder="+6281234567890">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                                    <input type="email" id="vcard-email" class="w-full input-dark rounded-xl p-3" placeholder="email@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Website</label>
+                                    <input type="url" id="vcard-website" class="w-full input-dark rounded-xl p-3" placeholder="https://website.com">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Alamat</label>
+                                    <textarea id="vcard-address" rows="2" class="w-full input-dark rounded-xl p-3" placeholder="Jl. Contoh No. 123, Jakarta"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email Form -->
+                        <div id="form-email" class="form-panel hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">📧</span>
+                                Kirim Email
+                            </h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Alamat Email</label>
+                                    <input type="email" id="email-to" class="w-full input-dark rounded-xl p-3" placeholder="email@example.com">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Subjek</label>
+                                    <input type="text" id="email-subject" class="w-full input-dark rounded-xl p-3" placeholder="Subjek email">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Isi Pesan</label>
+                                    <textarea id="email-body" rows="3" class="w-full input-dark rounded-xl p-3" placeholder="Isi pesan email..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SMS Form -->
+                        <div id="form-sms" class="form-panel hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">💬</span>
+                                Kirim SMS
+                            </h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Nomor Telepon</label>
+                                    <input type="tel" id="sms-phone" class="w-full input-dark rounded-xl p-3" placeholder="+6281234567890">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Isi Pesan</label>
+                                    <textarea id="sms-message" rows="3" class="w-full input-dark rounded-xl p-3" placeholder="Isi pesan SMS..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phone Form -->
+                        <div id="form-phone" class="form-panel hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">📞</span>
+                                Panggilan Telepon
+                            </h3>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-2">Nomor Telepon</label>
+                                <input type="tel" id="phone-number" class="w-full input-dark rounded-xl p-3" placeholder="+6281234567890">
+                            </div>
+                        </div>
+
+                        <!-- Location Form -->
+                        <div id="form-location" class="form-panel hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">📍</span>
+                                Lokasi GPS
+                            </h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Latitude</label>
+                                    <input type="text" id="location-lat" class="w-full input-dark rounded-xl p-3" placeholder="-6.200000">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Longitude</label>
+                                    <input type="text" id="location-lng" class="w-full input-dark rounded-xl p-3" placeholder="106.816666">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Nama Lokasi (Opsional)</label>
+                                    <input type="text" id="location-name" class="w-full input-dark rounded-xl p-3" placeholder="Monas Jakarta">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Event Form -->
+                        <div id="form-event" class="form-panel hidden">
+                            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span class="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">📅</span>
+                                Event Kalender
+                            </h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Nama Event</label>
+                                    <input type="text" id="event-title" class="w-full input-dark rounded-xl p-3" placeholder="Meeting Penting">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Tanggal Mulai</label>
+                                    <input type="datetime-local" id="event-start" class="w-full input-dark rounded-xl p-3">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Tanggal Selesai</label>
+                                    <input type="datetime-local" id="event-end" class="w-full input-dark rounded-xl p-3">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Lokasi</label>
+                                    <input type="text" id="event-location" class="w-full input-dark rounded-xl p-3" placeholder="Jakarta Convention Center">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-400 mb-2">Deskripsi</label>
+                                    <textarea id="event-description" rows="2" class="w-full input-dark rounded-xl p-3" placeholder="Deskripsi event..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customization Options -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-cyan-400 flex items-center justify-center">🎨</span>
+                            Kustomisasi
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <!-- Size -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-3">
+                                    Ukuran QR: <span id="size-value" class="text-white font-bold">200</span>px
+                                </label>
+                                <input type="range" id="qr-size" min="100" max="400" value="200" class="w-full">
+                            </div>
+                            
+                            <!-- Frame Padding -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-3">
+                                    Padding Bingkai: <span id="padding-value" class="text-white font-bold">40</span>px
+                                </label>
+                                <input type="range" id="qr-padding" min="20" max="100" value="40" class="w-full">
+                            </div>
+                            
+                            <!-- Foreground Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-3">Warna QR Code</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="color" id="qr-color" value="#000000" class="color-box">
+                                    <span id="color-hex" class="text-sm text-gray-300 font-mono">#000000</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Background Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-3">Warna Background</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="color" id="qr-bg" value="#FFFFFF" class="color-box">
+                                    <span id="bg-hex" class="text-sm text-gray-300 font-mono">#FFFFFF</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Error Correction -->
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-400 mb-3">Tingkat Koreksi Error</label>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <button onclick="setCorrection('L')" id="corr-L" class="frame-option py-3 rounded-xl border border-white/20 text-center text-sm">
+                                        <div class="font-bold">L</div>
+                                        <div class="text-xs text-gray-400">7%</div>
+                                    </button>
+                                    <button onclick="setCorrection('M')" id="corr-M" class="frame-option active py-3 rounded-xl border border-white/20 text-center text-sm">
+                                        <div class="font-bold">M</div>
+                                        <div class="text-xs text-gray-400">15%</div>
+                                    </button>
+                                    <button onclick="setCorrection('Q')" id="corr-Q" class="frame-option py-3 rounded-xl border border-white/20 text-center text-sm">
+                                        <div class="font-bold">Q</div>
+                                        <div class="text-xs text-gray-400">25%</div>
+                                    </button>
+                                    <button onclick="setCorrection('H')" id="corr-H" class="frame-option py-3 rounded-xl border border-white/20 text-center text-sm">
+                                        <div class="font-bold">H</div>
+                                        <div class="text-xs text-gray-400">30%</div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Color Presets -->
+                        <div class="mt-6">
+                            <label class="block text-sm font-medium text-gray-400 mb-3">Preset Warna</label>
+                            <div class="flex flex-wrap gap-3">
+                                <button onclick="setColorPreset('#000000', '#FFFFFF')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #FFFFFF 50%, #000000 50%)"></button>
+                                <button onclick="setColorPreset('#1e3a5f', '#e0f2fe')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #e0f2fe 50%, #1e3a5f 50%)"></button>
+                                <button onclick="setColorPreset('#14532d', '#dcfce7')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #dcfce7 50%, #14532d 50%)"></button>
+                                <button onclick="setColorPreset('#7f1d1d', '#fef2f2')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #fef2f2 50%, #7f1d1d 50%)"></button>
+                                <button onclick="setColorPreset('#713f12', '#fefce8')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #fefce8 50%, #713f12 50%)"></button>
+                                <button onclick="setColorPreset('#581c87', '#faf5ff')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #faf5ff 50%, #581c87 50%)"></button>
+                                <button onclick="setColorPreset('#0e7490', '#ecfeff')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #ecfeff 50%, #0e7490 50%)"></button>
+                                <button onclick="setColorPreset('#9d174d', '#fdf2f8')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #fdf2f8 50%, #9d174d 50%)"></button>
+                                <button onclick="setColorPreset('#FFFFFF', '#0f0f23')" class="preset-btn w-12 h-12 rounded-xl border-2 border-white/20 overflow-hidden" style="background: linear-gradient(135deg, #0f0f23 50%, #FFFFFF 50%)"></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Generator -->
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">📦</span>
+                            Batch Generator
+                        </h3>
+                        <p class="text-gray-400 mb-4 text-sm">Generate multiple QR codes sekaligus (satu per baris)</p>
+                        <textarea id="batch-input" rows="4" class="w-full input-dark rounded-xl p-4 mb-4" placeholder="https://example.com/1&#10;https://example.com/2&#10;https://example.com/3"></textarea>
+                        <button onclick="generateBatch()" class="btn-gradient text-white px-6 py-3 rounded-xl font-medium">
+                            ⚡ Generate Batch
+                        </button>
+                        <div id="batch-results" class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                    </div>
+                </div>
+
+                <!-- Right Panel - QR Preview -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="glass-card-light rounded-3xl p-8 sticky top-4">
+                        <!-- Live Indicator -->
+                        <div class="flex items-center justify-center gap-2 mb-6">
+                            <div class="w-3 h-3 bg-green-500 rounded-full live-indicator"></div>
+                            <span class="text-gray-700 font-semibold">Live Preview</span>
+                        </div>
+                        
+                        <!-- QR Container with Frame -->
+                        <div class="qr-frame rounded-2xl p-10 mb-6" id="qr-wrapper">
+                            <div class="flex items-center justify-center" id="qr-preview">
+                                <div class="text-center text-gray-400">
+                                    <div class="text-6xl mb-2">🔲</div>
+                                    <p>QR Code akan muncul di sini</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Download Buttons -->
+                        <div class="space-y-3">
+                            <button onclick="downloadQR('png')" class="download-btn w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                                <span>📥</span> Download PNG
+                            </button>
+                            <button onclick="downloadQR('jpeg')" class="download-btn w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                                <span>📥</span> Download JPEG
+                            </button>
+                            <button onclick="downloadQR('svg')" class="download-btn w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                                <span>📥</span> Download SVG
+                            </button>
+                            <button onclick="copyQR()" class="download-btn w-full bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
+                                <span>📋</span> Copy ke Clipboard
+                            </button>
+                        </div>
+
+                        <!-- Tips -->
+                        <div class="mt-6 p-4 bg-gradient-to-br from-violet-50 to-indigo-50 rounded-xl border border-violet-100">
+                            <h4 class="font-semibold text-violet-800 mb-2 flex items-center gap-2">
+                                <span>💡</span> Tips
+                            </h4>
+                            <ul class="text-sm text-violet-700 space-y-1">
+                                <li>• Hasil download sudah termasuk bingkai putih</li>
+                                <li>• Gunakan kontras tinggi untuk scan terbaik</li>
+                                <li>• High correction jika ingin menambah logo</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR History -->
+            <div class="mt-8 glass-card rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold flex items-center gap-2">
+                        <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">📜</span>
+                        Riwayat QR Code
+                    </h3>
+                    <button onclick="clearHistory()" class="text-red-400 hover:text-red-300 text-sm font-medium flex items-center gap-1">
+                        <span>🗑️</span> Hapus Semua
+                    </button>
+                </div>
+                <div id="qr-history" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <p class="text-gray-500 col-span-full text-center py-8">Belum ada riwayat</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="py-6 text-center border-t border-white/10">
+            <p class="text-gray-500">Made with ❤️ | QR Studio Premium Generator</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-xl shadow-2xl transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2">
+        <span id="toast-icon">✓</span>
+        <span id="toast-message">Berhasil!</span>
+    </div>
+
+    <script>
+        let currentTab = 'text';
+        let currentCorrection = 'M';
+        let qrHistory = JSON.parse(localStorage.getItem('qrHistory') || '[]');
+        let qrInstance = null;
+        let debounceTimer = null;
+
+        function debounce(func, delay = 300) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(func, delay);
+        }
+
+        function autoGenerate() {
+            debounce(() => generateQR(true), 300);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+            updateColorHex();
+            
+            document.getElementById('qr-color').addEventListener('input', () => {
+                updateColorHex();
+                autoGenerate();
+            });
+            document.getElementById('qr-bg').addEventListener('input', () => {
+                updateColorHex();
+                autoGenerate();
+            });
+
+            const textInputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="url"], textarea');
+            textInputs.forEach(input => {
+                input.addEventListener('input', autoGenerate);
+            });
+
+            const selectInputs = document.querySelectorAll('select');
+            selectInputs.forEach(select => {
+                select.addEventListener('change', autoGenerate);
+            });
+
+            const checkboxInputs = document.querySelectorAll('input[type="checkbox"]');
+            checkboxInputs.forEach(checkbox => {
+                checkbox.addEventListener('change', autoGenerate);
+            });
+
+            const datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
+            datetimeInputs.forEach(input => {
+                input.addEventListener('change', autoGenerate);
+            });
+
+            document.getElementById('qr-size').addEventListener('input', () => {
+                updateSizeLabel();
+                autoGenerate();
+            });
+
+            document.getElementById('qr-padding').addEventListener('input', () => {
+                updatePaddingLabel();
+                updateFramePadding();
+            });
+
+            setTimeout(() => generateQR(true), 500);
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            document.querySelectorAll('.tab-pill').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-300');
+            });
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.remove('text-gray-300');
+            
+            document.querySelectorAll('.form-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.getElementById(`form-${tab}`).classList.remove('hidden');
+
+            autoGenerate();
+        }
+
+        function setCorrection(level) {
+            currentCorrection = level;
+            document.querySelectorAll('[id^="corr-"]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`corr-${level}`).classList.add('active');
+            autoGenerate();
+        }
+
+        function updateSizeLabel() {
+            document.getElementById('size-value').textContent = document.getElementById('qr-size').value;
+        }
+
+        function updatePaddingLabel() {
+            document.getElementById('padding-value').textContent = document.getElementById('qr-padding').value;
+        }
+
+        function updateFramePadding() {
+            const padding = document.getElementById('qr-padding').value;
+            document.getElementById('qr-wrapper').style.padding = padding + 'px';
+        }
+
+        function updateColorHex() {
+            document.getElementById('color-hex').textContent = document.getElementById('qr-color').value.toUpperCase();
+            document.getElementById('bg-hex').textContent = document.getElementById('qr-bg').value.toUpperCase();
+        }
+
+        function setColorPreset(fg, bg) {
+            document.getElementById('qr-color').value = fg;
+            document.getElementById('qr-bg').value = bg;
+            updateColorHex();
+            generateQR(true);
+            showToast('Preset warna diterapkan!');
+        }
+
+        function getQRData() {
+            switch(currentTab) {
+                case 'text':
+                    return document.getElementById('input-text').value;
+                
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value;
+                    const password = document.getElementById('wifi-password').value;
+                    const encryption = document.getElementById('wifi-encryption').value;
+                    const hidden = document.getElementById('wifi-hidden').checked;
+                    return `WIFI:T:${encryption};S:${ssid};P:${password};H:${hidden};;`;
+                
+                case 'vcard':
+                    const name = document.getElementById('vcard-name').value;
+                    const company = document.getElementById('vcard-company').value;
+                    const title = document.getElementById('vcard-title').value;
+                    const phone = document.getElementById('vcard-phone').value;
+                    const email = document.getElementById('vcard-email').value;
+                    const website = document.getElementById('vcard-website').value;
+                    const address = document.getElementById('vcard-address').value;
+                    return `BEGIN:VCARD\nVERSION:3.0\nN:${name}\nFN:${name}\nORG:${company}\nTITLE:${title}\nTEL:${phone}\nEMAIL:${email}\nURL:${website}\nADR:${address}\nEND:VCARD`;
+                
+                case 'email':
+                    const emailTo = document.getElementById('email-to').value;
+                    const subject = document.getElementById('email-subject').value;
+                    const body = document.getElementById('email-body').value;
+                    return `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                
+                case 'sms':
+                    const smsPhone = document.getElementById('sms-phone').value;
+                    const smsMessage = document.getElementById('sms-message').value;
+                    return `sms:${smsPhone}?body=${encodeURIComponent(smsMessage)}`;
+                
+                case 'phone':
+                    const phoneNumber = document.getElementById('phone-number').value;
+                    return `tel:${phoneNumber}`;
+                
+                case 'location':
+                    const lat = document.getElementById('location-lat').value;
+                    const lng = document.getElementById('location-lng').value;
+                    const locName = document.getElementById('location-name').value;
+                    return `geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(locName)})`;
+                
+                case 'event':
+                    const eventTitle = document.getElementById('event-title').value;
+                    const startDate = document.getElementById('event-start').value.replace(/[-:]/g, '').replace('T', 'T');
+                    const endDate = document.getElementById('event-end').value.replace(/[-:]/g, '').replace('T', 'T');
+                    const eventLocation = document.getElementById('event-location').value;
+                    const eventDesc = document.getElementById('event-description').value;
+                    return `BEGIN:VEVENT\nSUMMARY:${eventTitle}\nDTSTART:${startDate}\nDTEND:${endDate}\nLOCATION:${eventLocation}\nDESCRIPTION:${eventDesc}\nEND:VEVENT`;
+                
+                default:
+                    return '';
+            }
+        }
+
+        function generateQR(silent = false) {
+            const data = getQRData();
+            if (!data) {
+                if (!silent) showToast('Mohon isi data terlebih dahulu!', 'error');
+                return;
+            }
+
+            const size = parseInt(document.getElementById('qr-size').value);
+            const color = document.getElementById('qr-color').value;
+            const bgColor = document.getElementById('qr-bg').value;
+
+            const correctionLevel = {
+                'L': QRCode.CorrectLevel.L,
+                'M': QRCode.CorrectLevel.M,
+                'Q': QRCode.CorrectLevel.Q,
+                'H': QRCode.CorrectLevel.H
+            };
+
+            const container = document.getElementById('qr-preview');
+            container.innerHTML = '';
+
+            qrInstance = new QRCode(container, {
+                text: data,
+                width: size,
+                height: size,
+                colorDark: color,
+                colorLight: bgColor,
+                correctLevel: correctionLevel[currentCorrection]
+            });
+
+            if (!silent) {
+                addToHistory(data, size, color, bgColor);
+                showToast('QR Code berhasil dibuat!');
+            }
+        }
+
+        function downloadQR(format) {
+            const qrCanvas = document.querySelector('#qr-preview canvas');
+            if (!qrCanvas) {
+                showToast('Generate QR Code terlebih dahulu!', 'error');
+                return;
+            }
+
+            const padding = parseInt(document.getElementById('qr-padding').value);
+            const bgColor = document.getElementById('qr-bg').value;
+            const qrSize = qrCanvas.width;
+            const totalSize = qrSize + (padding * 2);
+
+            // Create new canvas with frame
+            const frameCanvas = document.createElement('canvas');
+            frameCanvas.width = totalSize;
+            frameCanvas.height = totalSize;
+            const ctx = frameCanvas.getContext('2d');
+
+            // Draw white background frame
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, totalSize, totalSize);
+
+            // Draw rounded corners effect (optional shadow/border)
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 5;
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(padding - 10, padding - 10, qrSize + 20, qrSize + 20);
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            // Draw QR code centered
+            ctx.drawImage(qrCanvas, padding, padding);
+
+            let link = document.createElement('a');
+            
+            if (format === 'svg') {
+                const svgData = canvasToSVG(qrCanvas, padding);
+                const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                link.href = URL.createObjectURL(blob);
+                link.download = 'qrcode-framed.svg';
+            } else {
+                const mimeType = format === 'png' ? 'image/png' : 'image/jpeg';
+                link.href = frameCanvas.toDataURL(mimeType, 1.0);
+                link.download = `qrcode-framed.${format}`;
+            }
+            
+            link.click();
+            showToast(`QR Code dengan bingkai berhasil didownload!`);
+        }
+
+        function canvasToSVG(canvas, padding) {
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            const width = canvas.width;
+            const height = canvas.height;
+            const totalWidth = width + (padding * 2);
+            const totalHeight = height + (padding * 2);
+            
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${totalHeight}">`;
+            // White frame background
+            svg += `<rect width="100%" height="100%" fill="#FFFFFF"/>`;
+            // QR background
+            svg += `<rect x="${padding}" y="${padding}" width="${width}" height="${height}" fill="${document.getElementById('qr-bg').value}"/>`;
+            
+            const pixelSize = 1;
+            for (let y = 0; y < height; y += pixelSize) {
+                for (let x = 0; x < width; x += pixelSize) {
+                    const i = (y * width + x) * 4;
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    
+                    if (r < 128 && g < 128 && b < 128) {
+                        svg += `<rect x="${x + padding}" y="${y + padding}" width="${pixelSize}" height="${pixelSize}" fill="${document.getElementById('qr-color').value}"/>`;
+                    }
+                }
+            }
+            
+            svg += '</svg>';
+            return svg;
+        }
+
+        async function copyQR() {
+            const qrCanvas = document.querySelector('#qr-preview canvas');
+            if (!qrCanvas) {
+                showToast('Generate QR Code terlebih dahulu!', 'error');
+                return;
+            }
+
+            const padding = parseInt(document.getElementById('qr-padding').value);
+            const bgColor = document.getElementById('qr-bg').value;
+            const qrSize = qrCanvas.width;
+            const totalSize = qrSize + (padding * 2);
+
+            const frameCanvas = document.createElement('canvas');
+            frameCanvas.width = totalSize;
+            frameCanvas.height = totalSize;
+            const ctx = frameCanvas.getContext('2d');
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, totalSize, totalSize);
+            ctx.drawImage(qrCanvas, padding, padding);
+
+            try {
+                frameCanvas.toBlob(async (blob) => {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': blob })
+                    ]);
+                    showToast('QR Code dengan bingkai berhasil disalin!');
+                });
+            } catch (err) {
+                showToast('Gagal menyalin ke clipboard', 'error');
+            }
+        }
+
+        function generateBatch() {
+            const input = document.getElementById('batch-input').value;
+            const lines = input.split('\n').filter(line => line.trim());
+            
+            if (lines.length === 0) {
+                showToast('Mohon masukkan data terlebih dahulu!', 'error');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('batch-results');
+            resultsContainer.innerHTML = '';
+
+            const size = 120;
+            const color = document.getElementById('qr-color').value;
+            const bgColor = document.getElementById('qr-bg').value;
+
+            lines.forEach((line, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'bg-white rounded-xl p-3 text-center';
+                
+                const qrDiv = document.createElement('div');
+                qrDiv.id = `batch-qr-${index}`;
+                qrDiv.className = 'flex justify-center';
+                wrapper.appendChild(qrDiv);
+                
+                const label = document.createElement('p');
+                label.className = 'text-xs text-gray-500 mt-2 truncate';
+                label.textContent = line.substring(0, 20) + (line.length > 20 ? '...' : '');
+                wrapper.appendChild(label);
+
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'mt-2 text-xs bg-gradient-to-r from-violet-500 to-purple-600 text-white px-3 py-1.5 rounded-lg font-medium';
+                downloadBtn.textContent = '📥 Download';
+                downloadBtn.onclick = () => downloadBatchQR(index);
+                wrapper.appendChild(downloadBtn);
+                
+                resultsContainer.appendChild(wrapper);
+                
+                new QRCode(qrDiv, {
+                    text: line.trim(),
+                    width: size,
+                    height: size,
+                    colorDark: color,
+                    colorLight: bgColor,
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            });
+
+            showToast(`${lines.length} QR Code berhasil dibuat!`);
+        }
+
+        function downloadBatchQR(index) {
+            const qrCanvas = document.querySelector(`#batch-qr-${index} canvas`);
+            if (qrCanvas) {
+                const padding = 30;
+                const qrSize = qrCanvas.width;
+                const totalSize = qrSize + (padding * 2);
+
+                const frameCanvas = document.createElement('canvas');
+                frameCanvas.width = totalSize;
+                frameCanvas.height = totalSize;
+                const ctx = frameCanvas.getContext('2d');
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, totalSize, totalSize);
+                ctx.drawImage(qrCanvas, padding, padding);
+
+                const link = document.createElement('a');
+                link.href = frameCanvas.toDataURL('image/png');
+                link.download = `qrcode-batch-${index + 1}.png`;
+                link.click();
+            }
+        }
+
+        function addToHistory(data, size, color, bgColor) {
+            const qrCanvas = document.querySelector('#qr-preview canvas');
+            if (!qrCanvas) return;
+
+            // Create thumbnail with small frame
+            const padding = 10;
+            const thumbSize = qrCanvas.width;
+            const totalSize = thumbSize + (padding * 2);
+            
+            const thumbCanvas = document.createElement('canvas');
+            thumbCanvas.width = totalSize;
+            thumbCanvas.height = totalSize;
+            const ctx = thumbCanvas.getContext('2d');
+            
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, totalSize, totalSize);
+            ctx.drawImage(qrCanvas, padding, padding);
+
+            const historyItem = {
+                data: data.substring(0, 50),
+                image: thumbCanvas.toDataURL('image/png'),
+                timestamp: new Date().toISOString(),
+                size,
+                color,
+                bgColor
+            };
+
+            qrHistory.unshift(historyItem);
+            if (qrHistory.length > 12) qrHistory.pop();
+            
+            localStorage.setItem('qrHistory', JSON.stringify(qrHistory));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const container = document.getElementById('qr-history');
+            
+            if (qrHistory.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">Belum ada riwayat</p>';
+                return;
+            }
+
+            container.innerHTML = qrHistory.map((item, index) => `
+                <div class="bg-white/10 rounded-xl p-3 text-center hover:bg-white/20 transition-all cursor-pointer transform hover:scale-105" onclick="restoreFromHistory(${index})">
+                    <img src="${item.image}" alt="QR" class="w-full rounded-lg mb-2">
+                    <p class="text-xs text-gray-400 truncate">${item.data}</p>
+                </div>
+            `).join('');
+        }
+
+        function restoreFromHistory(index) {
+            const item = qrHistory[index];
+            if (!item) return;
+
+            document.getElementById('input-text').value = item.data;
+            document.getElementById('qr-size').value = item.size;
+            document.getElementById('qr-color').value = item.color;
+            document.getElementById('qr-bg').value = item.bgColor;
+            
+            updateSizeLabel();
+            updateColorHex();
+            switchTab('text');
+            generateQR();
+            
+            showToast('QR Code dipulihkan dari riwayat!');
+        }
+
+        function clearHistory() {
+            if (confirm('Hapus semua riwayat QR Code?')) {
+                qrHistory = [];
+                localStorage.removeItem('qrHistory');
+                loadHistory();
+                showToast('Riwayat berhasil dihapus!');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            
+            if (type === 'error') {
+                toast.className = 'fixed bottom-4 right-4 bg-gradient-to-r from-red-500 to-rose-600 text-white px-6 py-3 rounded-xl shadow-2xl transform transition-all duration-300 flex items-center gap-2';
+                toastIcon.textContent = '✕';
+            } else {
+                toast.className = 'fixed bottom-4 right-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white px-6 py-3 rounded-xl shadow-2xl transform transition-all duration-300 flex items-center gap-2';
+                toastIcon.textContent = '✓';
+            }
+            
+            toastMessage.textContent = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
