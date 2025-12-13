@@ -3,9 +3,11 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>QR Code Generator</title>
+<title>QR & Barcode Scanner Pro</title>
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -153,12 +155,12 @@ body {
     width: 64px;
     height: 64px;
     margin: 0 auto 16px;
-    background: var(--gradient-accent);
+    background: var(--gradient-primary);
     border-radius: var(--radius-lg);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 40px rgba(253, 121, 168, 0.3);
+    box-shadow: var(--shadow-glow);
     position: relative;
     overflow: hidden;
 }
@@ -181,7 +183,7 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 4px;
-    background: var(--gradient-accent);
+    background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -191,6 +193,92 @@ body {
     font-size: 0.875rem;
     color: var(--text-secondary);
     font-weight: 400;
+}
+
+.scanner-section {
+    position: relative;
+    aspect-ratio: 4/3;
+    background: var(--dark-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--dark-border);
+}
+
+.scanner-section video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.scanner-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text-muted);
+}
+
+.scanner-placeholder .material-icons-round {
+    font-size: 48px;
+    opacity: 0.5;
+}
+
+.scanner-placeholder span {
+    font-size: 0.875rem;
+}
+
+.scanner-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.scanner-overlay.active {
+    opacity: 1;
+}
+
+.scan-region {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    max-width: 220px;
+    aspect-ratio: 1;
+}
+
+.scan-corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--primary-light);
+}
+
+.scan-corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-radius: 4px 0 0 0; }
+.scan-corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-radius: 0 4px 0 0; }
+.scan-corner.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-radius: 0 0 0 4px; }
+.scan-corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-radius: 0 0 4px 0; }
+
+.scan-line {
+    position: absolute;
+    left: 5%;
+    width: 90%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary-light), var(--primary), var(--primary-light), transparent);
+    box-shadow: 0 0 15px var(--primary);
+    animation: scanMove 2s ease-in-out infinite;
+}
+
+@keyframes scanMove {
+    0%, 100% { top: 10%; opacity: 0; }
+    10%, 90% { opacity: 1; }
+    50% { top: 90%; }
 }
 
 .btn {
@@ -209,7 +297,6 @@ body {
     position: relative;
     overflow: hidden;
     white-space: nowrap;
-    text-decoration: none;
 }
 
 .btn .material-icons-round {
@@ -242,21 +329,27 @@ body {
     border-color: var(--primary);
 }
 
-.btn-accent {
-    background: var(--gradient-accent);
-    color: white;
-    box-shadow: 0 4px 15px rgba(253, 121, 168, 0.4);
-}
-
-.btn-accent:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(253, 121, 168, 0.5);
+.btn-icon {
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    flex-shrink: 0;
 }
 
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--error);
+    color: white;
 }
 
 .btn-grid {
@@ -271,6 +364,134 @@ body {
 
 .btn-row .btn {
     flex: 1;
+}
+
+.btn-row .btn-icon {
+    flex: 0 0 48px;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: var(--radius-md);
+    margin-top: 4px;
+}
+
+.toggle-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggle {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    cursor: pointer;
+}
+
+.toggle input {
+    display: none;
+}
+
+.toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--dark-light);
+    border-radius: 14px;
+    border: 1px solid var(--dark-border);
+    transition: var(--transition);
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle input:checked + .toggle-track {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.toggle input:checked + .toggle-track + .toggle-thumb {
+    left: 27px;
+    background: white;
+}
+
+.output-section {
+    margin-top: 4px;
+}
+
+.output-box {
+    background: var(--dark-light);
+    border: 1px solid var(--dark-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    min-height: 60px;
+    max-height: 120px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.output-box::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--gradient-primary);
+    border-radius: 3px 0 0 3px;
+}
+
+.output-text {
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--success);
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+
+.output-text.error {
+    color: var(--error);
+}
+
+.output-text.warning {
+    color: var(--warning);
+}
+
+.output-text.info {
+    color: var(--primary-light);
+}
+
+.action-buttons {
+    display: none;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.action-buttons.show {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    flex: 1;
+    min-width: calc(50% - 6px);
 }
 
 ::-webkit-scrollbar {
@@ -289,6 +510,14 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
+}
+
+#fileInput {
+    display: none;
+}
+
+#snapshot {
+    display: none;
 }
 
 .toast-container {
@@ -336,22 +565,88 @@ body {
     font-size: 20px;
 }
 
-.qr-section {
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
 }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+.modal.open {
+    opacity: 1;
+    visibility: visible;
 }
 
-.input-label {
-    font-size: 0.875rem;
-    font-weight: 600;
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    position: relative;
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    transform: scale(0.9) translateY(20px);
+    transition: var(--transition);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal.open .modal-content {
+    transform: scale(1) translateY(0);
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    border-radius: 50%;
     color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal-close:hover {
+    background: var(--error);
+    color: white;
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .qr-input {
@@ -376,143 +671,125 @@ body {
     color: var(--text-muted);
 }
 
-.qr-textarea {
-    min-height: 100px;
-    resize: vertical;
-    font-family: inherit;
-}
-
-.qr-preview-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-}
-
 .qr-preview {
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 24px;
+    padding: 16px;
     background: white;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
-    position: relative;
-    overflow: hidden;
-}
-
-.qr-preview::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(108,92,231,0.1) 0%, rgba(253,121,168,0.1) 100%);
-    opacity: 0;
-    transition: var(--transition);
-}
-
-.qr-preview:hover::before {
-    opacity: 1;
+    border-radius: var(--radius-md);
 }
 
 .qr-preview canvas {
-    display: block;
     max-width: 100%;
     height: auto;
 }
 
-.qr-info {
-    text-align: center;
-    font-size: 0.8125rem;
-    color: var(--text-muted);
-}
-
-.options-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.modal-actions {
+    display: flex;
     gap: 12px;
 }
 
-.option-group {
+.modal-actions .btn {
+    flex: 1;
+}
+
+#resultModal {
+    padding: 0;
+}
+
+#resultModal .modal-backdrop {
+    background: var(--dark);
+}
+
+#resultModal .modal-content {
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    padding: 0;
+    background: var(--dark);
 }
 
-.option-label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+#resultModal .modal-header {
+    padding: 16px 20px;
+    margin: 0;
+    background: var(--dark-card);
+    border-bottom: 1px solid var(--dark-border);
+    flex-shrink: 0;
 }
 
-.option-select {
-    padding: 10px 12px;
-    font-family: inherit;
-    font-size: 0.875rem;
-    background: var(--dark-light);
-    border: 1px solid var(--dark-border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    outline: none;
-    cursor: pointer;
-    transition: var(--transition);
+#resultModal .modal-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
 }
 
-.option-select:focus {
-    border-color: var(--primary);
-}
-
-.color-picker-wrapper {
+.result-container {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    overflow: auto;
+    background: var(--dark);
+    padding: 16px;
 }
 
-.color-picker {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border: 2px solid var(--dark-border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    overflow: hidden;
-    background: transparent;
+.result-container img,
+.result-container video {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
 }
 
-.color-picker::-webkit-color-swatch-wrapper {
-    padding: 0;
+#resultModal .modal-actions {
+    padding: 16px 20px;
+    margin: 0;
+    background: var(--dark-card);
+    border-top: 1px solid var(--dark-border);
+    flex-shrink: 0;
+    gap: 12px;
 }
 
-.color-picker::-webkit-color-swatch {
-    border: none;
-    border-radius: 4px;
+@media (min-width: 768px) {
+    #resultModal .modal-header {
+        padding: 20px 32px;
+    }
+    
+    #resultModal .modal-actions {
+        padding: 20px 32px;
+    }
+    
+    .result-container {
+        padding: 32px;
+    }
+    
+    .result-container img,
+    .result-container video {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: var(--radius-lg);
+    }
 }
 
-.color-value {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-.back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: var(--transition);
-    margin-bottom: 8px;
-}
-
-.back-link:hover {
-    color: var(--primary-light);
-}
-
-.back-link .material-icons-round {
-    font-size: 18px;
+@media (min-width: 1024px) {
+    .result-container img,
+    .result-container video {
+        max-width: 80%;
+        max-height: 85%;
+    }
 }
 
 @media (min-width: 768px) {
@@ -563,9 +840,39 @@ body {
         font-size: 0.8125rem;
     }
     
-    .options-section {
-        grid-template-columns: 1fr;
+    .btn .label {
+        display: none;
     }
+    
+    .btn-row .btn:not(.btn-icon) {
+        padding: 12px;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+body.modal-open {
+    overflow: hidden;
 }
 </style>
 </head>
@@ -579,89 +886,78 @@ body {
 </div>
 
 <div class="app-container">
-    <a href="index.html" class="back-link">
-        <span class="material-icons-round">arrow_back</span>
-        Kembali ke Scanner
-    </a>
-    
     <div class="card">
         <div class="header">
             <div class="logo">
-                <span class="material-icons-round">qr_code_2</span>
+                <span class="material-icons-round">qr_code_scanner</span>
             </div>
-            <h1 class="title">QR Generator</h1>
-            <p class="subtitle">Buat QR Code dengan mudah</p>
+            <h1 class="title">QR Scanner Pro</h1>
+            <p class="subtitle">Pindai QR & Barcode dengan mudah</p>
         </div>
 
-        <div class="qr-section">
-            <div class="input-group">
-                <label class="input-label" for="qrText">Teks atau URL</label>
-                <textarea class="qr-input qr-textarea" id="qrText" placeholder="Masukkan teks, URL, atau data lainnya..."></textarea>
+        <div class="scanner-section">
+            <video id="liveVideo" autoplay playsinline></video>
+            <div class="scanner-placeholder" id="scannerPlaceholder">
+                <span class="material-icons-round">center_focus_strong</span>
+                <span>Nyalakan kamera untuk memindai</span>
             </div>
-
-            <div class="options-section">
-                <div class="option-group">
-                    <label class="option-label">Ukuran</label>
-                    <select class="option-select" id="qrSize">
-                        <option value="150">Kecil (150px)</option>
-                        <option value="200" selected>Sedang (200px)</option>
-                        <option value="300">Besar (300px)</option>
-                        <option value="400">Sangat Besar (400px)</option>
-                    </select>
-                </div>
-                <div class="option-group">
-                    <label class="option-label">Error Correction</label>
-                    <select class="option-select" id="qrLevel">
-                        <option value="L">Low (7%)</option>
-                        <option value="M">Medium (15%)</option>
-                        <option value="Q">Quartile (25%)</option>
-                        <option value="H" selected>High (30%)</option>
-                    </select>
-                </div>
-                <div class="option-group">
-                    <label class="option-label">Warna QR</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color" class="color-picker" id="qrForeground" value="#1A1A25">
-                        <span class="color-value" id="fgValue">#1A1A25</span>
-                    </div>
-                </div>
-                <div class="option-group">
-                    <label class="option-label">Warna Latar</label>
-                    <div class="color-picker-wrapper">
-                        <input type="color" class="color-picker" id="qrBackground" value="#FFFFFF">
-                        <span class="color-value" id="bgValue">#FFFFFF</span>
-                    </div>
+            <div class="scanner-overlay" id="scannerOverlay">
+                <div class="scan-region">
+                    <div class="scan-corner tl"></div>
+                    <div class="scan-corner tr"></div>
+                    <div class="scan-corner bl"></div>
+                    <div class="scan-corner br"></div>
+                    <div class="scan-line"></div>
                 </div>
             </div>
+        </div>
+        <canvas id="snapshot"></canvas>
 
-            <div class="qr-preview-container">
-                <div class="qr-preview">
-                    <canvas id="qrCanvas"></canvas>
-                </div>
-                <p class="qr-info" id="qrInfo">Masukkan teks untuk membuat QR Code</p>
+        <div class="btn-grid" style="margin-top: 16px;">
+            <div class="btn-row">
+                <button class="btn btn-primary" id="startCameraButton">
+                    <span class="material-icons-round">videocam</span>
+                    <span class="label">Nyalakan Kamera</span>
+                </button>
+                <button class="btn btn-secondary btn-icon" id="flashlightBtn" disabled title="Senter">
+                    <span class="material-icons-round">flashlight_off</span>
+                </button>
             </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" id="fileInputBtn">
+                    <span class="material-icons-round">image</span>
+                    <span class="label">Pilih Gambar</span>
+                </button>
+                <button class="btn btn-secondary" id="createQRBtn">
+                    <span class="material-icons-round">qr_code_2</span>
+                    <span class="label">Buat QR</span>
+                </button>
+            </div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*">
 
-            <div class="btn-grid">
-                <div class="btn-row">
-                    <button class="btn btn-accent" id="downloadPngBtn">
-                        <span class="material-icons-round">image</span>
-                        <span>Unduh PNG</span>
-                    </button>
-                    <button class="btn btn-primary" id="downloadSvgBtn">
-                        <span class="material-icons-round">download</span>
-                        <span>Unduh SVG</span>
-                    </button>
-                </div>
-                <div class="btn-row">
-                    <button class="btn btn-secondary" id="copyBtn">
-                        <span class="material-icons-round">content_copy</span>
-                        <span>Salin Gambar</span>
-                    </button>
-                    <button class="btn btn-secondary" id="resetBtn">
-                        <span class="material-icons-round">refresh</span>
-                        <span>Reset</span>
-                    </button>
-                </div>
+        <div class="toggle-container">
+            <label class="toggle">
+                <input type="checkbox" id="luckyCheck">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+            </label>
+            <span class="toggle-label" onclick="document.getElementById('luckyCheck').click()">Mode Dekripsi</span>
+        </div>
+
+        <div class="output-section">
+            <div class="output-box">
+                <div class="output-text info" id="output">✦ STATUS: SIAP</div>
+            </div>
+            <div class="action-buttons" id="actionButtons">
+                <button class="btn btn-secondary" id="copyTextBtn">
+                    <span class="material-icons-round">content_copy</span>
+                    <span class="label">Salin</span>
+                </button>
+                <button class="btn btn-primary" id="rightActionBtn">
+                    <span class="material-icons-round">open_in_new</span>
+                    <span class="label">Buka</span>
+                </button>
             </div>
         </div>
     </div>
@@ -669,22 +965,91 @@ body {
 
 <div class="toast-container" id="toastContainer"></div>
 
+<div class="modal" id="qrModal">
+    <div class="modal-backdrop" onclick="closeQRModal()"></div>
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeQRModal()">
+            <span class="material-icons-round">close</span>
+        </button>
+        <div class="modal-header">
+            <h2 class="modal-title">Buat Kode QR</h2>
+        </div>
+        <div class="modal-body">
+            <input type="text" class="qr-input" id="qrText" placeholder="Masukkan teks atau URL...">
+            <div class="qr-preview">
+                <canvas id="qrCanvas"></canvas>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeQRModal()">
+                    <span class="material-icons-round">close</span>
+                    <span class="label">Tutup</span>
+                </button>
+                <button class="btn btn-primary" id="downloadQRBtn">
+                    <span class="material-icons-round">download</span>
+                    <span class="label">Unduh</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="resultModal">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Hasil Dekripsi</h2>
+        </div>
+        <div class="modal-body">
+            <div class="result-container" id="resultContainer"></div>
+            <div class="modal-actions" id="resultActions">
+                <button class="btn btn-secondary" id="closePageBtn">
+                    <span class="material-icons-round">close</span>
+                    <span class="label">Tutup</span>
+                </button>
+                <button class="btn btn-primary" id="downloadBtn">
+                    <span class="material-icons-round">download</span>
+                    <span class="label">Unduh</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+const liveVideo = document.getElementById('liveVideo');
+const snapshot = document.getElementById('snapshot');
+const output = document.getElementById('output');
+const fileInput = document.getElementById('fileInput');
+const fileInputBtn = document.getElementById('fileInputBtn');
+const startCameraButton = document.getElementById('startCameraButton');
+const createQRBtn = document.getElementById('createQRBtn');
+const scannerOverlay = document.getElementById('scannerOverlay');
+const scannerPlaceholder = document.getElementById('scannerPlaceholder');
+const flashlightBtn = document.getElementById('flashlightBtn');
+
+const qrModal = document.getElementById('qrModal');
 const qrText = document.getElementById('qrText');
 const qrCanvas = document.getElementById('qrCanvas');
-const qrSize = document.getElementById('qrSize');
-const qrLevel = document.getElementById('qrLevel');
-const qrForeground = document.getElementById('qrForeground');
-const qrBackground = document.getElementById('qrBackground');
-const fgValue = document.getElementById('fgValue');
-const bgValue = document.getElementById('bgValue');
-const qrInfo = document.getElementById('qrInfo');
-const downloadPngBtn = document.getElementById('downloadPngBtn');
-const downloadSvgBtn = document.getElementById('downloadSvgBtn');
-const copyBtn = document.getElementById('copyBtn');
-const resetBtn = document.getElementById('resetBtn');
+const downloadQRBtn = document.getElementById('downloadQRBtn');
 
-let qr = null;
+const resultModal = document.getElementById('resultModal');
+const resultContainer = document.getElementById('resultContainer');
+const downloadBtn = document.getElementById('downloadBtn');
+const closePageBtn = document.getElementById('closePageBtn');
+
+const actionButtons = document.getElementById('actionButtons');
+const copyTextBtn = document.getElementById('copyTextBtn');
+const rightActionBtn = document.getElementById('rightActionBtn');
+
+const luckyCheck = document.getElementById('luckyCheck');
+
+let stream = null;
+let animationFrameId = null;
+let lastDecodedData = null;
+let lastDecodedDataLink = null;
+let lastDecodedText = null;
+let track = null;
+let torchOn = false;
 
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
@@ -714,137 +1079,465 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-function generateQR() {
-    const text = qrText.value.trim() || " ";
-    const size = parseInt(qrSize.value);
-    const level = qrLevel.value;
-    const foreground = qrForeground.value;
-    const background = qrBackground.value;
-    
-    qr = new QRious({
-        element: qrCanvas,
-        value: text,
-        size: size,
-        level: level,
-        background: background,
-        foreground: foreground
-    });
-    
-    if (qrText.value.trim()) {
-        const charCount = qrText.value.length;
-        qrInfo.textContent = `${charCount} karakter • ${size}x${size}px • Level ${level}`;
+function playBeep() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15);
+    } catch (err) {
+        console.error("Audio error:", err);
+    }
+}
+
+function caesarDecipher(str, shift) {
+    let result = '';
+    for (let i = 0; i < str.length; i++) {
+        let code = str.charCodeAt(i);
+        if (code >= 65 && code <= 90) {
+            result += String.fromCharCode((code - 65 - shift + 26) % 26 + 65);
+        } else if (code >= 97 && code <= 122) {
+            result += String.fromCharCode((code - 97 - shift + 26) % 26 + 97);
+        } else {
+            result += str[i];
+        }
+    }
+    return result;
+}
+
+function setOutput(text, type = '') {
+    output.textContent = text;
+    output.className = 'output-text' + (type ? ' ' + type : '');
+}
+
+function openQRModal() {
+    qrModal.classList.add('open');
+    document.body.classList.add('modal-open');
+    generateQRFromInput();
+}
+
+function closeQRModal() {
+    qrModal.classList.remove('open');
+    document.body.classList.remove('modal-open');
+}
+
+function openResultModal() {
+    resultModal.classList.add('open');
+    document.body.classList.add('modal-open');
+}
+
+function closeResultModal() {
+    resultModal.classList.remove('open');
+    document.body.classList.remove('modal-open');
+    resultContainer.innerHTML = '';
+}
+
+function showDecodedBase64(data) {
+    setOutput('');
+    resultContainer.innerHTML = '';
+    lastDecodedData = null;
+    actionButtons.classList.remove('show');
+    lastDecodedDataLink = null;
+    lastDecodedText = null;
+
+    if (data.startsWith('data:image/')) {
+        const img = document.createElement('img');
+        img.src = data;
+        img.alt = "Gambar hasil dekripsi";
+        resultContainer.appendChild(img);
+        lastDecodedData = data;
+        openResultModal();
+    } else if (data.startsWith('data:video/')) {
+        const vid = document.createElement('video');
+        vid.src = data;
+        vid.controls = true;
+        vid.loop = true;
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.preload = "metadata";
+        resultContainer.appendChild(vid);
+        lastDecodedData = data;
+        openResultModal();
     } else {
-        qrInfo.textContent = 'Masukkan teks untuk membuat QR Code';
+        processQRData(data);
     }
 }
 
-function updateColorValue(input, display) {
-    display.textContent = input.value.toUpperCase();
+function stopCamera() {
+    if (stream) {
+        if (torchOn && track) {
+            try {
+                track.applyConstraints({ advanced: [{ torch: false }] });
+            } catch (e) {}
+            torchOn = false;
+        }
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+        track = null;
+    }
+    
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    
+    liveVideo.pause();
+    liveVideo.srcObject = null;
+    liveVideo.style.display = 'none';
+    scannerPlaceholder.style.display = 'flex';
+    scannerOverlay.classList.remove('active');
+    
+    startCameraButton.innerHTML = '<span class="material-icons-round">videocam</span><span class="label">Nyalakan Kamera</span>';
+    flashlightBtn.disabled = true;
+    flashlightBtn.innerHTML = '<span class="material-icons-round">flashlight_off</span>';
 }
 
-qrText.addEventListener('input', generateQR);
-qrSize.addEventListener('change', generateQR);
-qrLevel.addEventListener('change', generateQR);
-
-qrForeground.addEventListener('input', () => {
-    updateColorValue(qrForeground, fgValue);
-    generateQR();
-});
-
-qrBackground.addEventListener('input', () => {
-    updateColorValue(qrBackground, bgValue);
-    generateQR();
-});
-
-downloadPngBtn.addEventListener('click', () => {
-    if (!qrText.value.trim()) {
-        showToast('Masukkan teks terlebih dahulu', 'error');
-        return;
+async function startCamera() {
+    stopCamera();
+    
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }
+        });
+        
+        liveVideo.srcObject = stream;
+        track = stream.getVideoTracks()[0] || null;
+        
+        liveVideo.style.display = 'block';
+        scannerPlaceholder.style.display = 'none';
+        scannerOverlay.classList.add('active');
+        
+        try {
+            const caps = track?.getCapabilities?.() || null;
+            if (caps?.torch) {
+                flashlightBtn.disabled = false;
+                flashlightBtn.innerHTML = '<span class="material-icons-round">flashlight_off</span>';
+            }
+        } catch (e) {
+            flashlightBtn.disabled = true;
+        }
+        
+        await liveVideo.play();
+        startCameraButton.innerHTML = '<span class="material-icons-round">videocam_off</span><span class="label">Matikan Kamera</span>';
+        setOutput('📷 Kamera aktif - Arahkan ke kode', 'info');
+        scanQRCode();
+        
+    } catch (err) {
+        setOutput('❌ Gagal mengakses kamera: ' + err.message, 'error');
+        showToast('Gagal mengakses kamera', 'error');
     }
-    
-    const a = document.createElement('a');
-    a.href = qrCanvas.toDataURL('image/png');
-    a.download = 'qrcode.png';
-    a.click();
-    showToast('QR Code PNG diunduh!', 'success');
-});
+}
 
-downloadSvgBtn.addEventListener('click', () => {
-    if (!qrText.value.trim()) {
-        showToast('Masukkan teks terlebih dahulu', 'error');
-        return;
+function toggleCamera() {
+    if (stream) {
+        stopCamera();
+        setOutput('✦ STATUS: SIAP', 'info');
+    } else {
+        startCamera();
     }
-    
-    const size = parseInt(qrSize.value);
-    const text = qrText.value.trim();
-    const foreground = qrForeground.value;
-    const background = qrBackground.value;
-    
-    // Create a temporary canvas to get QR data
-    const tempCanvas = document.createElement('canvas');
-    const tempQr = new QRious({
-        element: tempCanvas,
-        value: text,
-        size: size,
-        level: qrLevel.value,
-        background: background,
-        foreground: foreground
-    });
-    
-    // Convert to SVG (simplified approach using image embedding)
-    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <rect width="100%" height="100%" fill="${background}"/>
-    <image width="${size}" height="${size}" xlink:href="${tempCanvas.toDataURL('image/png')}"/>
-</svg>`;
-    
-    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'qrcode.svg';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('QR Code SVG diunduh!', 'success');
-});
+}
 
-copyBtn.addEventListener('click', async () => {
-    if (!qrText.value.trim()) {
-        showToast('Masukkan teks terlebih dahulu', 'error');
+flashlightBtn.addEventListener('click', async () => {
+    if (!track) {
+        showToast('Senter tidak tersedia', 'error');
         return;
     }
     
     try {
-        const blob = await new Promise(resolve => qrCanvas.toBlob(resolve, 'image/png'));
-        await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-        ]);
-        showToast('QR Code disalin ke clipboard!', 'success');
+        const caps = track.getCapabilities?.() || {};
+        if (!caps.torch) {
+            showToast('Perangkat tidak mendukung senter', 'error');
+            return;
+        }
+        
+        await track.applyConstraints({ advanced: [{ torch: !torchOn }] });
+        torchOn = !torchOn;
+        
+        flashlightBtn.innerHTML = `<span class="material-icons-round">${torchOn ? 'flashlight_on' : 'flashlight_off'}</span>`;
+        showToast(torchOn ? 'Senter ON' : 'Senter OFF', 'info');
+        
     } catch (err) {
-        // Fallback: copy data URL
+        showToast('Gagal mengaktifkan senter', 'error');
+    }
+});
+
+function tryDecodeBarcodeFromCanvas(canvas) {
+    return new Promise((resolve) => {
+        if ('BarcodeDetector' in window) {
+            try {
+                const formats = ["code_128", "code_39", "code_93", "ean_13", "ean_8", "upc_e", "upc_a", "itf", "codabar"];
+                const detector = new BarcodeDetector({ formats });
+                detector.detect(canvas)
+                    .then(results => {
+                        if (results?.length > 0) {
+                            resolve(results[0].rawValue || null);
+                        } else {
+                            resolve(null);
+                        }
+                    })
+                    .catch(err => {
+                        console.warn("BarcodeDetector error:", err);
+                        resolve(null);
+                    });
+                return;
+            } catch (err) {
+                console.warn("BarcodeDetector exception:", err);
+            }
+        }
+        
         try {
-            await navigator.clipboard.writeText(qrCanvas.toDataURL('image/png'));
-            showToast('Data URL disalin ke clipboard!', 'info');
+            const src = canvas.toDataURL();
+            if (window.Quagga?.decodeSingle) {
+                Quagga.decodeSingle({
+                    src,
+                    numOfWorkers: 0,
+                    inputStream: { size: 800 },
+                    locator: { patchSize: "medium", halfSample: true },
+                    decoder: {
+                        readers: [
+                            "code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader",
+                            "upc_reader", "upc_e_reader", "codabar_reader", "i2of5_reader"
+                        ]
+                    }
+                }, function(result) {
+                    if (result?.codeResult?.code) {
+                        resolve(result.codeResult.code);
+                    } else {
+                        resolve(null);
+                    }
+                });
+            } else {
+                resolve(null);
+            }
+        } catch (err) {
+            console.warn("Quagga fallback error:", err);
+            resolve(null);
+        }
+    });
+}
+
+function scanQRCode() {
+    const ctx = snapshot.getContext('2d');
+    
+    async function tick() {
+        if (!stream) return;
+        
+        if (liveVideo.readyState === liveVideo.HAVE_ENOUGH_DATA) {
+            const w = liveVideo.videoWidth;
+            const h = liveVideo.videoHeight;
+            
+            if (w === 0 || h === 0) {
+                animationFrameId = requestAnimationFrame(tick);
+                return;
+            }
+            
+            snapshot.width = w;
+            snapshot.height = h;
+            ctx.drawImage(liveVideo, 0, 0, w, h);
+            
+            const imageData = ctx.getImageData(0, 0, w, h);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+                playBeep();
+                setOutput('🎯 QR: ' + code.data, '');
+                processQRData(code.data);
+                stopCamera();
+                showToast('QR Code ditemukan!', 'success');
+                return;
+            }
+            
+            try {
+                const barcode = await tryDecodeBarcodeFromCanvas(snapshot);
+                if (barcode) {
+                    playBeep();
+                    setOutput('🎯 Barcode: ' + barcode, '');
+                    processQRData(barcode);
+                    stopCamera();
+                    showToast('Barcode ditemukan!', 'success');
+                    return;
+                }
+            } catch (err) {
+                console.warn("Barcode check failed:", err);
+            }
+        }
+        
+        animationFrameId = requestAnimationFrame(tick);
+    }
+    
+    tick();
+}
+
+function processQRData(data) {
+    lastDecodedData = null;
+    actionButtons.classList.remove('show');
+    lastDecodedDataLink = null;
+    lastDecodedText = null;
+    
+    const parts = data.split("||").map(p => p.trim());
+    
+    if (luckyCheck.checked) {
+        if (parts.length === 2 && parts[0].startsWith("http") && !isNaN(parseInt(parts[1]))) {
+            fetchAndDecrypt(parts[0], parseInt(parts[1]));
+            return;
+        }
+    }
+    
+    setOutput('📋 ' + data, '');
+    lastDecodedText = data;
+    
+    if (data.startsWith("http://") || data.startsWith("https://")) {
+        lastDecodedDataLink = data;
+        actionButtons.classList.add('show');
+        rightActionBtn.innerHTML = '<span class="material-icons-round">open_in_new</span><span class="label">Buka Link</span>';
+    } else {
+        actionButtons.classList.add('show');
+        rightActionBtn.innerHTML = '<span class="material-icons-round">search</span><span class="label">Cari Google</span>';
+    }
+}
+
+async function fetchAndDecrypt(link, shift) {
+    try {
+        setOutput('⏳ Mengambil data...', 'info');
+        const res = await fetch(link);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const rawText = await res.text();
+        const shifted = caesarDecipher(rawText, shift);
+        showDecodedBase64(shifted);
+    } catch (err) {
+        setOutput('❌ Error: ' + err.message, 'error');
+        showToast('Gagal mengambil data', 'error');
+    }
+}
+
+fileInputBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    stopCamera();
+    const reader = new FileReader();
+    
+    reader.onload = async (ev) => {
+        const img = new Image();
+        img.onload = async function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            
+            if (code) {
+                playBeep();
+                setOutput('🎯 QR: ' + code.data, '');
+                processQRData(code.data);
+                showToast('QR Code ditemukan!', 'success');
+                return;
+            }
+            
+            setOutput('🔍 Mencari barcode...', 'info');
+            
+            try {
+                const barcode = await tryDecodeBarcodeFromCanvas(canvas);
+                if (barcode) {
+                    playBeep();
+                    setOutput('🎯 Barcode: ' + barcode, '');
+                    processQRData(barcode);
+                    showToast('Barcode ditemukan!', 'success');
+                } else {
+                    setOutput('⚠ Tidak ditemukan QR/Barcode', 'warning');
+                    actionButtons.classList.remove('show');
+                }
+            } catch (err) {
+                setOutput('❌ Error: ' + err.message, 'error');
+            }
+        };
+        
+        img.src = ev.target.result;
+    };
+    
+    reader.readAsDataURL(file);
+});
+
+copyTextBtn.addEventListener('click', async () => {
+    if (lastDecodedText) {
+        try {
+            await navigator.clipboard.writeText(lastDecodedText);
+            showToast('Teks berhasil disalin!', 'success');
         } catch (e) {
-            showToast('Gagal menyalin gambar', 'error');
+            showToast('Gagal menyalin teks', 'error');
         }
     }
 });
 
-resetBtn.addEventListener('click', () => {
-    qrText.value = '';
-    qrSize.value = '200';
-    qrLevel.value = 'H';
-    qrForeground.value = '#1A1A25';
-    qrBackground.value = '#FFFFFF';
-    fgValue.textContent = '#1A1A25';
-    bgValue.textContent = '#FFFFFF';
-    generateQR();
-    showToast('Reset berhasil', 'info');
+rightActionBtn.addEventListener('click', () => {
+    if (lastDecodedDataLink) {
+        window.open(lastDecodedDataLink, "_blank");
+    } else if (lastDecodedText) {
+        const q = encodeURIComponent(lastDecodedText);
+        window.open(`https://www.google.com/search?q=${q}`, '_blank');
+    }
 });
 
-// Initialize
-generateQR();
+downloadBtn.addEventListener('click', () => {
+    if (!lastDecodedData) return;
+    const a = document.createElement('a');
+    a.href = lastDecodedData;
+    a.download = lastDecodedData.startsWith('data:image/') ? 'hasil_dekripsi.png' : 'hasil_dekripsi';
+    a.click();
+    showToast('Mengunduh file...', 'success');
+});
+
+closePageBtn.addEventListener('click', () => {
+    location.reload();
+});
+
+createQRBtn.addEventListener('click', openQRModal);
+
+qrText.addEventListener('input', generateQRFromInput);
+
+function generateQRFromInput() {
+    const text = qrText.value.trim() || " ";
+    new QRious({
+        element: qrCanvas,
+        value: text,
+        size: 200,
+        level: 'H',
+        background: '#ffffff',
+        foreground: '#1A1A25'
+    });
+}
+
+downloadQRBtn.addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = qrCanvas.toDataURL("image/png");
+    a.download = 'qrcode.png';
+    a.click();
+    showToast('QR Code diunduh!', 'success');
+});
+
+startCameraButton.addEventListener('click', toggleCamera);
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        if (resultModal.classList.contains('open')) closeResultModal();
+        if (qrModal.classList.contains('open')) closeQRModal();
+    }
+});
+
+setOutput('✦ STATUS: SIAP', 'info');
 </script>
 
 </body>
