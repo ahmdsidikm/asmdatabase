@@ -486,9 +486,18 @@
                                 <button onclick="connectSupabase()" class="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-medium hover:shadow-lg transition-all">
                                     Hubungkan ke Supabase
                                 </button>
+                                <button onclick="testConnection()" class="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-all">
+                                    Test
+                                </button>
                                 <button onclick="disconnectSupabase()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-all">
                                     Putuskan
                                 </button>
+                            </div>
+                            
+                            <!-- Debug Info -->
+                            <div id="debugInfo" class="hidden mt-4 p-4 bg-slate-800 rounded-xl text-sm font-mono">
+                                <p class="text-emerald-400 mb-2">Debug Info:</p>
+                                <pre id="debugText" class="text-slate-300 text-xs whitespace-pre-wrap"></pre>
                             </div>
                         </div>
                     </div>
@@ -1027,13 +1036,36 @@ FOR EACH ROW EXECUTE FUNCTION update_account_balance();</pre>
                 document.getElementById('supabaseKey').value = data.supabase.key;
                 if (data.supabase.connected) {
                     initSupabase();
+                    updateConnectionStatus();
+                }
+            }
+        }
+        
+        // Auto-reconnect on page load if was connected
+        async function autoReconnect() {
+            if (data.supabase.url && data.supabase.key && data.supabase.connected) {
+                if (initSupabase()) {
+                    console.log('Auto-reconnected to Supabase');
                 }
             }
         }
 
         function initSupabase() {
             try {
-                supabaseClient = supabase.createClient(data.supabase.url, data.supabase.key);
+                // Clean URL - remove trailing slash if exists
+                let url = data.supabase.url.trim();
+                if (url.endsWith('/')) {
+                    url = url.slice(0, -1);
+                }
+                data.supabase.url = url;
+                
+                supabaseClient = supabase.createClient(url, data.supabase.key, {
+                    auth: {
+                        persistSession: false,
+                        autoRefreshToken: false
+                    }
+                });
+                console.log('Supabase client initialized:', url);
                 return true;
             } catch (error) {
                 console.error('Error initializing Supabase:', error);
@@ -1050,25 +1082,106 @@ FOR EACH ROW EXECUTE FUNCTION update_account_balance();</pre>
                 return;
             }
             
+            // Validate URL format
+            if (!url.includes('supabase.co')) {
+                showToast('URL tidak valid! Gunakan format: https://xxxxx.supabase.co');
+                return;
+            }
+            
             data.supabase.url = url;
             data.supabase.key = key;
             
+            showToast('Menghubungkan ke Supabase...');
+            
             if (initSupabase()) {
                 try {
-                    // Test connection
-                    const { data: testData, error } = await supabaseClient.from('settings').select('*').limit(1);
+                    // Test connection with multiple methods
+                    let connected = false;
+                    let errorMsg = '';
                     
-                    if (error) throw error;
+                    // Method 1: Try to query accounts table
+                    try {
+                        const { data: accData, error: accError } = await supabaseClient
+                            .from('accounts')
+                            .select('id')
+                            .limit(1);
+                        
+                        if (!accError) {
+                            connected = true;
+                        } else {
+                            errorMsg = accError.message;
+                        }
+                    } catch (e) {
+                        errorMsg = e.message;
+                    }
                     
-                    data.supabase.connected = true;
-                    saveData();
-                    updateConnectionStatus();
-                    showToast('Berhasil terhubung ke Supabase!');
+                    // Method 2: If accounts failed, try settings table
+                    if (!connected) {
+                        try {
+                            const { data: setData, error: setError } = await supabaseClient
+                                .from('settings')
+                                .select('id')
+                                .limit(1);
+                            
+                            if (!setError) {
+                                connected = true;
+                            }
+                        } catch (e) {
+                            // Keep original error
+                        }
+                    }
+                    
+                    // Method 3: Try a simple RPC or REST health check
+                    if (!connected) {
+                        try {
+                            // Try to access the REST API directly
+                            const response = await fetch(`${url}/rest/v1/`, {
+                                headers: {
+                                    'apikey': key,
+                                    'Authorization': `Bearer ${key}`
+                                }
+                            });
+                            
+                            if (response.ok || response.status === 200 || response.status === 404) {
+                                connected = true;
+                            }
+                        } catch (e) {
+                            // Network error
+                        }
+                    }
+                    
+                    if (connected) {
+                        data.supabase.connected = true;
+                        saveData();
+                        updateConnectionStatus();
+                        showToast('✅ Berhasil terhubung ke Supabase!');
+                    } else {
+                        throw new Error(errorMsg || 'Tidak dapat terhubung. Pastikan tabel sudah dibuat.');
+                    }
+                    
                 } catch (error) {
                     console.error('Connection error:', error);
-                    showToast('Gagal terhubung: ' + error.message);
                     data.supabase.connected = false;
+                    
+                    // More helpful error messages
+                    let msg = error.message;
+                    if (msg.includes('JWT')) {
+                        msg = 'API Key tidak valid!';
+                    } else if (msg.includes('fetch') || msg.includes('network')) {
+                        msg = 'Gagal menghubungi server. Periksa koneksi internet.';
+                    } else if (msg.includes('relation') || msg.includes('does not exist')) {
+                        // Table doesn't exist but connection works!
+                        data.supabase.connected = true;
+                        saveData();
+                        updateConnectionStatus();
+                        showToast('✅ Terhubung! Tabel belum dibuat - jalankan SQL di bawah.');
+                        return;
+                    }
+                    
+                    showToast('❌ Gagal: ' + msg);
                 }
+            } else {
+                showToast('❌ Gagal inisialisasi Supabase client');
             }
         }
 
@@ -1077,7 +1190,93 @@ FOR EACH ROW EXECUTE FUNCTION update_account_balance();</pre>
             supabaseClient = null;
             saveData();
             updateConnectionStatus();
+            document.getElementById('debugInfo').classList.add('hidden');
             showToast('Koneksi Supabase diputus');
+        }
+        
+        async function testConnection() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            
+            const debugDiv = document.getElementById('debugInfo');
+            const debugText = document.getElementById('debugText');
+            debugDiv.classList.remove('hidden');
+            
+            let logs = [];
+            logs.push(`URL: ${url}`);
+            logs.push(`Key: ${key.substring(0, 20)}...`);
+            logs.push(`---`);
+            
+            if (!url || !key) {
+                logs.push('❌ URL atau Key kosong!');
+                debugText.textContent = logs.join('\n');
+                return;
+            }
+            
+            // Test 1: Basic fetch to Supabase
+            logs.push('Test 1: Ping REST API...');
+            debugText.textContent = logs.join('\n');
+            
+            try {
+                const response = await fetch(`${url}/rest/v1/`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                logs.push(`  Status: ${response.status} ${response.statusText}`);
+                
+                if (response.status === 200) {
+                    logs.push('  ✅ REST API OK');
+                } else if (response.status === 401) {
+                    logs.push('  ❌ API Key tidak valid!');
+                } else {
+                    logs.push('  ⚠️ Response tidak standar');
+                }
+            } catch (e) {
+                logs.push(`  ❌ Error: ${e.message}`);
+            }
+            
+            debugText.textContent = logs.join('\n');
+            
+            // Test 2: Initialize client and query
+            logs.push('---');
+            logs.push('Test 2: Supabase Client...');
+            debugText.textContent = logs.join('\n');
+            
+            try {
+                const testClient = supabase.createClient(url, key);
+                logs.push('  ✅ Client dibuat');
+                
+                // Try accounts table
+                logs.push('Test 3: Query tabel accounts...');
+                debugText.textContent = logs.join('\n');
+                
+                const { data: accData, error: accError } = await testClient
+                    .from('accounts')
+                    .select('*')
+                    .limit(1);
+                
+                if (accError) {
+                    logs.push(`  ⚠️ Error: ${accError.message}`);
+                    if (accError.message.includes('does not exist')) {
+                        logs.push('  📝 Tabel belum dibuat - jalankan SQL');
+                    } else if (accError.message.includes('JWSError') || accError.message.includes('JWT')) {
+                        logs.push('  ❌ API Key tidak valid!');
+                    }
+                } else {
+                    logs.push(`  ✅ OK - ${accData ? accData.length : 0} row(s)`);
+                }
+                
+            } catch (e) {
+                logs.push(`  ❌ Error: ${e.message}`);
+            }
+            
+            logs.push('---');
+            logs.push('Test selesai!');
+            debugText.textContent = logs.join('\n');
         }
 
         function updateConnectionStatus() {
@@ -1106,118 +1305,216 @@ FOR EACH ROW EXECUTE FUNCTION update_account_balance();</pre>
         }
 
         async function syncToSupabase() {
-            if (!data.supabase.connected || !supabaseClient) {
+            if (!data.supabase.connected) {
                 showToast('Hubungkan ke Supabase terlebih dahulu!');
                 return;
+            }
+            
+            // Re-initialize client if needed
+            if (!supabaseClient) {
+                initSupabase();
             }
             
             try {
                 showToast('Mengupload data...');
                 
+                let successCount = 0;
+                let errorCount = 0;
+                
                 // Sync accounts
-                for (const account of data.accounts) {
-                    const { error } = await supabaseClient.from('accounts').upsert({
-                        id: account.id,
-                        name: account.name,
-                        type: account.type,
-                        balance: account.balance,
-                        description: account.description || '',
-                        is_active: true
-                    });
-                    if (error) throw error;
+                if (data.accounts.length > 0) {
+                    for (const account of data.accounts) {
+                        try {
+                            const { error } = await supabaseClient.from('accounts').upsert({
+                                id: account.id,
+                                name: account.name,
+                                type: account.type,
+                                balance: account.balance,
+                                description: account.description || '',
+                                is_active: true
+                            }, { onConflict: 'id' });
+                            
+                            if (error) {
+                                console.error('Account sync error:', error);
+                                errorCount++;
+                            } else {
+                                successCount++;
+                            }
+                        } catch (e) {
+                            console.error('Account sync exception:', e);
+                            errorCount++;
+                        }
+                    }
                 }
                 
                 // Sync transactions
-                for (const trans of data.transactions) {
-                    const { error } = await supabaseClient.from('transactions').upsert({
-                        id: trans.id,
-                        account_id: trans.accountId,
-                        type: trans.type,
-                        amount: trans.amount,
-                        category: trans.category,
-                        description: trans.description,
-                        notes: trans.notes || '',
-                        date: trans.date,
-                        to_account_id: trans.toAccountId || null
-                    });
-                    if (error) throw error;
+                if (data.transactions.length > 0) {
+                    for (const trans of data.transactions) {
+                        try {
+                            const { error } = await supabaseClient.from('transactions').upsert({
+                                id: trans.id,
+                                account_id: trans.accountId,
+                                type: trans.type,
+                                amount: trans.amount,
+                                category: trans.category,
+                                description: trans.description,
+                                notes: trans.notes || '',
+                                date: trans.date,
+                                to_account_id: trans.toAccountId || null
+                            }, { onConflict: 'id' });
+                            
+                            if (error) {
+                                console.error('Transaction sync error:', error);
+                                errorCount++;
+                            } else {
+                                successCount++;
+                            }
+                        } catch (e) {
+                            console.error('Transaction sync exception:', e);
+                            errorCount++;
+                        }
+                    }
                 }
                 
                 // Sync budgets
-                for (const budget of data.budgets) {
-                    const { error } = await supabaseClient.from('budgets').upsert({
-                        id: budget.id,
-                        category: budget.category,
-                        amount: budget.amount
-                    });
-                    if (error) throw error;
+                if (data.budgets.length > 0) {
+                    for (const budget of data.budgets) {
+                        try {
+                            const { error } = await supabaseClient.from('budgets').upsert({
+                                id: budget.id,
+                                category: budget.category,
+                                amount: budget.amount
+                            }, { onConflict: 'id' });
+                            
+                            if (error) {
+                                console.error('Budget sync error:', error);
+                                errorCount++;
+                            } else {
+                                successCount++;
+                            }
+                        } catch (e) {
+                            console.error('Budget sync exception:', e);
+                            errorCount++;
+                        }
+                    }
                 }
                 
                 data.supabase.lastSync = new Date().toISOString();
                 saveData();
                 updateConnectionStatus();
-                showToast('Data berhasil diupload ke Supabase!');
+                
+                if (errorCount === 0) {
+                    showToast(`✅ ${successCount} item berhasil diupload!`);
+                } else {
+                    showToast(`⚠️ ${successCount} OK, ${errorCount} gagal. Cek console.`);
+                }
             } catch (error) {
                 console.error('Sync error:', error);
-                showToast('Gagal sync: ' + error.message);
+                showToast('❌ Gagal sync: ' + error.message);
             }
         }
 
         async function syncFromSupabase() {
-            if (!data.supabase.connected || !supabaseClient) {
+            if (!data.supabase.connected) {
                 showToast('Hubungkan ke Supabase terlebih dahulu!');
                 return;
+            }
+            
+            // Re-initialize client if needed
+            if (!supabaseClient) {
+                initSupabase();
             }
             
             try {
                 showToast('Mengdownload data...');
                 
-                // Get accounts
-                const { data: accounts, error: accError } = await supabaseClient.from('accounts').select('*');
-                if (accError) throw accError;
+                let hasData = false;
                 
-                data.accounts = accounts.map(a => ({
-                    id: a.id,
-                    name: a.name,
-                    type: a.type,
-                    balance: parseFloat(a.balance),
-                    description: a.description
-                }));
+                // Get accounts
+                try {
+                    const { data: accounts, error: accError } = await supabaseClient
+                        .from('accounts')
+                        .select('*');
+                    
+                    if (accError) {
+                        console.error('Accounts fetch error:', accError);
+                        if (accError.message.includes('does not exist')) {
+                            showToast('⚠️ Tabel accounts belum dibuat');
+                        }
+                    } else if (accounts && accounts.length > 0) {
+                        data.accounts = accounts.map(a => ({
+                            id: a.id,
+                            name: a.name,
+                            type: a.type,
+                            balance: parseFloat(a.balance) || 0,
+                            description: a.description || ''
+                        }));
+                        hasData = true;
+                    }
+                } catch (e) {
+                    console.error('Accounts exception:', e);
+                }
                 
                 // Get transactions
-                const { data: transactions, error: transError } = await supabaseClient.from('transactions').select('*');
-                if (transError) throw transError;
-                
-                data.transactions = transactions.map(t => ({
-                    id: t.id,
-                    accountId: t.account_id,
-                    type: t.type,
-                    amount: parseFloat(t.amount),
-                    category: t.category,
-                    description: t.description,
-                    notes: t.notes,
-                    date: t.date,
-                    toAccountId: t.to_account_id
-                }));
+                try {
+                    const { data: transactions, error: transError } = await supabaseClient
+                        .from('transactions')
+                        .select('*');
+                    
+                    if (transError) {
+                        console.error('Transactions fetch error:', transError);
+                    } else if (transactions && transactions.length > 0) {
+                        data.transactions = transactions.map(t => ({
+                            id: t.id,
+                            accountId: t.account_id,
+                            type: t.type,
+                            amount: parseFloat(t.amount) || 0,
+                            category: t.category,
+                            description: t.description,
+                            notes: t.notes || '',
+                            date: t.date,
+                            toAccountId: t.to_account_id
+                        }));
+                        hasData = true;
+                    }
+                } catch (e) {
+                    console.error('Transactions exception:', e);
+                }
                 
                 // Get budgets
-                const { data: budgets, error: budError } = await supabaseClient.from('budgets').select('*');
-                if (budError) throw budError;
-                
-                data.budgets = budgets.map(b => ({
-                    id: b.id,
-                    category: b.category,
-                    amount: parseFloat(b.amount)
-                }));
+                try {
+                    const { data: budgets, error: budError } = await supabaseClient
+                        .from('budgets')
+                        .select('*');
+                    
+                    if (budError) {
+                        console.error('Budgets fetch error:', budError);
+                    } else if (budgets && budgets.length > 0) {
+                        data.budgets = budgets.map(b => ({
+                            id: b.id,
+                            category: b.category,
+                            amount: parseFloat(b.amount) || 0
+                        }));
+                        hasData = true;
+                    }
+                } catch (e) {
+                    console.error('Budgets exception:', e);
+                }
                 
                 data.supabase.lastSync = new Date().toISOString();
                 saveData();
                 updateDashboard();
+                updateAccountsUI();
                 updateConnectionStatus();
-                showToast('Data berhasil didownload dari Supabase!');
+                
+                if (hasData) {
+                    showToast(`✅ Data berhasil didownload! ${data.accounts.length} akun, ${data.transactions.length} transaksi`);
+                } else {
+                    showToast('ℹ️ Tidak ada data di cloud atau tabel belum dibuat');
+                }
             } catch (error) {
                 console.error('Sync error:', error);
-                showToast('Gagal sync: ' + error.message);
+                showToast('❌ Gagal sync: ' + error.message);
             }
         }
 
