@@ -1,726 +1,949 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML Code Editor with Supabase</title>
+    <title>HTML Editor Pro - Supabase Integration</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
     <style>
         .CodeMirror {
-            height: 450px;
-            border: 1px solid #374151;
-            border-radius: 0.375rem;
+            height: 100% !important;
             font-size: 14px;
-            transition: all 0.3s ease;
+            border-radius: 0.5rem;
         }
-        .CodeMirror.fullscreen {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            height: 100vh !important;
-            width: 100vw !important;
-            z-index: 9999 !important;
-            border-radius: 0 !important;
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        .fullscreen-overlay {
-            display: none;
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 10000;
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        .fullscreen-overlay.active {
-            display: flex;
-            gap: 10px;
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
         }
-        .mobile-frame {
-            background: linear-gradient(145deg, #1a1a2e, #16213e);
-            border-radius: 35px;
-            padding: 12px;
-            box-shadow: 
-                0 0 0 3px #0f0f23,
-                0 10px 40px rgba(0,0,0,0.5),
-                inset 0 0 20px rgba(255,255,255,0.05);
-            position: relative;
-        }
-        .mobile-frame::before {
-            content: '';
-            position: absolute;
-            top: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
             height: 6px;
-            background: #0f0f23;
-            border-radius: 10px;
         }
-        .mobile-frame::after {
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 3px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+        .status-online::before {
             content: '';
             position: absolute;
-            bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            height: 5px;
-            background: #0f0f23;
-            border-radius: 10px;
-        }
-        .mobile-screen {
-            border-radius: 25px;
-            overflow: hidden;
-            background: white;
-        }
-        .device-selector button.active {
-            background: #3b82f6 !important;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse-ring 1.5s infinite;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
-    <div class="container mx-auto px-4 py-6">
-        <!-- Header -->
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-blue-400 mb-2">🖥️ HTML Code Editor</h1>
-            <p class="text-gray-400">Write, Run, Save & Load HTML Code</p>
-        </div>
-
-        <!-- Supabase Config -->
-        <div class="bg-gray-800 rounded-lg p-4 mb-6">
-            <h2 class="text-lg font-semibold mb-3 text-yellow-400">⚙️ Supabase Configuration</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Supabase URL</label>
-                    <input type="text" id="supabaseUrl" value="https://vlrglwotjlfamnpzaeir.supabase.co"
-                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+<body class="bg-gray-900 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-2xl">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl md:text-2xl font-bold">HTML Editor Pro</h1>
+                        <p class="text-xs text-white/70">dengan Supabase Integration</p>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Supabase Anon Key</label>
-                    <input type="password" id="supabaseKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZscmdsd290amxmYW1ucHphZWlyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNjYzMzYsImV4cCI6MjA3MDg0MjMzNn0.cwHu4vQlulKZQwNHD7ENT2zN_rZG4LkEQxJTjlIT12Q"
-                        class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                
+                <!-- Connection Status -->
+                <div id="connectionStatus" class="flex items-center gap-2 glass-effect px-4 py-2 rounded-full">
+                    <div class="relative w-3 h-3">
+                        <div id="statusDot" class="w-3 h-3 rounded-full bg-gray-400"></div>
+                    </div>
+                    <span id="statusText" class="text-sm">Belum Terhubung</span>
                 </div>
-            </div>
-            <button onclick="connectSupabase()" class="mt-3 bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-sm font-medium transition">
-                🔗 Connect to Supabase
-            </button>
-            <span id="connectionStatus" class="ml-3 text-sm"></span>
-        </div>
-
-        <!-- HTML Code Editor -->
-        <div class="bg-gray-800 rounded-lg p-4 mb-6" id="editorContainer">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="font-semibold text-orange-400">📄 HTML Code</h3>
-                <div class="flex gap-2">
-                    <button onclick="toggleDarkMode()" id="darkModeBtn" class="bg-gray-600 hover:bg-gray-700 px-3 py-1 rounded text-sm font-medium transition">
-                        🌙 Dark Mode
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="openConfigModal()" class="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all btn-glow">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span class="hidden sm:inline">Konfigurasi</span>
                     </button>
-                    <button onclick="toggleFullscreen()" id="fullscreenBtn" class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm font-medium transition">
-                        ⛶ Fullscreen
-                    </button>
-                    <button onclick="resetAll()" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm font-medium transition">
-                        🔄 Reset
+                    <button onclick="openSQLModal()" class="flex items-center gap-2 bg-emerald-500/80 hover:bg-emerald-500 px-4 py-2 rounded-lg transition-all btn-glow">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                        </svg>
+                        <span class="hidden sm:inline">SQL Guide</span>
                     </button>
                 </div>
             </div>
-            <textarea id="htmlCode"></textarea>
         </div>
+    </header>
 
-        <!-- Fullscreen Overlay Buttons -->
-        <div id="fullscreenOverlay" class="fullscreen-overlay">
-            <button onclick="toggleDarkMode()" id="darkModeBtnFS" class="bg-gray-600 hover:bg-gray-700 px-3 py-2 rounded text-sm font-medium transition text-white">
-                🌙 Dark Mode
-            </button>
-            <button onclick="toggleFullscreen()" class="bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm font-medium transition text-white">
-                ✕ Exit Fullscreen
-            </button>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-wrap gap-3 mb-6 justify-center">
-            <button onclick="runCode()" id="runBtn" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
-                ▶️ Run Code
-            </button>
-            <button onclick="stopCode()" id="stopBtn" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2 hidden">
-                ⏹️ Stop Code
-            </button>
-            <button onclick="openInNewTab()" class="bg-orange-600 hover:bg-orange-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
-                🔗 Open in New Tab
-            </button>
-            <button onclick="downloadCode()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
-                📥 Download
-            </button>
-            <label class="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2 cursor-pointer">
-                📤 Import File
-                <input type="file" accept=".html,.htm" onchange="importFile(event)" class="hidden">
-            </label>
-        </div>
-
-        <!-- Supabase Operations -->
-        <div class="bg-gray-800 rounded-lg p-4 mb-6">
-            <h2 class="text-lg font-semibold mb-3 text-cyan-400">💾 Supabase Operations</h2>
-            <div class="flex flex-wrap gap-3 items-end">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">Code ID</label>
-                    <input type="number" id="codeId" placeholder="Enter ID" min="1"
-                        class="w-32 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
-                </div>
-                <button onclick="saveToSupabase()" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded font-medium transition">
-                    💾 Save to Supabase
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Toolbar -->
+        <div class="bg-gray-800 rounded-t-xl p-4 flex flex-wrap items-center gap-3 border-b border-gray-700">
+            <!-- File Name Input -->
+            <div class="flex-1 min-w-[200px]">
+                <input type="text" id="fileName" placeholder="Nama file (contoh: index.html)" 
+                    class="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex flex-wrap gap-2">
+                <button onclick="runCode()" class="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-all font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Run</span>
                 </button>
-                <button onclick="loadFromSupabase()" class="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded font-medium transition">
-                    📂 Load from Supabase
+                <button onclick="saveToSupabase()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-all font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                    </svg>
+                    <span>Save</span>
                 </button>
-                <button onclick="loadAllFromSupabase()" class="bg-violet-600 hover:bg-violet-700 px-4 py-2 rounded font-medium transition">
-                    📋 Load All Records
+                <button onclick="openLoadModal()" class="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg transition-all font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                    </svg>
+                    <span>Load</span>
                 </button>
-                <button onclick="deleteFromSupabase()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded font-medium transition">
-                    🗑️ Delete Record
+                <button onclick="clearEditor()" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-all font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <span class="hidden sm:inline">Clear</span>
                 </button>
             </div>
         </div>
 
-        <!-- Saved Records List -->
-        <div id="recordsList" class="bg-gray-800 rounded-lg p-4 mb-6 hidden">
-            <h2 class="text-lg font-semibold mb-3 text-pink-400">📋 Saved Records</h2>
-            <div id="recordsContainer" class="space-y-2 max-h-48 overflow-y-auto"></div>
-        </div>
-
-        <!-- Preview Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Desktop Preview -->
-            <div class="bg-gray-800 rounded-lg p-4">
-                <h2 class="text-lg font-semibold mb-3 text-green-400">🖥️ Desktop Preview</h2>
-                <div class="bg-white rounded-lg overflow-hidden" style="min-height: 500px;">
-                    <iframe id="preview" class="w-full border-0" style="height: 500px;"></iframe>
+        <!-- Editor & Preview Container -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-4 bg-gray-800 lg:bg-transparent rounded-b-xl lg:rounded-xl overflow-hidden">
+            <!-- Code Editor -->
+            <div class="bg-gray-800 lg:rounded-xl overflow-hidden">
+                <div class="bg-gray-900 px-4 py-2 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                        <span class="text-gray-400 text-sm">Editor</span>
+                    </div>
+                    <button onclick="copyCode()" class="text-gray-400 hover:text-white transition-colors" title="Copy Code">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                    </button>
                 </div>
+                <div id="codeEditor" class="h-[400px] lg:h-[500px]"></div>
             </div>
 
-            <!-- Mobile Preview -->
-            <div class="bg-gray-800 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-lg font-semibold text-purple-400">📱 Mobile Preview</h2>
-                    <div class="device-selector flex gap-2">
-                        <button onclick="setMobileSize('iphone')" id="btn-iphone" class="active bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-xs font-medium transition">
-                            iPhone (375px)
+            <!-- Preview -->
+            <div class="bg-gray-800 lg:rounded-xl overflow-hidden">
+                <div class="bg-gray-900 px-4 py-2 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        <span class="text-gray-400 text-sm">Preview</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="openInNewTab()" class="text-gray-400 hover:text-white transition-colors" title="Buka di Tab Baru">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
                         </button>
-                        <button onclick="setMobileSize('android')" id="btn-android" class="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-xs font-medium transition">
-                            Android (360px)
-                        </button>
-                        <button onclick="setMobileSize('tablet')" id="btn-tablet" class="bg-gray-600 hover:bg-gray-500 px-3 py-1 rounded text-xs font-medium transition">
-                            Tablet (768px)
+                        <button onclick="openPreviewFullscreen()" class="text-gray-400 hover:text-white transition-colors" title="Fullscreen">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                            </svg>
                         </button>
                     </div>
                 </div>
-                <div class="flex justify-center items-start py-4 bg-gradient-to-b from-gray-700 to-gray-800 rounded-lg" style="min-height: 600px;">
-                    <div class="mobile-frame" id="mobileFrame">
-                        <div class="mobile-screen" id="mobileScreen" style="width: 375px; height: 667px;">
-                            <iframe id="previewMobile" class="w-full h-full border-0"></iframe>
+                <div class="bg-white h-[400px] lg:h-[500px]">
+                    <iframe id="preview" class="w-full h-full border-0"></iframe>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl w-full max-w-lg animate-fadeIn shadow-2xl">
+            <div class="gradient-bg rounded-t-2xl px-6 py-4 flex items-center justify-between">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Konfigurasi Supabase
+                </h2>
+                <button onclick="closeConfigModal()" class="text-white/80 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Supabase URL</label>
+                    <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co" 
+                        class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Supabase Anon Key</label>
+                    <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+                        class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Nama Tabel</label>
+                    <input type="text" id="tableName" placeholder="html_files" value="html_files"
+                        class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button onclick="testConnection()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Test Koneksi
+                    </button>
+                    <button onclick="saveConfig()" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SQL Guide Modal -->
+    <div id="sqlModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl w-full max-w-2xl animate-fadeIn shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="bg-emerald-600 rounded-t-2xl px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                    </svg>
+                    SQL Setup Guide
+                </h2>
+                <button onclick="closeSQLModal()" class="text-white/80 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto scrollbar-thin">
+                <div class="space-y-4">
+                    <div class="bg-gray-900 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-emerald-400 font-semibold">1. Buat Tabel di Supabase SQL Editor</h3>
+                            <button onclick="copySql('sql1')" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <pre id="sql1" class="text-gray-300 text-sm overflow-x-auto whitespace-pre-wrap"><code>-- Buat tabel untuk menyimpan file HTML
+CREATE TABLE html_files (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Buat index untuk pencarian nama
+CREATE INDEX idx_html_files_name ON html_files(name);
+
+-- Buat function untuk auto update timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Buat trigger untuk auto update
+CREATE TRIGGER update_html_files_updated_at
+    BEFORE UPDATE ON html_files
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();</code></pre>
+                    </div>
+
+                    <div class="bg-gray-900 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-emerald-400 font-semibold">2. Enable Row Level Security (RLS)</h3>
+                            <button onclick="copySql('sql2')" class="text-gray-400 hover:text-white transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <pre id="sql2" class="text-gray-300 text-sm overflow-x-auto whitespace-pre-wrap"><code>-- Enable RLS
+ALTER TABLE html_files ENABLE ROW LEVEL SECURITY;
+
+-- Policy untuk akses publik (baca/tulis)
+-- Gunakan ini jika ingin akses terbuka
+CREATE POLICY "Allow public access" ON html_files
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- ATAU untuk akses lebih aman dengan API key:
+-- CREATE POLICY "Allow anon access" ON html_files
+--     FOR ALL TO anon USING (true) WITH CHECK (true);</code></pre>
+                    </div>
+
+                    <div class="bg-gray-900 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-emerald-400 font-semibold">3. Cara Mendapatkan API Credentials</h3>
+                        </div>
+                        <div class="text-gray-300 text-sm space-y-2">
+                            <p>📌 <strong>Supabase URL:</strong></p>
+                            <p class="pl-4 text-gray-400">Settings → API → Project URL</p>
+                            <p class="mt-3">📌 <strong>Anon Key:</strong></p>
+                            <p class="pl-4 text-gray-400">Settings → API → Project API keys → anon public</p>
                         </div>
                     </div>
-                </div>
-                <div class="mt-3 text-center text-gray-400 text-sm">
-                    <span id="deviceInfo">📱 iPhone SE - 375 x 667px</span>
+
+                    <div class="bg-amber-900/30 border border-amber-600/50 rounded-xl p-4">
+                        <h3 class="text-amber-400 font-semibold flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            Penting!
+                        </h3>
+                        <p class="text-gray-300 text-sm">Pastikan RLS sudah diaktifkan dan policy sudah dibuat agar API bisa mengakses tabel.</p>
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Toast Notification -->
-        <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg font-medium transform translate-y-20 opacity-0 transition-all duration-300"></div>
+    <!-- Load Files Modal -->
+    <div id="loadModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 rounded-2xl w-full max-w-lg animate-fadeIn shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="bg-purple-600 rounded-t-2xl px-6 py-4 flex items-center justify-between flex-shrink-0">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Load File
+                </h2>
+                <button onclick="closeLoadModal()" class="text-white/80 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4 border-b border-gray-700 flex-shrink-0">
+                <div class="relative">
+                    <input type="text" id="searchFile" placeholder="Cari file..." oninput="filterFiles()"
+                        class="w-full bg-gray-700 text-white pl-10 pr-4 py-2 rounded-lg focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                    <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div id="fileList" class="p-4 overflow-y-auto scrollbar-thin flex-1">
+                <div class="text-center text-gray-400 py-8">
+                    <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                    </svg>
+                    <p>Klik tombol refresh untuk memuat daftar file</p>
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-700 flex-shrink-0">
+                <button onclick="loadFileList()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Refresh Daftar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Preview Modal -->
+    <div id="fullscreenModal" class="fixed inset-0 bg-black hidden z-50">
+        <div class="absolute top-4 right-4 z-10">
+            <button onclick="closeFullscreen()" class="bg-red-500 hover:bg-red-600 text-white p-2 rounded-lg transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <iframe id="fullscreenPreview" class="w-full h-full border-0 bg-white"></iframe>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <div class="bg-gray-800 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-gray-700">
+            <div id="toastIcon"></div>
+            <span id="toastMessage"></span>
+        </div>
     </div>
 
     <script>
-        let htmlEditor;
-        let supabase = null;
-        let isDarkMode = false;
-        let isFullscreen = false;
-        let isRunning = false;
-        let currentDevice = 'iphone';
-
-        const deviceSizes = {
-            iphone: { width: 375, height: 667, name: 'iPhone SE', icon: '📱' },
-            android: { width: 360, height: 740, name: 'Android', icon: '📱' },
-            tablet: { width: 768, height: 1024, name: 'iPad', icon: '📟' }
-        };
-
-        const defaultCode = `<!DOCTYPE html>
-<html lang="en">
+        // Initialize CodeMirror
+        let editor;
+        let allFiles = [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            editor = CodeMirror(document.getElementById('codeEditor'), {
+                mode: 'htmlmixed',
+                theme: 'dracula',
+                lineNumbers: true,
+                autoCloseTags: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                indentUnit: 4,
+                tabSize: 4,
+                lineWrapping: true,
+                value: `<!DOCTYPE html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Page</title>
     <style>
-        .container {
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             text-align: center;
-            padding: 20px;
-            font-family: Arial, sans-serif;
         }
         h1 {
-            color: #3b82f6;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
         }
-        button {
-            background: #10b981;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #059669;
-        }
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.5rem;
-                color: #8b5cf6;
-            }
-            .container {
-                padding: 10px;
-            }
+        p {
+            color: #718096;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Hello World!</h1>
-        <p>Start coding...</p>
-        <p><small>Resize to see responsive design!</small></p>
-        <button onclick="sayHello()">Click Me</button>
+    <div class="card">
+        <h1>👋 Hello World!</h1>
+        <p>Selamat datang di HTML Editor Pro</p>
     </div>
-    <script>
-        function sayHello() {
-            alert('Hello from JavaScript!');
-        }
-    <\/script>
 </body>
-</html>`;
-
-        // Set mobile device size
-        function setMobileSize(device) {
-            currentDevice = device;
-            const size = deviceSizes[device];
-            const screen = document.getElementById('mobileScreen');
-            const frame = document.getElementById('mobileFrame');
-            
-            // Update screen size
-            screen.style.width = size.width + 'px';
-            screen.style.height = size.height + 'px';
-            
-            // Update device info
-            document.getElementById('deviceInfo').textContent = `${size.icon} ${size.name} - ${size.width} x ${size.height}px`;
-            
-            // Update button states
-            document.querySelectorAll('.device-selector button').forEach(btn => {
-                btn.classList.remove('active');
+</html>`
             });
-            document.getElementById('btn-' + device).classList.add('active');
             
-            // Re-run code if already running
-            if (isRunning) {
-                runCode();
-            }
-        }
-
-        // Save settings to localStorage
-        function saveSettings() {
-            const settings = {
-                code: htmlEditor.getValue(),
-                isDarkMode: isDarkMode,
-                codeId: document.getElementById('codeId').value,
-                currentDevice: currentDevice
-            };
-            localStorage.setItem('htmlEditorSettings', JSON.stringify(settings));
-        }
-
-        // Load settings from localStorage
-        function loadSettings() {
-            const saved = localStorage.getItem('htmlEditorSettings');
-            if (saved) {
-                try {
-                    const settings = JSON.parse(saved);
-                    
-                    // Load code
-                    if (settings.code) {
-                        htmlEditor.setValue(settings.code);
-                    } else {
-                        htmlEditor.setValue(defaultCode);
-                    }
-                    
-                    // Load dark mode
-                    if (settings.isDarkMode) {
-                        isDarkMode = false; // Will be toggled to true
-                        toggleDarkMode();
-                    }
-                    
-                    // Load code ID
-                    if (settings.codeId) {
-                        document.getElementById('codeId').value = settings.codeId;
-                    }
-                    
-                    // Load device size
-                    if (settings.currentDevice) {
-                        setMobileSize(settings.currentDevice);
-                    }
-                    
-                    showToast('Settings restored from browser');
-                } catch (e) {
-                    htmlEditor.setValue(defaultCode);
-                }
-            } else {
-                htmlEditor.setValue(defaultCode);
-            }
-        }
-
-        // Initialize CodeMirror editor
-        document.addEventListener('DOMContentLoaded', () => {
-            htmlEditor = CodeMirror.fromTextArea(document.getElementById('htmlCode'), {
-                mode: 'htmlmixed',
-                theme: 'default',
-                lineNumbers: true,
-                lineWrapping: true
-            });
-
-            // Auto-save on code change
-            htmlEditor.on('change', () => {
-                saveSettings();
-            });
-
-            // ESC key to exit fullscreen
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && isFullscreen) {
-                    toggleFullscreen();
-                }
-            });
-
-            // Load saved settings
-            loadSettings();
-
-            // Auto-connect to Supabase on load
-            connectSupabase();
+            // Load saved config
+            loadConfig();
+            
+            // Auto run on load
+            setTimeout(runCode, 500);
         });
 
-        // Show toast notification
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg font-medium transform transition-all duration-300 ${
-                type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'
-            }`;
-            toast.style.transform = 'translateY(0)';
-            toast.style.opacity = '1';
-            setTimeout(() => {
-                toast.style.transform = 'translateY(20px)';
-                toast.style.opacity = '0';
-            }, 3000);
-        }
-
-        // Run code in both previews
+        // Run HTML Code
         function runCode() {
-            const html = htmlEditor.getValue();
-
-            // Desktop preview
-            const iframe = document.getElementById('preview');
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            iframeDoc.open();
-            iframeDoc.write(html);
-            iframeDoc.close();
-
-            // Mobile preview
-            const iframeMobile = document.getElementById('previewMobile');
-            const iframeMobileDoc = iframeMobile.contentDocument || iframeMobile.contentWindow.document;
-            iframeMobileDoc.open();
-            iframeMobileDoc.write(html);
-            iframeMobileDoc.close();
-
-            isRunning = true;
-            document.getElementById('runBtn').classList.add('hidden');
-            document.getElementById('stopBtn').classList.remove('hidden');
-
-            showToast('Code executed in Desktop & Mobile!');
+            const code = editor.getValue();
+            const preview = document.getElementById('preview');
+            const previewDoc = preview.contentDocument || preview.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(code);
+            previewDoc.close();
+            showToast('Kode berhasil dijalankan!', 'success');
         }
 
-        // Stop code execution
-        function stopCode() {
-            const stopMessage = '<html><body style="display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:Arial,sans-serif;color:#666;"><p>⏹️ Code execution stopped</p></body></html>';
-            
-            // Stop desktop preview
-            document.getElementById('preview').srcdoc = stopMessage;
-            
-            // Stop mobile preview
-            document.getElementById('previewMobile').srcdoc = stopMessage;
-            
-            isRunning = false;
-            document.getElementById('runBtn').classList.remove('hidden');
-            document.getElementById('stopBtn').classList.add('hidden');
-
-            showToast('Code execution stopped!');
+        // Clear Editor
+        function clearEditor() {
+            if (confirm('Yakin ingin menghapus semua kode?')) {
+                editor.setValue('');
+                document.getElementById('fileName').value = '';
+                runCode();
+                showToast('Editor dibersihkan', 'info');
+            }
         }
 
-        // Open code in new tab
+        // Copy Code
+        function copyCode() {
+            const code = editor.getValue();
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Kode berhasil disalin!', 'success');
+            });
+        }
+
+        // Copy SQL
+        function copySql(id) {
+            const sql = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(sql).then(() => {
+                showToast('SQL berhasil disalin!', 'success');
+            });
+        }
+
+        // Modal Functions
+        function openConfigModal() {
+            document.getElementById('configModal').classList.remove('hidden');
+            document.getElementById('configModal').classList.add('flex');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.add('hidden');
+            document.getElementById('configModal').classList.remove('flex');
+        }
+
+        function openSQLModal() {
+            document.getElementById('sqlModal').classList.remove('hidden');
+            document.getElementById('sqlModal').classList.add('flex');
+        }
+
+        function closeSQLModal() {
+            document.getElementById('sqlModal').classList.add('hidden');
+            document.getElementById('sqlModal').classList.remove('flex');
+        }
+
+        function openLoadModal() {
+            document.getElementById('loadModal').classList.remove('hidden');
+            document.getElementById('loadModal').classList.add('flex');
+            loadFileList();
+        }
+
+        function closeLoadModal() {
+            document.getElementById('loadModal').classList.add('hidden');
+            document.getElementById('loadModal').classList.remove('flex');
+        }
+
+        function openPreviewFullscreen() {
+            const code = editor.getValue();
+            const modal = document.getElementById('fullscreenModal');
+            const preview = document.getElementById('fullscreenPreview');
+            const previewDoc = preview.contentDocument || preview.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(code);
+            previewDoc.close();
+            modal.classList.remove('hidden');
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenModal').classList.add('hidden');
+        }
+
+        // Open in New Tab
         function openInNewTab() {
-            const html = htmlEditor.getValue();
-            const blob = new Blob([html], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            showToast('Opened in new tab!');
+            const code = editor.getValue();
+            const newWindow = window.open('', '_blank');
+            newWindow.document.open();
+            newWindow.document.write(code);
+            newWindow.document.close();
+            showToast('Preview dibuka di tab baru!', 'success');
         }
 
-        // Download code as HTML file
-        function downloadCode() {
-            const html = htmlEditor.getValue();
-
-            const blob = new Blob([html], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'code.html';
-            a.click();
-            URL.revokeObjectURL(url);
-
-            showToast('Code downloaded!');
-        }
-
-        // Import HTML file
-        function importFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target.result;
-                htmlEditor.setValue(content);
-                showToast('File imported successfully!');
+        // Supabase Config
+        function saveConfig() {
+            const config = {
+                url: document.getElementById('supabaseUrl').value.trim(),
+                key: document.getElementById('supabaseKey').value.trim(),
+                table: document.getElementById('tableName').value.trim() || 'html_files'
             };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        // Reset all editors
-        function resetAll() {
-            if (confirm('Are you sure you want to reset all code?')) {
-                htmlEditor.setValue('');
-                document.getElementById('preview').srcdoc = '';
-                document.getElementById('previewMobile').srcdoc = '';
-                document.getElementById('codeId').value = '';
-                isRunning = false;
-                document.getElementById('runBtn').classList.remove('hidden');
-                document.getElementById('stopBtn').classList.add('hidden');
-                showToast('All code has been reset!');
-            }
-        }
-
-        // Toggle Dark Mode
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            const theme = isDarkMode ? 'dracula' : 'default';
-            htmlEditor.setOption('theme', theme);
             
-            const darkModeBtn = document.getElementById('darkModeBtn');
-            const darkModeBtnFS = document.getElementById('darkModeBtnFS');
-            
-            if (isDarkMode) {
-                darkModeBtn.innerHTML = '☀️ Light Mode';
-                darkModeBtnFS.innerHTML = '☀️ Light Mode';
-                showToast('Dark mode enabled');
-            } else {
-                darkModeBtn.innerHTML = '🌙 Dark Mode';
-                darkModeBtnFS.innerHTML = '🌙 Dark Mode';
-                showToast('Light mode enabled');
-            }
-            
-            // Save dark mode setting
-            saveSettings();
-        }
-
-        // Toggle Fullscreen
-        function toggleFullscreen() {
-            isFullscreen = !isFullscreen;
-            const cmElement = document.querySelector('.CodeMirror');
-            const overlay = document.getElementById('fullscreenOverlay');
-            
-            if (isFullscreen) {
-                cmElement.classList.add('fullscreen');
-                overlay.classList.add('active');
-                showToast('Fullscreen mode - Press ESC to exit');
-            } else {
-                cmElement.classList.remove('fullscreen');
-                overlay.classList.remove('active');
-                showToast('Exited fullscreen');
-            }
-            
-            // Refresh editor to fix any display issues
-            setTimeout(() => htmlEditor.refresh(), 100);
-        }
-
-        // Connect to Supabase
-        function connectSupabase() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-
-            if (!url || !key) {
-                showToast('Please enter Supabase URL and Key', 'error');
+            if (!config.url || !config.key) {
+                showToast('Mohon isi URL dan API Key!', 'error');
                 return;
             }
+            
+            localStorage.setItem('supabaseConfig', JSON.stringify(config));
+            showToast('Konfigurasi berhasil disimpan!', 'success');
+            updateConnectionStatus(true);
+            closeConfigModal();
+        }
 
+        function loadConfig() {
+            const saved = localStorage.getItem('supabaseConfig');
+            if (saved) {
+                const config = JSON.parse(saved);
+                document.getElementById('supabaseUrl').value = config.url || '';
+                document.getElementById('supabaseKey').value = config.key || '';
+                document.getElementById('tableName').value = config.table || 'html_files';
+                updateConnectionStatus(true);
+            }
+        }
+
+        function getConfig() {
+            const saved = localStorage.getItem('supabaseConfig');
+            if (!saved) {
+                showToast('Silakan konfigurasi Supabase terlebih dahulu!', 'error');
+                openConfigModal();
+                return null;
+            }
+            return JSON.parse(saved);
+        }
+
+        function updateConnectionStatus(connected) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (connected) {
+                dot.className = 'w-3 h-3 rounded-full bg-emerald-500 status-online relative';
+                text.textContent = 'Terhubung';
+            } else {
+                dot.className = 'w-3 h-3 rounded-full bg-gray-400';
+                text.textContent = 'Belum Terhubung';
+            }
+        }
+
+        // Test Connection
+        async function testConnection() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            const table = document.getElementById('tableName').value.trim() || 'html_files';
+            
+            if (!url || !key) {
+                showToast('Mohon isi URL dan API Key!', 'error');
+                return;
+            }
+            
             try {
-                supabase = window.supabase.createClient(url, key);
+                const response = await fetch(`${url}/rest/v1/${table}?select=id&limit=1`, {
+                    headers: {
+                        'apikey': key,
+                        'Authorization': `Bearer ${key}`
+                    }
+                });
                 
-                document.getElementById('connectionStatus').innerHTML = '<span class="text-green-400">✓ Connected</span>';
-                showToast('Connected to Supabase!');
-            } catch (error) {
-                document.getElementById('connectionStatus').innerHTML = '<span class="text-red-400">✗ Failed</span>';
-                showToast('Connection failed: ' + error.message, 'error');
+                if (response.ok) {
+                    showToast('Koneksi berhasil! ✓', 'success');
+                    updateConnectionStatus(true);
+                } else {
+                    const error = await response.json();
+                    showToast(`Error: ${error.message || 'Koneksi gagal'}`, 'error');
+                    updateConnectionStatus(false);
+                }
+            } catch (err) {
+                showToast(`Error: ${err.message}`, 'error');
+                updateConnectionStatus(false);
             }
         }
 
         // Save to Supabase
         async function saveToSupabase() {
-            if (!supabase) {
-                showToast('Please connect to Supabase first', 'error');
+            const config = getConfig();
+            if (!config) return;
+            
+            const fileName = document.getElementById('fileName').value.trim();
+            if (!fileName) {
+                showToast('Mohon isi nama file!', 'error');
+                document.getElementById('fileName').focus();
                 return;
             }
-
-            const id = parseInt(document.getElementById('codeId').value);
-            if (!id || id < 1) {
-                showToast('Please enter a valid ID', 'error');
-                return;
-            }
-
-            const html = htmlEditor.getValue();
-
+            
+            const code = editor.getValue();
+            
             try {
-                const { data, error } = await supabase
-                    .from('html_codes')
-                    .upsert({ id, html, css: '', js: '' }, { onConflict: 'id' });
-
-                if (error) throw error;
-                showToast(`Code saved with ID: ${id}`);
-            } catch (error) {
-                showToast('Save failed: ' + error.message, 'error');
+                // Check if file exists
+                const checkResponse = await fetch(
+                    `${config.url}/rest/v1/${config.table}?name=eq.${encodeURIComponent(fileName)}&select=id`,
+                    {
+                        headers: {
+                            'apikey': config.key,
+                            'Authorization': `Bearer ${config.key}`
+                        }
+                    }
+                );
+                
+                const existingFiles = await checkResponse.json();
+                
+                let response;
+                if (existingFiles.length > 0) {
+                    // Update existing
+                    response = await fetch(
+                        `${config.url}/rest/v1/${config.table}?id=eq.${existingFiles[0].id}`,
+                        {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': config.key,
+                                'Authorization': `Bearer ${config.key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({ content: code })
+                        }
+                    );
+                } else {
+                    // Insert new
+                    response = await fetch(
+                        `${config.url}/rest/v1/${config.table}`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'apikey': config.key,
+                                'Authorization': `Bearer ${config.key}`,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({ name: fileName, content: code })
+                        }
+                    );
+                }
+                
+                if (response.ok) {
+                    showToast(`File "${fileName}" berhasil disimpan!`, 'success');
+                } else {
+                    const error = await response.json();
+                    showToast(`Error: ${error.message}`, 'error');
+                }
+            } catch (err) {
+                showToast(`Error: ${err.message}`, 'error');
             }
         }
 
-        // Load from Supabase
-        async function loadFromSupabase() {
-            if (!supabase) {
-                showToast('Please connect to Supabase first', 'error');
-                return;
-            }
-
-            const id = parseInt(document.getElementById('codeId').value);
-            if (!id || id < 1) {
-                showToast('Please enter a valid ID', 'error');
-                return;
-            }
-
+        // Load File List
+        async function loadFileList() {
+            const config = getConfig();
+            if (!config) return;
+            
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = `
+                <div class="text-center text-gray-400 py-8">
+                    <svg class="w-8 h-8 mx-auto mb-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <p>Memuat daftar file...</p>
+                </div>
+            `;
+            
             try {
-                const { data, error } = await supabase
-                    .from('html_codes')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-
-                if (error) throw error;
-                if (!data) {
-                    showToast('No record found with this ID', 'error');
-                    return;
+                const response = await fetch(
+                    `${config.url}/rest/v1/${config.table}?select=id,name,created_at,updated_at&order=updated_at.desc`,
+                    {
+                        headers: {
+                            'apikey': config.key,
+                            'Authorization': `Bearer ${config.key}`
+                        }
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Gagal memuat daftar file');
                 }
-
-                htmlEditor.setValue(data.html || '');
-                showToast(`Code loaded from ID: ${id}`);
-            } catch (error) {
-                showToast('Load failed: ' + error.message, 'error');
-            }
-        }
-
-        // Load all records from Supabase
-        async function loadAllFromSupabase() {
-            if (!supabase) {
-                showToast('Please connect to Supabase first', 'error');
-                return;
-            }
-
-            try {
-                const { data, error } = await supabase
-                    .from('html_codes')
-                    .select('id, html')
-                    .order('id', { ascending: true });
-
-                if (error) throw error;
-
-                const recordsList = document.getElementById('recordsList');
-                const container = document.getElementById('recordsContainer');
-
-                if (!data || data.length === 0) {
-                    recordsList.classList.add('hidden');
-                    showToast('No records found', 'info');
-                    return;
-                }
-
-                container.innerHTML = data.map(record => `
-                    <div class="flex items-center justify-between bg-gray-700 rounded px-3 py-2">
-                        <span class="text-sm">
-                            <strong class="text-cyan-400">ID: ${record.id}</strong>
-                            <span class="text-gray-400 ml-2">
-                                HTML: ${(record.html || '').length} chars
-                            </span>
-                        </span>
-                        <button onclick="loadRecordById(${record.id})" class="bg-cyan-600 hover:bg-cyan-700 px-3 py-1 rounded text-xs">
-                            Load
-                        </button>
+                
+                allFiles = await response.json();
+                renderFileList(allFiles);
+            } catch (err) {
+                fileList.innerHTML = `
+                    <div class="text-center text-red-400 py-8">
+                        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p>${err.message}</p>
                     </div>
-                `).join('');
-
-                recordsList.classList.remove('hidden');
-                showToast(`Found ${data.length} records`);
-            } catch (error) {
-                showToast('Load failed: ' + error.message, 'error');
+                `;
             }
         }
 
-        // Load specific record by ID
-        async function loadRecordById(id) {
-            document.getElementById('codeId').value = id;
-            await loadFromSupabase();
+        function renderFileList(files) {
+            const fileList = document.getElementById('fileList');
+            
+            if (files.length === 0) {
+                fileList.innerHTML = `
+                    <div class="text-center text-gray-400 py-8">
+                        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        <p>Belum ada file tersimpan</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            fileList.innerHTML = files.map(file => `
+                <div class="bg-gray-700 rounded-lg p-4 mb-3 hover:bg-gray-600 transition-all cursor-pointer group" onclick="loadFile('${file.id}', '${file.name}')">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-white font-medium">${file.name}</h4>
+                                <p class="text-gray-400 text-xs">${formatDate(file.updated_at)}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="event.stopPropagation(); deleteFile('${file.id}', '${file.name}')" class="p-2 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Delete from Supabase
-        async function deleteFromSupabase() {
-            if (!supabase) {
-                showToast('Please connect to Supabase first', 'error');
-                return;
-            }
+        function filterFiles() {
+            const query = document.getElementById('searchFile').value.toLowerCase();
+            const filtered = allFiles.filter(f => f.name.toLowerCase().includes(query));
+            renderFileList(filtered);
+        }
 
-            const id = parseInt(document.getElementById('codeId').value);
-            if (!id || id < 1) {
-                showToast('Please enter a valid ID', 'error');
-                return;
-            }
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('id-ID', { 
+                day: 'numeric', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
 
-            if (!confirm(`Are you sure you want to delete record ID: ${id}?`)) {
-                return;
-            }
-
+        // Load File
+        async function loadFile(id, name) {
+            const config = getConfig();
+            if (!config) return;
+            
             try {
-                const { error } = await supabase
-                    .from('html_codes')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) throw error;
-                showToast(`Record ${id} deleted`);
-                loadAllFromSupabase();
-            } catch (error) {
-                showToast('Delete failed: ' + error.message, 'error');
+                const response = await fetch(
+                    `${config.url}/rest/v1/${config.table}?id=eq.${id}&select=content`,
+                    {
+                        headers: {
+                            'apikey': config.key,
+                            'Authorization': `Bearer ${config.key}`
+                        }
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Gagal memuat file');
+                }
+                
+                const data = await response.json();
+                if (data.length > 0) {
+                    editor.setValue(data[0].content);
+                    document.getElementById('fileName').value = name;
+                    closeLoadModal();
+                    runCode();
+                    showToast(`File "${name}" berhasil dimuat!`, 'success');
+                }
+            } catch (err) {
+                showToast(`Error: ${err.message}`, 'error');
             }
         }
+
+        // Delete File
+        async function deleteFile(id, name) {
+            if (!confirm(`Yakin ingin menghapus "${name}"?`)) return;
+            
+            const config = getConfig();
+            if (!config) return;
+            
+            try {
+                const response = await fetch(
+                    `${config.url}/rest/v1/${config.table}?id=eq.${id}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': config.key,
+                            'Authorization': `Bearer ${config.key}`
+                        }
+                    }
+                );
+                
+                if (response.ok) {
+                    showToast(`File "${name}" berhasil dihapus!`, 'success');
+                    loadFileList();
+                } else {
+                    throw new Error('Gagal menghapus file');
+                }
+            } catch (err) {
+                showToast(`Error: ${err.message}`, 'error');
+            }
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            const icons = {
+                success: `<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`,
+                error: `<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`,
+                info: `<svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>`
+            };
+            
+            toastIcon.innerHTML = icons[type] || icons.info;
+            toastMessage.textContent = message;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    runCode();
+                } else if (e.key === 's') {
+                    e.preventDefault();
+                    saveToSupabase();
+                }
+            }
+            if (e.key === 'Escape') {
+                closeConfigModal();
+                closeSQLModal();
+                closeLoadModal();
+                closeFullscreen();
+            }
+        });
     </script>
 </body>
 </html>
