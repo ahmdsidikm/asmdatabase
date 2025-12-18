@@ -6,7 +6,7 @@
     <title>Keuangan Pribadi - Personal Finance Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { font-family: 'Inter', sans-serif; }
@@ -1059,7 +1059,14 @@ FOR EACH ROW EXECUTE FUNCTION update_account_balance();</pre>
                 }
                 data.supabase.url = url;
                 
-                supabaseClient = supabase.createClient(url, data.supabase.key, {
+                // Check if supabase library is loaded
+                const supabaseLib = window.supabase;
+                if (!supabaseLib || !supabaseLib.createClient) {
+                    console.error('Supabase library not loaded');
+                    return false;
+                }
+                
+                supabaseClient = supabaseLib.createClient(url, data.supabase.key, {
                     auth: {
                         persistSession: false,
                         autoRefreshToken: false
@@ -1247,7 +1254,11 @@ FOR EACH ROW EXECUTE FUNCTION update_account_balance();</pre>
             debugText.textContent = logs.join('\n');
             
             try {
-                const testClient = supabase.createClient(url, key);
+                const supabaseLib = window.supabase;
+                if (!supabaseLib || !supabaseLib.createClient) {
+                    throw new Error('Library Supabase belum dimuat. Refresh halaman.');
+                }
+                const testClient = supabaseLib.createClient(url, key);
                 logs.push('  ✅ Client dibuat');
                 
                 // Try accounts table
