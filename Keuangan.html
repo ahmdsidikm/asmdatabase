@@ -1,0 +1,3994 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dompetku - Pencatatan Keuangan</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        @keyframes bounce-in {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes slide-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes slide-down {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .animate-bounce-in { animation: bounce-in 0.5s ease-out; }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        .animate-slide-down { animation: slide-down 0.3s ease-out; }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .animate-shake { animation: shake 0.5s ease-in-out; }
+        
+        .toast {
+            animation: slide-up 0.3s ease-out;
+        }
+        
+        .toast.hiding {
+            animation: slide-down 0.3s ease-out reverse;
+            opacity: 0;
+        }
+        
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .interactive-card {
+            transition: all 0.3s ease;
+        }
+        .interactive-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .interactive-card:active {
+            transform: scale(0.98);
+        }
+
+        .transaction-item {
+            animation: slide-down 0.3s ease-out;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .transaction-item.deleting {
+            background-color: #fef2f2;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+        }
+
+        .income-gradient {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+        }
+
+        .expense-gradient {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        }
+
+        .debt-gradient {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        }
+
+        .receivable-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .chart-bar {
+            transition: height 0.5s ease-out;
+        }
+
+        .donut-chart {
+            transform: rotate(-90deg);
+        }
+
+        .donut-segment {
+            transition: stroke-dasharray 0.5s ease-out;
+        }
+
+        .account-card {
+            min-width: 140px;
+        }
+
+        .progress-bar {
+            transition: width 0.5s ease-out;
+        }
+
+        .long-press-indicator {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #ef4444;
+            width: 0;
+            transition: width 0.5s linear;
+        }
+
+        .long-press-indicator.active {
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col">
+
+<!-- Toast Container -->
+<div id="toast-container" class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] space-y-2"></div>
+
+<!-- Add Transaction Modal -->
+<div id="add-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeAddModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Tambah Transaksi</h3>
+            
+            <!-- Transaction Type Toggle -->
+            <div class="flex bg-gray-100 rounded-xl p-1 mb-6">
+                <button onclick="setTransactionType('income')" id="income-btn" class="flex-1 py-3 rounded-lg font-semibold transition-all bg-green-500 text-white">
+                    <i class="fas fa-arrow-down mr-2"></i>Pemasukan
+                </button>
+                <button onclick="setTransactionType('expense')" id="expense-btn" class="flex-1 py-3 rounded-lg font-semibold transition-all text-gray-500">
+                    <i class="fas fa-arrow-up mr-2"></i>Pengeluaran
+                </button>
+            </div>
+
+            <!-- Account Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Akun</label>
+                <select id="account-select" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                    <!-- Options will be populated by JS -->
+                </select>
+            </div>
+
+            <!-- Amount Input -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Jumlah</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="amount-input" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-2xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- Category Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Kategori</label>
+                <div id="category-grid" class="grid grid-cols-4 gap-3">
+                </div>
+            </div>
+
+            <!-- Description Input -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Keterangan</label>
+                <input type="text" id="description-input" placeholder="Tambahkan keterangan..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Date Input -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Tanggal</label>
+                <input type="date" id="date-input" 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Submit Button -->
+            <button onclick="saveTransaction()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 active:scale-98 transition-all">
+                <i class="fas fa-save mr-2"></i>Simpan Transaksi
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Account Modal -->
+<div id="account-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeAccountModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Tambah Akun</h3>
+            
+            <!-- Account Name -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Nama Akun</label>
+                <input type="text" id="account-name-input" placeholder="Contoh: BCA, Dompet, Emas..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Initial Balance -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Saldo Awal</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="account-balance-input" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- Icon Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Ikon</label>
+                <div id="account-icon-grid" class="grid grid-cols-6 gap-3">
+                </div>
+            </div>
+
+            <!-- Color Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Warna</label>
+                <div id="account-color-grid" class="grid grid-cols-8 gap-3">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button onclick="saveAccount()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 active:scale-98 transition-all">
+                <i class="fas fa-save mr-2"></i>Simpan Akun
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Accounts Modal -->
+<div id="manage-accounts-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeManageAccountsModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Kelola Akun</h3>
+            
+            <div id="manage-accounts-list" class="space-y-3">
+                <!-- Accounts will be populated by JS -->
+            </div>
+
+            <button onclick="closeManageAccountsModal()" class="w-full mt-6 py-4 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div id="delete-account-modal" class="fixed inset-0 z-[95] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDeleteAccountModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-11/12 max-w-sm animate-bounce-in">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-wallet text-2xl text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Hapus Akun?</h3>
+            <p id="delete-account-name" class="text-gray-500 mb-2 font-semibold"></p>
+            <p class="text-gray-400 text-sm mb-6">Semua transaksi terkait akun ini juga akan dihapus</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteAccountModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button onclick="confirmDeleteAccount()" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Budget Modal -->
+<div id="budget-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeBudgetModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Tambah Anggaran</h3>
+            
+            <!-- Category Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Kategori</label>
+                <div id="budget-category-grid" class="grid grid-cols-4 gap-3">
+                </div>
+            </div>
+
+            <!-- Custom Category Name (shown when "Lainnya" is selected) -->
+            <div id="budget-custom-name-container" class="mb-6 hidden">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Nama Kategori</label>
+                <input type="text" id="budget-custom-name-input" placeholder="Contoh: Liburan, Renovasi, dll..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Budget Amount -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Batas Anggaran</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="budget-amount-input" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- Period Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Periode Anggaran</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Tanggal Mulai</label>
+                        <input type="date" id="budget-start-date" 
+                            class="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Tanggal Selesai</label>
+                        <input type="date" id="budget-end-date" 
+                            class="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors text-sm">
+                    </div>
+                </div>
+                <p class="text-xs text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Anggaran akan reset otomatis saat periode berakhir</p>
+            </div>
+
+            <!-- Submit Button -->
+            <button onclick="saveBudget()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 active:scale-98 transition-all">
+                <i class="fas fa-save mr-2"></i>Simpan Anggaran
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Debt Modal -->
+<div id="debt-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDebtModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Tambah Utang</h3>
+            <p class="text-center text-gray-500 text-sm mb-6">Uang yang Anda pinjam dari orang lain</p>
+            
+            <!-- Creditor Name -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Nama Pemberi Utang</label>
+                <input type="text" id="debt-creditor-input" placeholder="Contoh: Bank BCA, Budi, dll..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Jumlah Utang</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="debt-amount-input" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Keterangan</label>
+                <input type="text" id="debt-description-input" placeholder="Untuk apa utang ini..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Due Date -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Jatuh Tempo (Opsional)</label>
+                <input type="date" id="debt-due-date-input" 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Submit Button -->
+            <button onclick="saveDebt()" class="w-full py-4 bg-yellow-500 text-white rounded-xl font-semibold hover:bg-yellow-600 active:scale-98 transition-all">
+                <i class="fas fa-save mr-2"></i>Simpan Utang
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Receivable Modal -->
+<div id="receivable-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeReceivableModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Tambah Piutang</h3>
+            <p class="text-center text-gray-500 text-sm mb-6">Uang yang dipinjam orang lain dari Anda</p>
+            
+            <!-- Debtor Name -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Nama Peminjam</label>
+                <input type="text" id="receivable-debtor-input" placeholder="Contoh: Andi, Siti, dll..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Jumlah Piutang</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="receivable-amount-input" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Keterangan</label>
+                <input type="text" id="receivable-description-input" placeholder="Untuk apa piutang ini..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Due Date -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Jatuh Tempo (Opsional)</label>
+                <input type="date" id="receivable-due-date-input" 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Submit Button -->
+            <button onclick="saveReceivable()" class="w-full py-4 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 active:scale-98 transition-all">
+                <i class="fas fa-save mr-2"></i>Simpan Piutang
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Debt/Receivable List Modal -->
+<div id="debt-list-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDebtListModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 id="debt-list-title" class="text-xl font-bold text-center mb-6">Daftar Utang</h3>
+            
+            <!-- Summary -->
+            <div id="debt-list-summary" class="bg-gray-50 rounded-xl p-4 mb-4">
+            </div>
+            
+            <div id="debt-list-container" class="space-y-3 mb-6">
+                <!-- Items will be populated by JS -->
+            </div>
+
+            <button onclick="closeDebtListModal()" class="w-full py-4 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Pay Debt/Receivable Modal -->
+<div id="pay-modal" class="fixed inset-0 z-[95] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closePayModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-11/12 max-w-sm animate-bounce-in">
+        <div class="p-6">
+            <h3 id="pay-modal-title" class="text-xl font-bold text-center mb-4">Bayar Utang</h3>
+            <p id="pay-modal-info" class="text-center text-gray-500 mb-4"></p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Jumlah Pembayaran</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="pay-amount-input" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <button onclick="payFullAmount()" class="mt-2 text-sm text-indigo-600 font-medium">Bayar Lunas</button>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closePayModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button onclick="confirmPay()" id="pay-confirm-btn" class="flex-1 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors">
+                    Bayar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Target Modal -->
+<div id="target-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeTargetModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Tambah Target Tabungan</h3>
+            
+            <!-- Target Name -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Nama Target</label>
+                <input type="text" id="target-name-input" placeholder="Contoh: Beli Mobil, Rumah, Liburan..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <!-- Target Amount -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Target Jumlah</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="target-amount-input" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- Period Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Periode Target</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Tanggal Mulai</label>
+                        <input type="date" id="target-start-date" 
+                            class="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Target Selesai</label>
+                        <input type="date" id="target-end-date" 
+                            class="w-full px-3 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Icon Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Ikon</label>
+                <div id="target-icon-grid" class="grid grid-cols-6 gap-3">
+                </div>
+            </div>
+
+            <!-- Color Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Warna</label>
+                <div id="target-color-grid" class="grid grid-cols-8 gap-3">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button onclick="saveTarget()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 active:scale-98 transition-all">
+                <i class="fas fa-save mr-2"></i>Simpan Target
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Money to Target Modal -->
+<div id="add-to-target-modal" class="fixed inset-0 z-[95] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeAddToTargetModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-11/12 max-w-sm animate-bounce-in">
+        <div class="p-6">
+            <h3 class="text-xl font-bold text-center mb-2">Tambah Dana</h3>
+            <p id="add-to-target-info" class="text-center text-gray-500 mb-4"></p>
+            
+            <!-- Account Selection -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Dari Akun</label>
+                <select id="target-account-select" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Jumlah</label>
+                <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">Rp</span>
+                    <input type="number" id="add-to-target-amount" placeholder="0" 
+                        class="w-full pl-12 pr-4 py-4 text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeAddToTargetModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button onclick="confirmAddToTarget()" class="flex-1 py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors">
+                    <i class="fas fa-plus mr-1"></i>Tambah
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Target Detail Modal -->
+<div id="target-detail-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeTargetDetailModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <div id="target-detail-header" class="text-center mb-6"></div>
+            
+            <!-- Progress -->
+            <div id="target-detail-progress" class="mb-6"></div>
+            
+            <!-- History -->
+            <h4 class="font-semibold mb-3">Riwayat Setoran</h4>
+            <div id="target-detail-history" class="space-y-2 max-h-48 overflow-y-auto mb-6">
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="deleteTarget()" class="flex-1 py-3 bg-red-100 text-red-600 rounded-xl font-semibold hover:bg-red-200 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Hapus
+                </button>
+                <button onclick="closeTargetDetailModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction Detail Modal -->
+<div id="detail-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDetailModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-11/12 max-w-md animate-bounce-in">
+        <div class="p-6">
+            <div id="detail-icon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"></div>
+            <h3 id="detail-category" class="text-xl font-bold text-center mb-1"></h3>
+            <p id="detail-description" class="text-gray-500 text-center mb-4"></p>
+            <p id="detail-amount" class="text-3xl font-bold text-center mb-2"></p>
+            <p id="detail-date" class="text-sm text-gray-400 text-center mb-6"></p>
+            <div class="flex gap-3">
+                <button onclick="deleteTransaction()" class="flex-1 py-3 bg-red-100 text-red-600 rounded-xl font-semibold hover:bg-red-200 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>Hapus
+                </button>
+                <button onclick="closeDetailModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-confirm-modal" class="fixed inset-0 z-[95] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDeleteConfirm()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-11/12 max-w-sm animate-bounce-in">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-trash text-2xl text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Hapus Transaksi?</h3>
+            <p class="text-gray-500 mb-6">Transaksi ini akan dihapus permanen</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteConfirm()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button onclick="confirmDeleteTransaction()" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- API Settings Modal -->
+<div id="api-settings-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeApiSettingsModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-2">Pengaturan API Supabase</h3>
+            <p class="text-center text-gray-500 text-sm mb-6">Masukkan kredensial Supabase Anda untuk backup cloud</p>
+            
+            <!-- Supabase URL -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Supabase URL</label>
+                <input type="url" id="supabase-url-input" placeholder="https://xxxxx.supabase.co" 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors text-sm">
+            </div>
+
+            <!-- Supabase API Key -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-500 mb-2">API Key (anon/public)</label>
+                <div class="relative">
+                    <input type="password" id="supabase-key-input" placeholder="eyJhbGciOiJIUzI1NiIs..." 
+                        class="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors text-sm">
+                    <button onclick="toggleApiKeyVisibility()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                        <i id="api-key-eye" class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- User ID for data identification -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-2">User ID (untuk identifikasi data)</label>
+                <input type="text" id="user-id-input" placeholder="Contoh: john_doe atau email@domain.com" 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors text-sm">
+                <p class="text-xs text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Gunakan ID unik untuk mengidentifikasi data Anda</p>
+            </div>
+
+            <!-- Connection Status -->
+            <div id="api-connection-status" class="mb-6 p-3 rounded-xl bg-gray-50 hidden">
+                <div class="flex items-center gap-2">
+                    <i id="api-status-icon" class="fas fa-circle text-gray-400"></i>
+                    <span id="api-status-text" class="text-sm">Belum terhubung</span>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="bg-blue-50 rounded-xl p-4 mb-6">
+                <h4 class="font-medium text-blue-800 mb-2"><i class="fas fa-info-circle mr-2"></i>Cara Mendapatkan Kredensial</h4>
+                <ol class="text-sm text-blue-700 space-y-1">
+                    <li>1. Buat akun di <a href="https://supabase.com" target="_blank" class="underline">supabase.com</a></li>
+                    <li>2. Buat project baru</li>
+                    <li>3. Buat tabel "dompetku_backup" dengan kolom: id (int8, primary), user_id (text), data (jsonb), updated_at (timestamptz)</li>
+                    <li>4. Salin Project URL dan anon/public key dari Settings > API</li>
+                </ol>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="testApiConnection()" class="flex-1 py-4 bg-blue-100 text-blue-600 rounded-xl font-semibold hover:bg-blue-200 transition-all">
+                    <i class="fas fa-plug mr-2"></i>Test Koneksi
+                </button>
+                <button onclick="saveApiSettings()" class="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-all">
+                    <i class="fas fa-save mr-2"></i>Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backup Modal -->
+<div id="backup-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeBackupModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-2">Sinkronisasi Data</h3>
+            <p class="text-center text-gray-500 text-sm mb-6">Sinkronkan data dengan Supabase cloud</p>
+            
+            <!-- Connection Status -->
+            <div id="backup-connection-status" class="mb-6 p-4 rounded-xl bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i id="backup-status-icon" class="fas fa-circle text-gray-400"></i>
+                        <span id="backup-status-text" class="text-sm">Memeriksa koneksi...</span>
+                    </div>
+                    <button onclick="openApiSettingsModal(); closeBackupModal();" class="text-indigo-600 text-sm font-medium">
+                        <i class="fas fa-cog mr-1"></i>Pengaturan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Last Backup Info -->
+            <div id="last-backup-info" class="mb-6 p-4 rounded-xl bg-green-50 hidden">
+                <div class="flex items-center gap-2 text-green-700">
+                    <i class="fas fa-clock"></i>
+                    <span id="last-backup-time" class="text-sm">Terakhir backup: -</span>
+                </div>
+            </div>
+
+            <!-- Data Summary -->
+            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                <h4 class="font-medium mb-3">Data yang akan di-backup:</h4>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Transaksi:</span>
+                        <span id="backup-transactions-count" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Akun:</span>
+                        <span id="backup-accounts-count" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Anggaran:</span>
+                        <span id="backup-budgets-count" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Target:</span>
+                        <span id="backup-targets-count" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Utang:</span>
+                        <span id="backup-debts-count" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Piutang:</span>
+                        <span id="backup-receivables-count" class="font-medium">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto Sync Toggle -->
+            <div class="bg-gray-50 rounded-xl p-4 mb-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">Sinkronisasi Otomatis</p>
+                        <p class="text-xs text-gray-500">Data akan tersinkronisasi setiap ada perubahan</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="auto-sync-toggle" class="sr-only peer" onchange="toggleAutoSync(this.checked)">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3">
+                <button onclick="backupToCloud()" id="backup-btn" class="w-full py-4 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>Upload ke Cloud
+                </button>
+                <button onclick="restoreFromCloud()" id="restore-btn" class="w-full py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-cloud-download-alt mr-2"></i>Download dari Cloud
+                </button>
+                <button onclick="closeBackupModal()" class="w-full py-4 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
+                    Tutup
+                </button>
+            </div>
+
+            <!-- Warning -->
+            <p class="text-xs text-center text-gray-400 mt-4">
+                <i class="fas fa-exclamation-triangle mr-1"></i>Download akan menimpa semua data lokal Anda
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="bg-white shadow-sm p-4 sticky top-0 z-10">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-wallet text-indigo-600"></i>
+            </div>
+            <h1 class="text-xl font-bold text-indigo-600">Dompetku</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Sync Status Indicator -->
+            <div id="sync-indicator" class="hidden flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
+                <i class="fas fa-sync text-gray-500"></i>
+                <span class="text-gray-600">Offline</span>
+            </div>
+            <button onclick="manualSync()" class="w-10 h-10 hover:bg-gray-100 rounded-full flex items-center justify-center transition-colors relative" title="Sinkronkan">
+                <i class="fas fa-cloud text-gray-600"></i>
+            </button>
+            <button onclick="showToast('Notifikasi kosong', 'info')" class="w-10 h-10 hover:bg-gray-100 rounded-full flex items-center justify-center transition-colors relative">
+                <i class="fas fa-bell text-gray-600"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto pb-24 p-4">
+    
+    <!-- Home Page -->
+    <div id="home" class="tab-content active">
+        <!-- Accounts Section -->
+        <div class="mb-4">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-lg">Akun Saya</h3>
+                <button onclick="openAccountModal()" class="text-indigo-600 text-sm font-medium">
+                    <i class="fas fa-plus mr-1"></i>Tambah
+                </button>
+            </div>
+            <div id="accounts-container" class="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
+                <!-- Accounts will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Balance Card -->
+        <div class="balance-card p-6 rounded-2xl shadow-lg mb-6 text-white">
+            <p class="text-white/80 text-sm mb-1">Total Saldo</p>
+            <h2 id="total-balance" class="text-3xl font-bold mb-4">Rp 0</h2>
+            <div class="flex justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-arrow-down text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="text-white/70 text-xs">Pemasukan</p>
+                        <p id="total-income" class="font-semibold">Rp 0</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-arrow-up text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="text-white/70 text-xs">Pengeluaran</p>
+                        <p id="total-expense" class="font-semibold">Rp 0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debt/Receivable Summary Cards -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div onclick="openDebtListModal('debt')" class="debt-gradient p-4 rounded-xl text-white cursor-pointer interactive-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span class="text-sm font-medium">Total Utang</span>
+                </div>
+                <p id="total-debt" class="text-xl font-bold">Rp 0</p>
+            </div>
+            <div onclick="openDebtListModal('receivable')" class="receivable-gradient p-4 rounded-xl text-white cursor-pointer interactive-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <i class="fas fa-hand-holding-heart"></i>
+                    <span class="text-sm font-medium">Total Piutang</span>
+                </div>
+                <p id="total-receivable" class="text-xl font-bold">Rp 0</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-4 gap-3 mb-6">
+            <button onclick="openAddModal(); setTransactionType('income')" class="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center gap-2 interactive-card">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-plus text-green-600"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-600">Pemasukan</span>
+            </button>
+            <button onclick="openAddModal(); setTransactionType('expense')" class="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center gap-2 interactive-card">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-minus text-red-600"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-600">Pengeluaran</span>
+            </button>
+            <button onclick="openDebtModal()" class="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center gap-2 interactive-card">
+                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-hand-holding-usd text-yellow-600"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-600">Utang</span>
+            </button>
+            <button onclick="openReceivableModal()" class="bg-white p-4 rounded-xl shadow-sm flex flex-col items-center gap-2 interactive-card">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-hand-holding-heart text-blue-600"></i>
+                </div>
+                <span class="text-xs font-medium text-gray-600">Piutang</span>
+            </button>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-lg">Transaksi Terakhir</h3>
+            <button onclick="switchTab('stats')" class="text-indigo-600 text-sm font-medium">Lihat Semua</button>
+        </div>
+        <div id="recent-transactions" class="space-y-3">
+            <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                <i class="fas fa-receipt text-4xl mb-3"></i>
+                <p>Belum ada transaksi</p>
+                <p class="text-sm">Tap + untuk menambah transaksi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Page -->
+    <div id="budget" class="tab-content">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-2xl font-bold">Anggaran</h2>
+            <button onclick="openBudgetModal()" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-full font-medium">
+                <i class="fas fa-plus mr-1"></i>Tambah
+            </button>
+        </div>
+
+        <!-- Budget Summary -->
+        <div class="bg-white rounded-xl p-4 mb-4 shadow-sm">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-500">Total Anggaran</span>
+                <span id="budget-total" class="font-bold text-lg">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-gray-500">Terpakai</span>
+                <span id="budget-used" class="font-bold text-lg text-red-600">Rp 0</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-gray-500">Sisa</span>
+                <span id="budget-remaining" class="font-bold text-lg text-green-600">Rp 0</span>
+            </div>
+        </div>
+
+        <!-- Budget List -->
+        <div id="budget-list" class="space-y-3">
+            <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                <i class="fas fa-piggy-bank text-4xl mb-3"></i>
+                <p>Belum ada anggaran</p>
+                <p class="text-sm">Tap + untuk menambah anggaran</p>
+            </div>
+        </div>
+
+        <!-- Target Section -->
+        <div class="mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold">Target Tabungan</h2>
+                <button onclick="openTargetModal()" class="px-4 py-2 bg-green-600 text-white text-sm rounded-full font-medium">
+                    <i class="fas fa-plus mr-1"></i>Tambah
+                </button>
+            </div>
+
+            <!-- Target List -->
+            <div id="target-list" class="space-y-3">
+                <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                    <i class="fas fa-bullseye text-4xl mb-3"></i>
+                    <p>Belum ada target</p>
+                    <p class="text-sm">Tap + untuk menambah target tabungan</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Page (now includes History) -->
+    <div id="stats" class="tab-content">
+        <h2 class="text-2xl font-bold mb-4">Statistik & Riwayat</h2>
+
+        <!-- Period Selector -->
+        <div class="flex bg-white rounded-xl p-1 mb-6 shadow-sm">
+            <button onclick="setStatPeriod('week')" id="period-week" class="flex-1 py-2 rounded-lg font-medium transition-all text-gray-500">Minggu</button>
+            <button onclick="setStatPeriod('month')" id="period-month" class="flex-1 py-2 rounded-lg font-medium transition-all bg-indigo-600 text-white">Bulan</button>
+            <button onclick="setStatPeriod('year')" id="period-year" class="flex-1 py-2 rounded-lg font-medium transition-all text-gray-500">Tahun</button>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="income-gradient p-4 rounded-xl text-white">
+                <p class="text-white/80 text-sm">Total Pemasukan</p>
+                <p id="stat-income" class="text-xl font-bold">Rp 0</p>
+                <p class="text-white/70 text-xs mt-1"><i class="fas fa-arrow-up mr-1"></i>Periode ini</p>
+            </div>
+            <div class="expense-gradient p-4 rounded-xl text-white">
+                <p class="text-white/80 text-sm">Total Pengeluaran</p>
+                <p id="stat-expense" class="text-xl font-bold">Rp 0</p>
+                <p class="text-white/70 text-xs mt-1"><i class="fas fa-arrow-down mr-1"></i>Periode ini</p>
+            </div>
+        </div>
+
+        <!-- Expense by Category -->
+        <div class="bg-white rounded-xl p-4 mb-6 shadow-sm">
+            <h3 class="font-bold mb-4">Pengeluaran per Kategori</h3>
+            <div id="category-chart" class="flex items-center justify-center mb-4">
+                <svg class="donut-chart w-40 h-40" viewBox="0 0 42 42">
+                    <circle cx="21" cy="21" r="15.9" fill="transparent" stroke="#e5e7eb" stroke-width="3"></circle>
+                    <circle id="donut-segment-1" class="donut-segment" cx="21" cy="21" r="15.9" fill="transparent" stroke="#ef4444" stroke-width="3" stroke-dasharray="0 100"></circle>
+                    <circle id="donut-segment-2" class="donut-segment" cx="21" cy="21" r="15.9" fill="transparent" stroke="#f59e0b" stroke-width="3" stroke-dasharray="0 100"></circle>
+                    <circle id="donut-segment-3" class="donut-segment" cx="21" cy="21" r="15.9" fill="transparent" stroke="#3b82f6" stroke-width="3" stroke-dasharray="0 100"></circle>
+                    <circle id="donut-segment-4" class="donut-segment" cx="21" cy="21" r="15.9" fill="transparent" stroke="#8b5cf6" stroke-width="3" stroke-dasharray="0 100"></circle>
+                </svg>
+            </div>
+            <div id="category-legend" class="space-y-2">
+            </div>
+        </div>
+
+        <!-- Transaction History Section -->
+        <div class="bg-white rounded-xl p-4 mb-4 shadow-sm">
+            <h3 class="font-bold mb-4">Riwayat Transaksi</h3>
+            
+            <!-- Filters -->
+            <div class="flex gap-2 mb-4">
+                <button onclick="filterTransactions('all')" id="filter-all" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded-full">Semua</button>
+                <button onclick="filterTransactions('income')" id="filter-income" class="px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-full">Masuk</button>
+                <button onclick="filterTransactions('expense')" id="filter-expense" class="px-3 py-1 bg-gray-200 text-gray-600 text-sm rounded-full">Keluar</button>
+            </div>
+
+            <!-- Search -->
+            <div class="relative mb-4">
+                <input type="text" id="search-transaction" placeholder="Cari transaksi..." 
+                    class="w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    oninput="searchTransactions(this.value)">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+
+            <!-- Month Selector -->
+            <div class="flex items-center justify-between bg-gray-50 rounded-xl p-3 mb-4">
+                <button onclick="changeMonth(-1)" class="w-10 h-10 hover:bg-gray-200 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chevron-left text-gray-500"></i>
+                </button>
+                <span id="current-month" class="font-semibold"></span>
+                <button onclick="changeMonth(1)" class="w-10 h-10 hover:bg-gray-200 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chevron-right text-gray-500"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-400 text-center mb-3">
+                <i class="fas fa-info-circle mr-1"></i>Tekan lama untuk menghapus transaksi
+            </p>
+        </div>
+
+        <div id="all-transactions" class="space-y-3">
+        </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div id="profile" class="tab-content">
+        <div class="bg-white rounded-2xl shadow-md overflow-hidden mb-4">
+            <div class="h-20 bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+            <div class="px-4 pb-4">
+                <div class="relative -top-10 text-center">
+                    <div class="w-20 h-20 bg-gray-300 rounded-full border-4 border-white mx-auto overflow-hidden">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Avatar" class="w-full h-full">
+                    </div>
+                    <h2 class="text-xl font-bold mt-2">Pengguna</h2>
+                    <p class="text-gray-500 text-sm">Kelola keuanganmu dengan bijak</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Summary -->
+        <div class="bg-white rounded-xl p-4 mb-4 shadow-sm">
+            <h3 class="font-bold mb-3">Ringkasan Bulan Ini</h3>
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p id="profile-transactions" class="text-2xl font-bold text-indigo-600">0</p>
+                    <p class="text-xs text-gray-500">Transaksi</p>
+                </div>
+                <div>
+                    <p id="profile-income-count" class="text-2xl font-bold text-green-600">0</p>
+                    <p class="text-xs text-gray-500">Pemasukan</p>
+                </div>
+                <div>
+                    <p id="profile-expense-count" class="text-2xl font-bold text-red-600">0</p>
+                    <p class="text-xs text-gray-500">Pengeluaran</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Items -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <button onclick="openManageAccountsModal()" class="w-full text-left p-4 hover:bg-gray-50 flex items-center gap-3 border-b transition-colors">
+                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-wallet text-purple-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium">Kelola Akun</p>
+                    <p class="text-xs text-gray-500">Tambah atau hapus akun</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+            </button>
+            <button onclick="exportData()" class="w-full text-left p-4 hover:bg-gray-50 flex items-center gap-3 border-b transition-colors">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-download text-blue-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium">Ekspor Data</p>
+                    <p class="text-xs text-gray-500">Download data transaksi</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+            </button>
+            <button onclick="openBackupModal()" class="w-full text-left p-4 hover:bg-gray-50 flex items-center gap-3 border-b transition-colors">
+                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-sync text-green-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium">Sinkronisasi Data</p>
+                    <p class="text-xs text-gray-500">Sinkron dengan Supabase</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+            </button>
+            <button onclick="openApiSettingsModal()" class="w-full text-left p-4 hover:bg-gray-50 flex items-center gap-3 border-b transition-colors">
+                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-cog text-gray-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium">Pengaturan API</p>
+                    <p class="text-xs text-gray-500">Konfigurasi Supabase</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+            </button>
+            <button onclick="confirmClearData()" class="w-full text-left p-4 hover:bg-red-50 flex items-center gap-3 transition-colors">
+                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-trash text-red-600"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-medium text-red-600">Hapus Semua Data</p>
+                    <p class="text-xs text-gray-500">Reset aplikasi</p>
+                </div>
+                <i class="fas fa-chevron-right text-gray-300"></i>
+            </button>
+        </div>
+
+        <p class="text-center text-gray-400 text-sm mt-6">Dompetku v2.0.0</p>
+    </div>
+</main>
+
+<!-- Bottom Tab Bar -->
+<nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe z-50">
+    <div class="flex justify-around items-center h-16">
+        <button onclick="switchTab('home')" class="nav-item w-full h-full flex flex-col items-center justify-center text-indigo-600 active:bg-gray-100 transition-colors" data-target="home">
+            <i class="fas fa-home text-xl mb-1"></i>
+            <span class="text-xs font-medium">Beranda</span>
+        </button>
+
+        <button onclick="switchTab('budget')" class="nav-item w-full h-full flex flex-col items-center justify-center text-gray-400 hover:text-indigo-500 active:bg-gray-100 transition-colors" data-target="budget">
+            <i class="fas fa-piggy-bank text-xl mb-1"></i>
+            <span class="text-xs font-medium">Anggaran</span>
+        </button>
+
+        <div class="relative -top-6">
+            <button onclick="openAddModal()" class="w-14 h-14 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-indigo-700 active:scale-95 transition-all hover:rotate-90 duration-300">
+                <i class="fas fa-plus text-xl"></i>
+            </button>
+        </div>
+
+        <button onclick="switchTab('stats')" class="nav-item w-full h-full flex flex-col items-center justify-center text-gray-400 hover:text-indigo-500 active:bg-gray-100 transition-colors" data-target="stats">
+            <i class="fas fa-chart-bar text-xl mb-1"></i>
+            <span class="text-xs font-medium">Statistik</span>
+        </button>
+
+        <button onclick="switchTab('profile')" class="nav-item w-full h-full flex flex-col items-center justify-center text-gray-400 hover:text-indigo-500 active:bg-gray-100 transition-colors" data-target="profile">
+            <i class="fas fa-user text-xl mb-1"></i>
+            <span class="text-xs font-medium">Profil</span>
+        </button>
+    </div>
+</nav>
+
+<script>
+    // Data
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+    let accounts = JSON.parse(localStorage.getItem('accounts')) || [
+        { id: 'default-wallet', name: 'Dompet', balance: 0, icon: 'fa-wallet', color: 'bg-green-500' },
+        { id: 'default-bank', name: 'Bank', balance: 0, icon: 'fa-university', color: 'bg-blue-500' }
+    ];
+    let budgets = JSON.parse(localStorage.getItem('budgets')) || [];
+    let debts = JSON.parse(localStorage.getItem('debts')) || [];
+    let receivables = JSON.parse(localStorage.getItem('receivables')) || [];
+    let targets = JSON.parse(localStorage.getItem('targets')) || [];
+    
+    let currentTransactionType = 'income';
+    let selectedCategory = null;
+    let selectedBudgetCategory = null;
+    let selectedAccountIcon = 'fa-wallet';
+    let selectedAccountColor = 'bg-indigo-500';
+    let currentFilter = 'all';
+    let currentMonth = new Date();
+    let selectedTransactionId = null;
+    let longPressTimer = null;
+    let longPressTransactionId = null;
+    let accountToDeleteId = null;
+    let currentPayItem = null;
+    let currentPayType = null;
+    let selectedTargetIcon = 'fa-car';
+    let selectedTargetColor = 'bg-blue-500';
+    let currentTargetId = null;
+
+    const accountIcons = [
+        'fa-wallet', 'fa-university', 'fa-credit-card', 'fa-coins', 
+        'fa-piggy-bank', 'fa-gem', 'fa-money-bill-wave', 'fa-dollar-sign',
+        'fa-euro-sign', 'fa-yen-sign', 'fa-bitcoin', 'fa-chart-line'
+    ];
+
+    const accountColors = [
+        'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500',
+        'bg-teal-500', 'bg-blue-500', 'bg-indigo-500', 'bg-purple-500',
+        'bg-pink-500', 'bg-gray-500', 'bg-cyan-500', 'bg-lime-500'
+    ];
+
+    const targetIcons = [
+        'fa-car', 'fa-home', 'fa-plane', 'fa-laptop', 
+        'fa-motorcycle', 'fa-mobile-alt', 'fa-ring', 'fa-graduation-cap',
+        'fa-baby', 'fa-heartbeat', 'fa-umbrella-beach', 'fa-tools'
+    ];
+
+    const categories = {
+        income: [
+            { id: 'salary', name: 'Gaji', icon: 'fa-briefcase', color: 'bg-green-500' },
+            { id: 'bonus', name: 'Bonus', icon: 'fa-gift', color: 'bg-emerald-500' },
+            { id: 'investment', name: 'Investasi', icon: 'fa-chart-line', color: 'bg-teal-500' },
+            { id: 'freelance', name: 'Freelance', icon: 'fa-laptop', color: 'bg-cyan-500' },
+            { id: 'business', name: 'Bisnis', icon: 'fa-store', color: 'bg-green-600' },
+            { id: 'gift', name: 'Hadiah', icon: 'fa-hand-holding-heart', color: 'bg-lime-500' },
+            { id: 'refund', name: 'Refund', icon: 'fa-undo', color: 'bg-green-400' },
+            { id: 'other-income', name: 'Lainnya', icon: 'fa-plus-circle', color: 'bg-gray-500' }
+        ],
+        expense: [
+            { id: 'food', name: 'Makanan', icon: 'fa-utensils', color: 'bg-red-500' },
+            { id: 'transport', name: 'Transport', icon: 'fa-car', color: 'bg-blue-500' },
+            { id: 'shopping', name: 'Belanja', icon: 'fa-shopping-bag', color: 'bg-pink-500' },
+            { id: 'bills', name: 'Tagihan', icon: 'fa-file-invoice', color: 'bg-yellow-500' },
+            { id: 'entertainment', name: 'Hiburan', icon: 'fa-film', color: 'bg-purple-500' },
+            { id: 'health', name: 'Kesehatan', icon: 'fa-heartbeat', color: 'bg-red-600' },
+            { id: 'education', name: 'Pendidikan', icon: 'fa-graduation-cap', color: 'bg-indigo-500' },
+            { id: 'other-expense', name: 'Lainnya', icon: 'fa-ellipsis-h', color: 'bg-gray-500' },
+            { id: 'target-saving', name: 'Tabungan Target', icon: 'fa-bullseye', color: 'bg-cyan-500' }
+        ]
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('date-input').valueAsDate = new Date();
+        updateMonthDisplay();
+        renderCategories();
+        renderAccounts();
+        renderAccountOptions();
+        updateDashboard();
+        renderTransactions();
+        renderBudgets();
+        renderTargets();
+        updateDebtReceivableSummary();
+    });
+
+function isSupabaseConnected() {
+    return (
+        localStorage.getItem('supabase_url') &&
+        localStorage.getItem('supabase_key') &&
+        localStorage.getItem('user_id')
+    );
+}
+
+    // Tab switching
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        setTimeout(() => {
+            document.getElementById(tabId).classList.add('active');
+        }, 50);
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            if (item.dataset.target === tabId) {
+                item.classList.remove('text-gray-400');
+                item.classList.add('text-indigo-600');
+                const icon = item.querySelector('i');
+                icon.classList.add('animate-bounce-in');
+                setTimeout(() => icon.classList.remove('animate-bounce-in'), 500);
+            } else {
+                item.classList.add('text-gray-400');
+                item.classList.remove('text-indigo-600');
+            }
+        });
+
+        if (tabId === 'stats') {
+            updateStats();
+            renderAllTransactions();
+        }
+        if (tabId === 'profile') {
+            updateProfileStats();
+        }
+        if (tabId === 'budget') {
+            renderBudgets();
+            renderTargets();
+        }
+    }
+
+    // Toast notifications
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        
+        const colors = {
+            success: 'bg-green-500',
+            error: 'bg-red-500',
+            info: 'bg-blue-500',
+            warning: 'bg-yellow-500'
+        };
+        
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-times-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-circle'
+        };
+        
+        toast.className = `toast ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2`;
+        toast.innerHTML = `<i class="fas ${icons[type]}"></i> ${message}`;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('hiding');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Account Modal functions
+    function openAccountModal() {
+        document.getElementById('account-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        renderAccountIconGrid();
+        renderAccountColorGrid();
+    }
+
+    function closeAccountModal() {
+        document.getElementById('account-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('account-name-input').value = '';
+        document.getElementById('account-balance-input').value = '';
+        selectedAccountIcon = 'fa-wallet';
+        selectedAccountColor = 'bg-indigo-500';
+    }
+
+    // Manage Accounts Modal
+    function openManageAccountsModal() {
+        document.getElementById('manage-accounts-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        renderManageAccountsList();
+    }
+
+    function closeManageAccountsModal() {
+        document.getElementById('manage-accounts-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function renderManageAccountsList() {
+        const container = document.getElementById('manage-accounts-list');
+        
+        if (accounts.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-400 py-6">
+                    <i class="fas fa-wallet text-4xl mb-3"></i>
+                    <p>Belum ada akun</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = accounts.map(acc => {
+            const accountTransactions = transactions.filter(t => t.accountId === acc.id);
+            const income = accountTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = accountTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const currentBalance = acc.balance + income - expense;
+            const transactionCount = accountTransactions.length;
+
+            return `
+                <div class="bg-gray-50 rounded-xl p-4 flex items-center gap-3">
+                    <div class="w-12 h-12 ${acc.color} rounded-full flex items-center justify-center">
+                        <i class="fas ${acc.icon} text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold">${acc.name}</h4>
+                        <p class="text-sm text-gray-500">${formatCurrency(currentBalance)}</p>
+                        <p class="text-xs text-gray-400">${transactionCount} transaksi</p>
+                    </div>
+                    <button onclick="promptDeleteAccount('${acc.id}')" class="w-10 h-10 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors">
+                        <i class="fas fa-trash text-red-600"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function promptDeleteAccount(id) {
+        const account = accounts.find(a => a.id === id);
+        if (!account) return;
+
+        accountToDeleteId = id;
+        document.getElementById('delete-account-name').textContent = account.name;
+        document.getElementById('delete-account-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteAccountModal() {
+        document.getElementById('delete-account-modal').classList.add('hidden');
+        accountToDeleteId = null;
+    }
+
+// Fungsi untuk konfirmasi penghapusan akun
+function confirmDeleteAccount() {
+    if (!accountToDeleteId) return;
+
+    // Check if this is the last account
+    if (accounts.length <= 1) {
+        showToast('Minimal harus ada 1 akun!', 'error');
+        closeDeleteAccountModal();
+        return;
+    }
+
+    // Kumpulkan ID transaksi yang terkait dengan akun ini untuk dihapus di Supabase
+    const relatedTransactions = transactions.filter(t => t.accountId === accountToDeleteId);
+    const relatedTransactionIds = relatedTransactions.map(t => t.id);
+
+    // Hapus transaksi secara lokal
+    transactions = transactions.filter(t => t.accountId !== accountToDeleteId);
+
+    // Hapus transaksi di Supabase jika sync dikonfigurasi
+    if (isSyncConfigured()) {
+        relatedTransactionIds.forEach(id => {
+            deleteFromCloud('dompetku_transactions', id);
+        });
+    }
+
+    // Hapus akun secara lokal
+    accounts = accounts.filter(a => a.id !== accountToDeleteId);
+
+    // Hapus akun di Supabase jika sync dikonfigurasi
+    if (isSyncConfigured()) {
+        deleteFromCloud('dompetku_accounts', accountToDeleteId);
+    }
+
+    saveData();
+    renderAccounts();
+    renderAccountOptions();
+    renderManageAccountsList();
+    updateDashboard();
+    renderTransactions();
+    renderBudgets();
+    closeDeleteAccountModal();
+    showToast('Akun berhasil dihapus', 'success');
+}
+    function renderAccountIconGrid() {
+        const grid = document.getElementById('account-icon-grid');
+        grid.innerHTML = accountIcons.map(icon => `
+            <button onclick="selectAccountIcon('${icon}')" 
+                class="w-12 h-12 rounded-xl flex items-center justify-center transition-all ${selectedAccountIcon === icon ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'bg-gray-100 hover:bg-gray-200'}">
+                <i class="fas ${icon} ${selectedAccountIcon === icon ? 'text-indigo-600' : 'text-gray-600'}"></i>
+            </button>
+        `).join('');
+    }
+
+    function renderAccountColorGrid() {
+        const grid = document.getElementById('account-color-grid');
+        grid.innerHTML = accountColors.map(color => `
+            <button onclick="selectAccountColor('${color}')" 
+                class="w-10 h-10 ${color} rounded-full flex items-center justify-center transition-all ${selectedAccountColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}">
+                ${selectedAccountColor === color ? '<i class="fas fa-check text-white text-sm"></i>' : ''}
+            </button>
+        `).join('');
+    }
+
+    function selectAccountIcon(icon) {
+        selectedAccountIcon = icon;
+        renderAccountIconGrid();
+    }
+
+    function selectAccountColor(color) {
+        selectedAccountColor = color;
+        renderAccountColorGrid();
+    }
+
+    function saveAccount() {
+        const name = document.getElementById('account-name-input').value.trim();
+        const balance = parseFloat(document.getElementById('account-balance-input').value) || 0;
+
+        if (!name) {
+            showToast('Masukkan nama akun', 'error');
+            return;
+        }
+
+        const account = {
+            id: Date.now().toString(),
+            name: name,
+            balance: balance,
+            icon: selectedAccountIcon,
+            color: selectedAccountColor
+        };
+
+        accounts.push(account);
+        saveData();
+        renderAccounts();
+        renderAccountOptions();
+        updateDashboard();
+        closeAccountModal();
+        showToast('Akun berhasil ditambahkan', 'success');
+    }
+
+    function renderAccounts() {
+        const container = document.getElementById('accounts-container');
+        
+        if (accounts.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-4 text-center text-gray-400 w-full">
+                    <p class="text-sm">Belum ada akun</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = accounts.map(acc => {
+            const accountTransactions = transactions.filter(t => t.accountId === acc.id);
+            const income = accountTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = accountTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const currentBalance = acc.balance + income - expense;
+
+            return `
+                <div class="account-card ${acc.color} p-4 rounded-xl text-white flex-shrink-0 interactive-card cursor-pointer" onclick="showAccountDetail('${acc.id}')">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas ${acc.icon}"></i>
+                        <span class="font-medium text-sm">${acc.name}</span>
+                    </div>
+                    <p class="text-lg font-bold">${formatCurrency(currentBalance)}</p>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderAccountOptions() {
+        const select = document.getElementById('account-select');
+        select.innerHTML = accounts.map(acc => `
+            <option value="${acc.id}">${acc.name}</option>
+        `).join('');
+    }
+
+    function showAccountDetail(id) {
+        const account = accounts.find(a => a.id === id);
+        if (!account) return;
+        
+        const accountTransactions = transactions.filter(t => t.accountId === id);
+        const income = accountTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const expense = accountTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        
+        showToast(`${account.name}: Masuk ${formatCurrency(income)}, Keluar ${formatCurrency(expense)}`, 'info');
+    }
+
+    // Budget Modal functions
+    function closeBudgetModal() {
+        document.getElementById('budget-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('budget-amount-input').value = '';
+        document.getElementById('budget-custom-name-input').value = '';
+        document.getElementById('budget-custom-name-container').classList.add('hidden');
+        document.getElementById('budget-start-date').value = '';
+        document.getElementById('budget-end-date').value = '';
+        selectedBudgetCategory = null;
+    }
+
+    function openBudgetModal() {
+        document.getElementById('budget-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        // Set default dates
+        const today = new Date();
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        document.getElementById('budget-start-date').valueAsDate = today;
+        document.getElementById('budget-end-date').valueAsDate = endOfMonth;
+        renderBudgetCategories();
+    }
+
+    function renderBudgetCategories() {
+        const grid = document.getElementById('budget-category-grid');
+        const cats = categories.expense;
+        
+        grid.innerHTML = cats.map(cat => `
+            <button onclick="selectBudgetCategory('${cat.id}')" 
+                class="category-btn p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${selectedBudgetCategory === cat.id ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50 hover:bg-gray-100'}">
+                <div class="w-10 h-10 ${cat.color} rounded-full flex items-center justify-center">
+                    <i class="fas ${cat.icon} text-white text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-600 truncate w-full text-center">${cat.name}</span>
+            </button>
+        `).join('');
+    }
+
+    function selectBudgetCategory(id) {
+        selectedBudgetCategory = id;
+        renderBudgetCategories();
+        
+        // Show custom name input if "Lainnya" is selected
+        const customNameContainer = document.getElementById('budget-custom-name-container');
+        if (id === 'other-expense') {
+            customNameContainer.classList.remove('hidden');
+        } else {
+            customNameContainer.classList.add('hidden');
+            document.getElementById('budget-custom-name-input').value = '';
+        }
+    }
+
+    function saveBudget() {
+        const amount = parseFloat(document.getElementById('budget-amount-input').value);
+        const customName = document.getElementById('budget-custom-name-input').value.trim();
+        const startDate = document.getElementById('budget-start-date').value;
+        const endDate = document.getElementById('budget-end-date').value;
+
+        if (!selectedBudgetCategory) {
+            showToast('Pilih kategori', 'error');
+            return;
+        }
+
+        if (selectedBudgetCategory === 'other-expense' && !customName) {
+            showToast('Masukkan nama kategori', 'error');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            showToast('Masukkan jumlah yang valid', 'error');
+            return;
+        }
+
+        if (!startDate || !endDate) {
+            showToast('Pilih periode anggaran', 'error');
+            return;
+        }
+
+        if (new Date(startDate) > new Date(endDate)) {
+            showToast('Tanggal mulai harus sebelum tanggal selesai', 'error');
+            return;
+        }
+
+        // For custom category, create a unique id
+        const budgetId = selectedBudgetCategory === 'other-expense' 
+            ? `custom-${Date.now()}` 
+            : selectedBudgetCategory;
+
+        // Check if budget already exists for this category (only for non-custom)
+        if (selectedBudgetCategory !== 'other-expense') {
+            const existingIndex = budgets.findIndex(b => b.category === selectedBudgetCategory && !b.isExpired);
+            if (existingIndex >= 0) {
+                budgets[existingIndex].amount = amount;
+                budgets[existingIndex].startDate = startDate;
+                budgets[existingIndex].endDate = endDate;
+                saveData();
+                renderBudgets();
+                closeBudgetModal();
+                showToast('Anggaran berhasil diperbarui', 'success');
+                return;
+            }
+        }
+
+        budgets.push({
+            id: Date.now().toString(),
+            category: selectedBudgetCategory,
+            customName: customName || null,
+            amount: amount,
+            startDate: startDate,
+            endDate: endDate,
+            createdAt: new Date().toISOString()
+        });
+
+        saveData();
+        renderBudgets();
+        closeBudgetModal();
+        showToast('Anggaran berhasil disimpan', 'success');
+    }
+
+    function checkAndResetBudgets() {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        let hasChanges = false;
+
+        budgets.forEach(budget => {
+            if (budget.endDate) {
+                const endDate = new Date(budget.endDate);
+                endDate.setHours(23, 59, 59, 999);
+                
+                if (now > endDate) {
+                    // Reset: create new period
+                    const daysDiff = Math.ceil((new Date(budget.endDate) - new Date(budget.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                    const newStartDate = new Date(budget.endDate);
+                    newStartDate.setDate(newStartDate.getDate() + 1);
+                    const newEndDate = new Date(newStartDate);
+                    newEndDate.setDate(newEndDate.getDate() + daysDiff - 1);
+                    
+                    budget.startDate = newStartDate.toISOString().split('T')[0];
+                    budget.endDate = newEndDate.toISOString().split('T')[0];
+                    budget.lastReset = now.toISOString();
+                    hasChanges = true;
+                }
+            }
+        });
+
+        if (hasChanges) {
+            saveData();
+        }
+    }
+
+    function formatShortDate(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    }
+
+    function getDaysRemaining(endDate) {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(0, 0, 0, 0);
+        const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+        return diff;
+    }
+
+    function renderBudgets() {
+        // Check and reset expired budgets first
+        checkAndResetBudgets();
+
+        const container = document.getElementById('budget-list');
+        const now = new Date();
+        
+        if (budgets.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                    <i class="fas fa-piggy-bank text-4xl mb-3"></i>
+                    <p>Belum ada anggaran</p>
+                    <p class="text-sm">Tap + untuk menambah anggaran</p>
+                </div>
+            `;
+            document.getElementById('budget-total').textContent = formatCurrency(0);
+            document.getElementById('budget-used').textContent = formatCurrency(0);
+            document.getElementById('budget-remaining').textContent = formatCurrency(0);
+            return;
+        }
+
+        let totalBudget = 0;
+        let totalUsed = 0;
+
+        container.innerHTML = budgets.map(budget => {
+            const cat = categories.expense.find(c => c.id === budget.category);
+            const displayName = budget.customName || cat?.name || 'Tidak diketahui';
+            const displayIcon = cat?.icon || 'fa-ellipsis-h';
+            const displayColor = cat?.color || 'bg-gray-500';
+            
+            // Filter transactions within budget period
+            const budgetStart = budget.startDate ? new Date(budget.startDate) : new Date(now.getFullYear(), now.getMonth(), 1);
+            const budgetEnd = budget.endDate ? new Date(budget.endDate) : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            budgetEnd.setHours(23, 59, 59, 999);
+            
+            const spent = transactions
+                .filter(t => {
+                    const tDate = new Date(t.date);
+                    return t.type === 'expense' && 
+                           t.category === budget.category && 
+                           tDate >= budgetStart && 
+                           tDate <= budgetEnd;
+                })
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const percentage = Math.min((spent / budget.amount) * 100, 100);
+            const remaining = budget.amount - spent;
+            const isOver = spent > budget.amount;
+            const daysRemaining = budget.endDate ? getDaysRemaining(budget.endDate) : null;
+
+            totalBudget += budget.amount;
+            totalUsed += spent;
+
+            return `
+                <div class="bg-white rounded-xl p-4 shadow-sm interactive-card" onclick="deleteBudget('${budget.id}')">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 ${displayColor} rounded-full flex items-center justify-center">
+                            <i class="fas ${displayIcon} text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold">${displayName}</h4>
+                            <p class="text-sm ${isOver ? 'text-red-500' : 'text-gray-500'}">
+                                ${isOver ? 'Melebihi ' + formatCurrency(Math.abs(remaining)) : 'Sisa ' + formatCurrency(remaining)}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold">${formatCurrency(spent)}</p>
+                            <p class="text-xs text-gray-400">dari ${formatCurrency(budget.amount)}</p>
+                        </div>
+                    </div>
+                    ${budget.startDate && budget.endDate ? `
+                        <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
+                            <span><i class="fas fa-calendar-alt mr-1"></i>${formatShortDate(budget.startDate)} - ${formatShortDate(budget.endDate)}</span>
+                            <span class="${daysRemaining <= 3 ? 'text-red-500 font-medium' : daysRemaining <= 7 ? 'text-yellow-600' : ''}">
+                                ${daysRemaining > 0 ? daysRemaining + ' hari lagi' : daysRemaining === 0 ? 'Hari terakhir!' : 'Akan reset'}
+                            </span>
+                        </div>
+                    ` : ''}
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="progress-bar ${isOver ? 'bg-red-500' : percentage > 80 ? 'bg-yellow-500' : 'bg-green-500'} h-2 rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('budget-total').textContent = formatCurrency(totalBudget);
+        document.getElementById('budget-used').textContent = formatCurrency(totalUsed);
+        document.getElementById('budget-remaining').textContent = formatCurrency(totalBudget - totalUsed);
+    }
+
+function deleteBudget(id) {
+    // Hapus secara lokal
+    budgets = budgets.filter(b => b.id !== id);
+    
+    // Hapus dari Supabase jika sync dikonfigurasi
+    if (isSyncConfigured()) {
+        deleteFromCloud('dompetku_budgets', id);
+    }
+    
+    saveData();
+    renderBudgets();
+    showToast('Anggaran berhasil dihapus', 'success');
+}
+
+async function deleteBudgetSupabase(id) {
+    try {
+        const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/dompetku_budgets?id=eq.${id}`,
+            {
+                method: 'DELETE',
+                headers: {
+                    apikey: SUPABASE_KEY,
+                    Authorization: `Bearer ${SUPABASE_KEY}`
+                }
+            }
+        );
+
+        if (!res.ok) {
+            const text = await res.text();
+            console.error('Supabase delete failed:', text);
+        }
+    } catch (err) {
+        console.error('Delete Supabase error:', err);
+    }
+}
+
+
+async function syncToSupabase() {
+    const data = {
+        transactions,
+        accounts,
+        budgets,      // 👈 INI WAJIB
+        debts,
+        receivables,
+        targets
+    };
+
+    const payload = {
+        user_id: getUserId(),
+        data: data,
+        updated_at: new Date().toISOString()
+    };
+
+    await fetch(`${SUPABASE_URL}/rest/v1/dompetku_backup`, {
+        method: 'POST',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(payload)
+    });
+}
+
+
+
+    // Debt Modal functions
+    function openDebtModal() {
+        document.getElementById('debt-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDebtModal() {
+        document.getElementById('debt-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('debt-creditor-input').value = '';
+        document.getElementById('debt-amount-input').value = '';
+        document.getElementById('debt-description-input').value = '';
+        document.getElementById('debt-due-date-input').value = '';
+    }
+
+
+    function saveDebt() {
+        const creditor = document.getElementById('debt-creditor-input').value.trim();
+        const amount = parseFloat(document.getElementById('debt-amount-input').value);
+        const description = document.getElementById('debt-description-input').value.trim();
+        const dueDate = document.getElementById('debt-due-date-input').value;
+
+        if (!creditor) {
+            showToast('Masukkan nama pemberi utang', 'error');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            showToast('Masukkan jumlah yang valid', 'error');
+            return;
+        }
+
+        debts.push({
+            id: Date.now().toString(),
+            creditor: creditor,
+            amount: amount,
+            remaining: amount,
+            description: description,
+            dueDate: dueDate || null,
+            createdAt: new Date().toISOString(),
+            payments: []
+        });
+
+        saveData();
+        updateDebtReceivableSummary();
+        closeDebtModal();
+        showToast('Utang berhasil ditambahkan', 'success');
+    }
+
+    // Receivable Modal functions
+    function openReceivableModal() {
+        document.getElementById('receivable-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeReceivableModal() {
+        document.getElementById('receivable-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('receivable-debtor-input').value = '';
+        document.getElementById('receivable-amount-input').value = '';
+        document.getElementById('receivable-description-input').value = '';
+        document.getElementById('receivable-due-date-input').value = '';
+    }
+
+    function saveReceivable() {
+        const debtor = document.getElementById('receivable-debtor-input').value.trim();
+        const amount = parseFloat(document.getElementById('receivable-amount-input').value);
+        const description = document.getElementById('receivable-description-input').value.trim();
+        const dueDate = document.getElementById('receivable-due-date-input').value;
+
+        if (!debtor) {
+            showToast('Masukkan nama peminjam', 'error');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            showToast('Masukkan jumlah yang valid', 'error');
+            return;
+        }
+
+        receivables.push({
+            id: Date.now().toString(),
+            debtor: debtor,
+            amount: amount,
+            remaining: amount,
+            description: description,
+            dueDate: dueDate || null,
+            createdAt: new Date().toISOString(),
+            payments: []
+        });
+
+        saveData();
+        updateDebtReceivableSummary();
+        closeReceivableModal();
+        showToast('Piutang berhasil ditambahkan', 'success');
+    }
+
+    // Debt/Receivable Summary
+    function updateDebtReceivableSummary() {
+        const totalDebt = debts.reduce((sum, d) => sum + d.remaining, 0);
+        const totalReceivable = receivables.reduce((sum, r) => sum + r.remaining, 0);
+        
+        document.getElementById('total-debt').textContent = formatCurrency(totalDebt);
+        document.getElementById('total-receivable').textContent = formatCurrency(totalReceivable);
+    }
+
+    // Debt/Receivable List Modal
+    function openDebtListModal(type) {
+        currentPayType = type;
+        const modal = document.getElementById('debt-list-modal');
+        const title = document.getElementById('debt-list-title');
+        const summary = document.getElementById('debt-list-summary');
+        const container = document.getElementById('debt-list-container');
+
+        if (type === 'debt') {
+            title.textContent = 'Daftar Utang';
+            const total = debts.reduce((sum, d) => sum + d.amount, 0);
+            const remaining = debts.reduce((sum, d) => sum + d.remaining, 0);
+            const paid = total - remaining;
+            
+            summary.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500">Total Utang</span>
+                    <span class="font-bold">${formatCurrency(total)}</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500">Sudah Dibayar</span>
+                    <span class="font-bold text-green-600">${formatCurrency(paid)}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Sisa Utang</span>
+                    <span class="font-bold text-red-600">${formatCurrency(remaining)}</span>
+                </div>
+            `;
+
+            if (debts.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 py-6">
+                        <i class="fas fa-hand-holding-usd text-4xl mb-3"></i>
+                        <p>Belum ada utang</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = debts.map(d => {
+                    const percentage = ((d.amount - d.remaining) / d.amount) * 100;
+                    const isOverdue = d.dueDate && new Date(d.dueDate) < new Date() && d.remaining > 0;
+                    return `
+                        <div class="bg-gray-50 rounded-xl p-4 ${isOverdue ? 'border-2 border-red-300' : ''}">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h4 class="font-semibold">${d.creditor}</h4>
+                                    <p class="text-xs text-gray-500">${d.description || '-'}</p>
+                                </div>
+                                ${d.remaining > 0 ? `
+                                    <button onclick="openPayModal('${d.id}', 'debt')" class="px-3 py-1 bg-yellow-500 text-white text-sm rounded-full">
+                                        Bayar
+                                    </button>
+                                ` : `
+                                    <span class="px-3 py-1 bg-green-100 text-green-600 text-sm rounded-full">Lunas</span>
+                                `}
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-500">Sisa: ${formatCurrency(d.remaining)}</span>
+                                <span class="text-sm font-medium">dari ${formatCurrency(d.amount)}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                <div class="bg-yellow-500 h-2 rounded-full" style="width: ${percentage}%"></div>
+                            </div>
+                            ${d.dueDate ? `
+                                <p class="text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}">
+                                    <i class="fas fa-calendar-alt mr-1"></i>Jatuh tempo: ${formatDate(d.dueDate)}
+                                </p>
+                            ` : ''}
+                            <button onclick="deleteDebtReceivable('${d.id}', 'debt')" class="mt-2 text-xs text-red-500">
+                                <i class="fas fa-trash mr-1"></i>Hapus
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } else {
+            title.textContent = 'Daftar Piutang';
+            const total = receivables.reduce((sum, r) => sum + r.amount, 0);
+            const remaining = receivables.reduce((sum, r) => sum + r.remaining, 0);
+            const received = total - remaining;
+            
+            summary.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500">Total Piutang</span>
+                    <span class="font-bold">${formatCurrency(total)}</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500">Sudah Diterima</span>
+                    <span class="font-bold text-green-600">${formatCurrency(received)}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500">Belum Diterima</span>
+                    <span class="font-bold text-blue-600">${formatCurrency(remaining)}</span>
+                </div>
+            `;
+
+            if (receivables.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-400 py-6">
+                        <i class="fas fa-hand-holding-heart text-4xl mb-3"></i>
+                        <p>Belum ada piutang</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = receivables.map(r => {
+                    const percentage = ((r.amount - r.remaining) / r.amount) * 100;
+                    const isOverdue = r.dueDate && new Date(r.dueDate) < new Date() && r.remaining > 0;
+                    return `
+                        <div class="bg-gray-50 rounded-xl p-4 ${isOverdue ? 'border-2 border-red-300' : ''}">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h4 class="font-semibold">${r.debtor}</h4>
+                                    <p class="text-xs text-gray-500">${r.description || '-'}</p>
+                                </div>
+                                ${r.remaining > 0 ? `
+                                    <button onclick="openPayModal('${r.id}', 'receivable')" class="px-3 py-1 bg-blue-500 text-white text-sm rounded-full">
+                                        Terima
+                                    </button>
+                                ` : `
+                                    <span class="px-3 py-1 bg-green-100 text-green-600 text-sm rounded-full">Lunas</span>
+                                `}
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-500">Sisa: ${formatCurrency(r.remaining)}</span>
+                                <span class="text-sm font-medium">dari ${formatCurrency(r.amount)}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: ${percentage}%"></div>
+                            </div>
+                            ${r.dueDate ? `
+                                <p class="text-xs ${isOverdue ? 'text-red-500 font-medium' : 'text-gray-400'}">
+                                    <i class="fas fa-calendar-alt mr-1"></i>Jatuh tempo: ${formatDate(r.dueDate)}
+                                </p>
+                            ` : ''}
+                            <button onclick="deleteDebtReceivable('${r.id}', 'receivable')" class="mt-2 text-xs text-red-500">
+                                <i class="fas fa-trash mr-1"></i>Hapus
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDebtListModal() {
+        document.getElementById('debt-list-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function deleteDebtReceivable(id, type) {
+        if (!confirm('Hapus item ini?')) return;
+
+        if (type === 'debt') {
+            debts = debts.filter(d => d.id !== id);
+        } else {
+            receivables = receivables.filter(r => r.id !== id);
+        }
+
+        saveData();
+        updateDebtReceivableSummary();
+        openDebtListModal(type);
+        showToast('Berhasil dihapus', 'success');
+    }
+
+    // Pay Modal
+    function openPayModal(id, type) {
+        currentPayItem = id;
+        currentPayType = type;
+        
+        const modal = document.getElementById('pay-modal');
+        const title = document.getElementById('pay-modal-title');
+        const info = document.getElementById('pay-modal-info');
+        const btn = document.getElementById('pay-confirm-btn');
+        
+        if (type === 'debt') {
+            const debt = debts.find(d => d.id === id);
+            title.textContent = 'Bayar Utang';
+            info.textContent = `${debt.creditor} - Sisa ${formatCurrency(debt.remaining)}`;
+            btn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            btn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+        } else {
+            const receivable = receivables.find(r => r.id === id);
+            title.textContent = 'Terima Pembayaran';
+            info.textContent = `${receivable.debtor} - Sisa ${formatCurrency(receivable.remaining)}`;
+            btn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            btn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        }
+        
+        document.getElementById('pay-amount-input').value = '';
+        modal.classList.remove('hidden');
+    }
+
+    function closePayModal() {
+        document.getElementById('pay-modal').classList.add('hidden');
+        currentPayItem = null;
+    }
+
+    function payFullAmount() {
+        if (currentPayType === 'debt') {
+            const debt = debts.find(d => d.id === currentPayItem);
+            document.getElementById('pay-amount-input').value = debt.remaining;
+        } else {
+            const receivable = receivables.find(r => r.id === currentPayItem);
+            document.getElementById('pay-amount-input').value = receivable.remaining;
+        }
+    }
+
+    function confirmPay() {
+        const amount = parseFloat(document.getElementById('pay-amount-input').value);
+        
+        if (!amount || amount <= 0) {
+            showToast('Masukkan jumlah yang valid', 'error');
+            return;
+        }
+
+        if (currentPayType === 'debt') {
+            const debt = debts.find(d => d.id === currentPayItem);
+            if (amount > debt.remaining) {
+                showToast('Jumlah melebihi sisa utang', 'error');
+                return;
+            }
+            debt.remaining -= amount;
+            debt.payments.push({
+                amount: amount,
+                date: new Date().toISOString()
+            });
+        } else {
+            const receivable = receivables.find(r => r.id === currentPayItem);
+            if (amount > receivable.remaining) {
+                showToast('Jumlah melebihi sisa piutang', 'error');
+                return;
+            }
+            receivable.remaining -= amount;
+            receivable.payments.push({
+                amount: amount,
+                date: new Date().toISOString()
+            });
+        }
+
+        saveData();
+        updateDebtReceivableSummary();
+        closePayModal();
+        openDebtListModal(currentPayType);
+        showToast('Pembayaran berhasil dicatat', 'success');
+    }
+
+    // Target Modal functions
+    function closeTargetModal() {
+        document.getElementById('target-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('target-name-input').value = '';
+        document.getElementById('target-amount-input').value = '';
+        document.getElementById('target-start-date').value = '';
+        document.getElementById('target-end-date').value = '';
+        selectedTargetIcon = 'fa-car';
+        selectedTargetColor = 'bg-blue-500';
+    }
+
+    function openTargetModal() {
+        document.getElementById('target-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        // Set default dates
+        const today = new Date();
+        const nextYear = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
+        document.getElementById('target-start-date').valueAsDate = today;
+        document.getElementById('target-end-date').valueAsDate = nextYear;
+        renderTargetIconGrid();
+        renderTargetColorGrid();
+    }
+
+    function renderTargetIconGrid() {
+        const grid = document.getElementById('target-icon-grid');
+        grid.innerHTML = targetIcons.map(icon => `
+            <button onclick="selectTargetIcon('${icon}')" 
+                class="w-12 h-12 rounded-xl flex items-center justify-center transition-all ${selectedTargetIcon === icon ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'bg-gray-100 hover:bg-gray-200'}">
+                <i class="fas ${icon} ${selectedTargetIcon === icon ? 'text-indigo-600' : 'text-gray-600'}"></i>
+            </button>
+        `).join('');
+    }
+
+    function renderTargetColorGrid() {
+        const grid = document.getElementById('target-color-grid');
+        grid.innerHTML = accountColors.map(color => `
+            <button onclick="selectTargetColor('${color}')" 
+                class="w-10 h-10 ${color} rounded-full flex items-center justify-center transition-all ${selectedTargetColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}">
+                ${selectedTargetColor === color ? '<i class="fas fa-check text-white text-sm"></i>' : ''}
+            </button>
+        `).join('');
+    }
+
+    function selectTargetIcon(icon) {
+        selectedTargetIcon = icon;
+        renderTargetIconGrid();
+    }
+
+    function selectTargetColor(color) {
+        selectedTargetColor = color;
+        renderTargetColorGrid();
+    }
+
+    function saveTarget() {
+        const name = document.getElementById('target-name-input').value.trim();
+        const amount = parseFloat(document.getElementById('target-amount-input').value);
+        const startDate = document.getElementById('target-start-date').value;
+        const endDate = document.getElementById('target-end-date').value;
+
+        if (!name) {
+            showToast('Masukkan nama target', 'error');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            showToast('Masukkan jumlah target yang valid', 'error');
+            return;
+        }
+
+        if (!startDate || !endDate) {
+            showToast('Pilih periode target', 'error');
+            return;
+        }
+
+        if (new Date(startDate) > new Date(endDate)) {
+            showToast('Tanggal mulai harus sebelum tanggal selesai', 'error');
+            return;
+        }
+
+        targets.push({
+            id: Date.now().toString(),
+            name: name,
+            targetAmount: amount,
+            currentAmount: 0,
+            icon: selectedTargetIcon,
+            color: selectedTargetColor,
+            startDate: startDate,
+            endDate: endDate,
+            createdAt: new Date().toISOString(),
+            deposits: []
+        });
+
+        saveData();
+        renderTargets();
+        closeTargetModal();
+        showToast('Target berhasil ditambahkan', 'success');
+    }
+
+    function renderTargets() {
+        const container = document.getElementById('target-list');
+        
+        if (targets.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                    <i class="fas fa-bullseye text-4xl mb-3"></i>
+                    <p>Belum ada target</p>
+                    <p class="text-sm">Tap + untuk menambah target tabungan</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = targets.map(target => {
+            const percentage = Math.min((target.currentAmount / target.targetAmount) * 100, 100);
+            const remaining = target.targetAmount - target.currentAmount;
+            const isComplete = target.currentAmount >= target.targetAmount;
+            const daysRemaining = target.endDate ? getDaysRemaining(target.endDate) : null;
+            const isOverdue = daysRemaining !== null && daysRemaining < 0 && !isComplete;
+
+            // Calculate daily savings needed
+            let dailySavingsNeeded = null;
+            if (daysRemaining > 0 && remaining > 0) {
+                dailySavingsNeeded = remaining / daysRemaining;
+            }
+
+            return `
+                <div class="bg-white rounded-xl p-4 shadow-sm interactive-card ${isOverdue ? 'border-2 border-red-300' : ''}">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-12 h-12 ${target.color} rounded-full flex items-center justify-center">
+                            <i class="fas ${target.icon} text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold">${target.name}</h4>
+                            <p class="text-sm ${isComplete ? 'text-green-500 font-medium' : isOverdue ? 'text-red-500' : 'text-gray-500'}">
+                                ${isComplete ? '🎉 Target tercapai!' : isOverdue ? '⚠️ Melewati deadline!' : 'Kurang ' + formatCurrency(remaining)}
+                            </p>
+                        </div>
+                        <div class="flex gap-2">
+                            ${!isComplete ? `
+                                <button onclick="openAddToTargetModal('${target.id}')" class="w-10 h-10 bg-green-100 hover:bg-green-200 rounded-full flex items-center justify-center transition-colors">
+                                    <i class="fas fa-plus text-green-600"></i>
+                                </button>
+                            ` : ''}
+                            <button onclick="openTargetDetailModal('${target.id}')" class="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+                                <i class="fas fa-info text-gray-600"></i>
+                            </button>
+                        </div>
+                    </div>
+                    ${target.startDate && target.endDate ? `
+                        <div class="flex items-center justify-between text-xs text-gray-400 mb-2">
+                            <span><i class="fas fa-calendar-alt mr-1"></i>${formatShortDate(target.startDate)} - ${formatShortDate(target.endDate)}</span>
+                            <span class="${isComplete ? 'text-green-500' : daysRemaining <= 7 ? 'text-red-500 font-medium' : daysRemaining <= 30 ? 'text-yellow-600' : ''}">
+                                ${isComplete ? '✓ Selesai' : daysRemaining > 0 ? daysRemaining + ' hari lagi' : daysRemaining === 0 ? 'Hari terakhir!' : Math.abs(daysRemaining) + ' hari terlewat'}
+                            </span>
+                        </div>
+                    ` : ''}
+                    ${dailySavingsNeeded && !isComplete ? `
+                        <div class="bg-blue-50 rounded-lg px-3 py-2 mb-2">
+                            <p class="text-xs text-blue-600"><i class="fas fa-lightbulb mr-1"></i>Tabung ${formatCurrency(dailySavingsNeeded)}/hari untuk mencapai target</p>
+                        </div>
+                    ` : ''}
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-semibold">${formatCurrency(target.currentAmount)}</span>
+                        <span class="text-sm text-gray-500">dari ${formatCurrency(target.targetAmount)}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="progress-bar ${isComplete ? 'bg-green-500' : isOverdue ? 'bg-red-500' : 'bg-blue-500'} h-3 rounded-full" style="width: ${percentage}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 text-right mt-1">${percentage.toFixed(1)}%</p>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openAddToTargetModal(id) {
+        const target = targets.find(t => t.id === id);
+        if (!target) return;
+
+        currentTargetId = id;
+        document.getElementById('add-to-target-info').textContent = `${target.name} - Sisa ${formatCurrency(target.targetAmount - target.currentAmount)}`;
+        
+        // Populate account options
+        const select = document.getElementById('target-account-select');
+        select.innerHTML = accounts.map(acc => {
+            const accountTransactions = transactions.filter(t => t.accountId === acc.id);
+            const income = accountTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = accountTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const currentBalance = acc.balance + income - expense;
+            return `<option value="${acc.id}">${acc.name} (${formatCurrency(currentBalance)})</option>`;
+        }).join('');
+
+        document.getElementById('add-to-target-amount').value = '';
+        document.getElementById('add-to-target-modal').classList.remove('hidden');
+    }
+
+    function closeAddToTargetModal() {
+        document.getElementById('add-to-target-modal').classList.add('hidden');
+        currentTargetId = null;
+    }
+
+    function confirmAddToTarget() {
+        const amount = parseFloat(document.getElementById('add-to-target-amount').value);
+        const accountId = document.getElementById('target-account-select').value;
+
+        if (!amount || amount <= 0) {
+            showToast('Masukkan jumlah yang valid', 'error');
+            return;
+        }
+
+        // Check account balance
+        const account = accounts.find(a => a.id === accountId);
+        const accountTransactions = transactions.filter(t => t.accountId === accountId);
+        const income = accountTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const expense = accountTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const currentBalance = account.balance + income - expense;
+
+        if (amount > currentBalance) {
+            showToast('Saldo tidak mencukupi', 'error');
+            return;
+        }
+
+        const target = targets.find(t => t.id === currentTargetId);
+        if (!target) return;
+
+        // Add deposit to target
+        target.currentAmount += amount;
+        target.deposits.push({
+            amount: amount,
+            accountId: accountId,
+            date: new Date().toISOString()
+        });
+
+        // Create expense transaction for the account
+        const transaction = {
+            id: Date.now().toString(),
+            type: 'expense',
+            amount: amount,
+            category: 'target-saving',
+            description: `Tabungan: ${target.name}`,
+            date: new Date().toISOString().split('T')[0],
+            accountId: accountId,
+            createdAt: new Date().toISOString()
+        };
+        transactions.unshift(transaction);
+
+        saveData();
+        renderTargets();
+        renderAccounts();
+        updateDashboard();
+        renderTransactions();
+        closeAddToTargetModal();
+        showToast('Dana berhasil ditambahkan ke target', 'success');
+    }
+
+    function openTargetDetailModal(id) {
+        const target = targets.find(t => t.id === id);
+        if (!target) return;
+
+        currentTargetId = id;
+        const percentage = Math.min((target.currentAmount / target.targetAmount) * 100, 100);
+        const isComplete = target.currentAmount >= target.targetAmount;
+        const daysRemaining = target.endDate ? getDaysRemaining(target.endDate) : null;
+        const isOverdue = daysRemaining !== null && daysRemaining < 0 && !isComplete;
+
+        document.getElementById('target-detail-header').innerHTML = `
+            <div class="w-16 h-16 ${target.color} rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="fas ${target.icon} text-white text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold">${target.name}</h3>
+            <p class="text-gray-500">${isComplete ? '🎉 Target tercapai!' : isOverdue ? '⚠️ Melewati deadline' : 'Sedang menabung...'}</p>
+            ${target.startDate && target.endDate ? `
+                <p class="text-sm text-gray-400 mt-1">
+                    <i class="fas fa-calendar-alt mr-1"></i>${formatShortDate(target.startDate)} - ${formatShortDate(target.endDate)}
+                    ${daysRemaining !== null ? `<span class="${isComplete ? 'text-green-500' : daysRemaining <= 7 ? 'text-red-500' : 'text-gray-500'}"> (${isComplete ? 'Selesai' : daysRemaining >= 0 ? daysRemaining + ' hari lagi' : Math.abs(daysRemaining) + ' hari terlewat'})</span>` : ''}
+                </p>
+            ` : ''}
+        `;
+
+        document.getElementById('target-detail-progress').innerHTML = `
+            <div class="bg-gray-50 rounded-xl p-4">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500">Terkumpul</span>
+                    <span class="font-bold text-lg">${formatCurrency(target.currentAmount)}</span>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-gray-500">Target</span>
+                    <span class="font-bold text-lg">${formatCurrency(target.targetAmount)}</span>
+                </div>
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-gray-500">Kurang</span>
+                    <span class="font-bold text-lg ${isComplete ? 'text-green-600' : 'text-red-600'}">${isComplete ? 'Rp 0' : formatCurrency(target.targetAmount - target.currentAmount)}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4 mb-2">
+                    <div class="progress-bar ${isComplete ? 'bg-green-500' : isOverdue ? 'bg-red-500' : 'bg-blue-500'} h-4 rounded-full" style="width: ${percentage}%"></div>
+                </div>
+                <p class="text-center text-sm font-medium ${isComplete ? 'text-green-600' : 'text-blue-600'}">${percentage.toFixed(1)}% tercapai</p>
+            </div>
+        `;
+
+        const historyContainer = document.getElementById('target-detail-history');
+        if (target.deposits.length === 0) {
+            historyContainer.innerHTML = `
+                <div class="text-center text-gray-400 py-4">
+                    <p class="text-sm">Belum ada setoran</p>
+                </div>
+            `;
+        } else {
+            historyContainer.innerHTML = target.deposits.map(d => {
+                const acc = accounts.find(a => a.id === d.accountId);
+                return `
+                    <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <div>
+                            <p class="font-medium text-green-600">+${formatCurrency(d.amount)}</p>
+                            <p class="text-xs text-gray-500">${acc?.name || 'Akun dihapus'}</p>
+                        </div>
+                        <p class="text-xs text-gray-400">${new Date(d.date).toLocaleDateString('id-ID')}</p>
+                    </div>
+                `;
+            }).reverse().join('');
+        }
+
+        document.getElementById('target-detail-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTargetDetailModal() {
+        document.getElementById('target-detail-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        currentTargetId = null;
+    }
+
+    function deleteTarget() {
+        if (!confirm('Hapus target ini? Dana yang sudah disetor tidak akan dikembalikan.')) return;
+
+        // Hapus secara lokal
+        targets = targets.filter(t => t.id !== currentTargetId);
+        
+        // Hapus dari Supabase jika sync dikonfigurasi
+        if (isSyncConfigured()) {
+            deleteFromCloud('dompetku_targets', currentTargetId);
+        }
+        
+        saveData();
+        renderTargets();
+        closeTargetDetailModal();
+        showToast('Target berhasil dihapus', 'success');
+    }
+
+    // Add Transaction Modal functions
+    function openAddModal() {
+        document.getElementById('add-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        renderCategories();
+        renderAccountOptions();
+    }
+
+    function closeAddModal() {
+        document.getElementById('add-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        resetForm();
+    }
+
+    function openDetailModal(id) {
+        const transaction = transactions.find(t => t.id === id);
+        if (!transaction) return;
+
+        selectedTransactionId = id;
+        const cat = [...categories.income, ...categories.expense].find(c => c.id === transaction.category);
+        
+        const iconEl = document.getElementById('detail-icon');
+        iconEl.className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'}`;
+        iconEl.innerHTML = `<i class="fas ${cat?.icon || 'fa-question'} text-2xl ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}"></i>`;
+        
+        document.getElementById('detail-category').textContent = cat?.name || 'Tidak diketahui';
+        document.getElementById('detail-description').textContent = transaction.description || '-';
+        document.getElementById('detail-amount').textContent = `${transaction.type === 'income' ? '+' : '-'} ${formatCurrency(transaction.amount)}`;
+        document.getElementById('detail-amount').className = `text-3xl font-bold text-center mb-2 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`;
+        document.getElementById('detail-date').textContent = formatDate(transaction.date);
+        
+        document.getElementById('detail-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detail-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+        selectedTransactionId = null;
+    }
+
+    // Long press delete
+    function startLongPress(id, element) {
+        longPressTransactionId = id;
+        longPressTimer = setTimeout(() => {
+            element.classList.add('deleting');
+            document.getElementById('delete-confirm-modal').classList.remove('hidden');
+        }, 500);
+
+        const indicator = element.querySelector('.long-press-indicator');
+        if (indicator) {
+            indicator.classList.add('active');
+        }
+    }
+
+    function endLongPress(element) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+        
+        const indicator = element.querySelector('.long-press-indicator');
+        if (indicator) {
+            indicator.classList.remove('active');
+        }
+    }
+
+    function closeDeleteConfirm() {
+        document.getElementById('delete-confirm-modal').classList.add('hidden');
+        document.querySelectorAll('.transaction-item.deleting').forEach(el => {
+            el.classList.remove('deleting');
+        });
+        longPressTransactionId = null;
+    }
+
+  // Fungsi untuk menghapus transaksi dari modal detail
+function deleteTransaction() {
+    if (!selectedTransactionId) return;
+    
+    // Hapus secara lokal
+    transactions = transactions.filter(t => t.id !== selectedTransactionId);
+    
+    // Hapus dari Supabase jika sync dikonfigurasi
+    if (isSyncConfigured()) {
+        deleteFromCloud('dompetku_transactions', selectedTransactionId);
+    }
+    
+    saveData();
+    updateDashboard();
+    renderTransactions();
+    renderBudgets();
+    closeDetailModal();
+    showToast('Transaksi berhasil dihapus', 'success');
+}
+
+// Fungsi untuk konfirmasi penghapusan transaksi (dari long-press)
+function confirmDeleteTransaction() {
+    if (!longPressTransactionId) return;
+    
+    // Hapus secara lokal
+    transactions = transactions.filter(t => t.id !== longPressTransactionId);
+    
+    // Hapus dari Supabase jika sync dikonfigurasi
+    if (isSyncConfigured()) {
+        deleteFromCloud('dompetku_transactions', longPressTransactionId);
+    }
+    
+    saveData();
+    updateDashboard();
+    renderTransactions();
+    renderBudgets();
+    closeDeleteConfirm();
+    showToast('Transaksi berhasil dihapus', 'success');
+}
+
+    // Transaction type toggle
+    function setTransactionType(type) {
+        currentTransactionType = type;
+        selectedCategory = null;
+        
+        const incomeBtn = document.getElementById('income-btn');
+        const expenseBtn = document.getElementById('expense-btn');
+        
+        if (type === 'income') {
+            incomeBtn.classList.add('bg-green-500', 'text-white');
+            incomeBtn.classList.remove('text-gray-500');
+            expenseBtn.classList.remove('bg-red-500', 'text-white');
+            expenseBtn.classList.add('text-gray-500');
+        } else {
+            expenseBtn.classList.add('bg-red-500', 'text-white');
+            expenseBtn.classList.remove('text-gray-500');
+            incomeBtn.classList.remove('bg-green-500', 'text-white');
+            incomeBtn.classList.add('text-gray-500');
+        }
+        
+        renderCategories();
+    }
+
+    // Render categories
+    function renderCategories() {
+        const grid = document.getElementById('category-grid');
+        const cats = categories[currentTransactionType];
+        
+        grid.innerHTML = cats.map(cat => `
+            <button onclick="selectCategory('${cat.id}')" 
+                class="category-btn p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${selectedCategory === cat.id ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50 hover:bg-gray-100'}">
+                <div class="w-10 h-10 ${cat.color} rounded-full flex items-center justify-center">
+                    <i class="fas ${cat.icon} text-white text-sm"></i>
+                </div>
+                <span class="text-xs text-gray-600 truncate w-full text-center">${cat.name}</span>
+            </button>
+        `).join('');
+    }
+
+    // Select category
+    function selectCategory(id) {
+        selectedCategory = id;
+        renderCategories();
+    }
+
+    // Save transaction
+    function saveTransaction() {
+        const amount = parseFloat(document.getElementById('amount-input').value);
+        const description = document.getElementById('description-input').value;
+        const date = document.getElementById('date-input').value;
+        const accountId = document.getElementById('account-select').value;
+        
+        if (!amount || amount <= 0) {
+            showToast('Masukkan jumlah yang valid', 'error');
+            document.getElementById('amount-input').classList.add('animate-shake', 'border-red-500');
+            setTimeout(() => {
+                document.getElementById('amount-input').classList.remove('animate-shake', 'border-red-500');
+            }, 500);
+            return;
+        }
+        
+        if (!selectedCategory) {
+            showToast('Pilih kategori', 'error');
+            return;
+        }
+        
+        if (!date) {
+            showToast('Pilih tanggal', 'error');
+            return;
+        }
+        
+        const transaction = {
+            id: Date.now().toString(),
+            type: currentTransactionType,
+            amount: amount,
+            category: selectedCategory,
+            description: description,
+            date: date,
+            accountId: accountId,
+            createdAt: new Date().toISOString()
+        };
+        
+        transactions.unshift(transaction);
+        saveData();
+        updateDashboard();
+        renderTransactions();
+        renderAccounts();
+        renderBudgets();
+        closeAddModal();
+        
+        showToast(`${currentTransactionType === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil ditambahkan`, 'success');
+    }
+
+    // Reset form
+    function resetForm() {
+        document.getElementById('amount-input').value = '';
+        document.getElementById('description-input').value = '';
+        document.getElementById('date-input').valueAsDate = new Date();
+        selectedCategory = null;
+        setTransactionType('income');
+    }
+
+    // Save to localStorage and auto-sync
+    function saveData() {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        localStorage.setItem('accounts', JSON.stringify(accounts));
+        localStorage.setItem('budgets', JSON.stringify(budgets));
+        localStorage.setItem('debts', JSON.stringify(debts));
+        localStorage.setItem('receivables', JSON.stringify(receivables));
+        localStorage.setItem('targets', JSON.stringify(targets));
+        
+        // Trigger auto sync to cloud
+        autoSync();
+    }
+
+    // Manual sync button
+    function manualSync() {
+        if (!isSyncConfigured()) {
+            showToast('Konfigurasi API terlebih dahulu di Profil > Pengaturan API', 'warning');
+            return;
+        }
+        syncToCloud();
+    }
+
+    // Format currency
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    // Format date
+    function formatDate(dateStr) {
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateStr).toLocaleDateString('id-ID', options);
+    }
+
+    // Update dashboard
+    function updateDashboard() {
+        const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const initialBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+        const balance = initialBalance + totalIncome - totalExpense;
+        
+        animateCounter('total-balance', balance);
+        animateCounter('total-income', totalIncome);
+        animateCounter('total-expense', totalExpense);
+    }
+
+    // Animate counter
+    function animateCounter(elementId, target) {
+        const element = document.getElementById(elementId);
+        const duration = 500;
+        const start = 0;
+        const startTime = performance.now();
+        
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const current = Math.floor(progress * target);
+            element.textContent = formatCurrency(current);
+            
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                element.textContent = formatCurrency(target);
+            }
+        }
+        
+        requestAnimationFrame(update);
+    }
+
+    // Render transactions
+    function renderTransactions() {
+        renderRecentTransactions();
+        renderAllTransactions();
+    }
+
+    // Render recent transactions (display only, no click)
+    function renderRecentTransactions() {
+        const container = document.getElementById('recent-transactions');
+        const recent = transactions.slice(0, 5);
+        
+        if (recent.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                    <i class="fas fa-receipt text-4xl mb-3"></i>
+                    <p>Belum ada transaksi</p>
+                    <p class="text-sm">Tap + untuk menambah transaksi</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = recent.map(t => createRecentTransactionItem(t)).join('');
+    }
+
+    // Create recent transaction item (display only, no interaction)
+    function createRecentTransactionItem(t) {
+        const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
+        const account = accounts.find(a => a.id === t.accountId);
+        
+        return `
+            <div class="bg-white rounded-xl p-4 flex items-center gap-3">
+                <div class="w-12 h-12 ${cat?.color || 'bg-gray-500'} rounded-full flex items-center justify-center">
+                    <i class="fas ${cat?.icon || 'fa-question'} text-white"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-semibold truncate">${cat?.name || 'Tidak diketahui'}</h4>
+                    <p class="text-sm text-gray-500 truncate">${t.description || '-'} ${account ? '• ' + account.name : ''}</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Render all transactions
+    function renderAllTransactions() {
+        const container = document.getElementById('all-transactions');
+        let filtered = transactions;
+        
+        // Filter by type
+        if (currentFilter !== 'all') {
+            filtered = filtered.filter(t => t.type === currentFilter);
+        }
+        
+        // Filter by month
+        filtered = filtered.filter(t => {
+            const date = new Date(t.date);
+            return date.getMonth() === currentMonth.getMonth() && 
+                   date.getFullYear() === currentMonth.getFullYear();
+        });
+        
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                    <i class="fas fa-search text-4xl mb-3"></i>
+                    <p>Tidak ada transaksi</p>
+                    <p class="text-sm">di bulan ini</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Group by date
+        const grouped = {};
+        filtered.forEach(t => {
+            if (!grouped[t.date]) {
+                grouped[t.date] = [];
+            }
+            grouped[t.date].push(t);
+        });
+        
+        let html = '';
+        Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+            const dateTransactions = grouped[date];
+            const dayTotal = dateTransactions.reduce((sum, t) => {
+                return sum + (t.type === 'income' ? t.amount : -t.amount);
+            }, 0);
+            
+            html += `
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <span class="text-sm font-medium text-gray-500">${formatDate(date)}</span>
+                        <span class="text-sm font-semibold ${dayTotal >= 0 ? 'text-green-600' : 'text-red-600'}">
+                            ${dayTotal >= 0 ? '+' : ''}${formatCurrency(dayTotal)}
+                        </span>
+                    </div>
+                    <div class="space-y-2">
+                        ${dateTransactions.map(t => createTransactionItem(t)).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+
+    // Create transaction item HTML (with long press for stats page)
+    function createTransactionItem(t) {
+        const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
+        const account = accounts.find(a => a.id === t.accountId);
+        
+        return `
+            <div onmousedown="startLongPress('${t.id}', this)"
+                onmouseup="endLongPress(this)"
+                onmouseleave="endLongPress(this)"
+                ontouchstart="startLongPress('${t.id}', this)"
+                ontouchend="endLongPress(this)"
+                ontouchcancel="endLongPress(this)"
+                class="transaction-item bg-white rounded-xl p-4 flex items-center gap-3 cursor-pointer interactive-card relative overflow-hidden">
+                <div class="long-press-indicator"></div>
+                <div class="w-12 h-12 ${cat?.color || 'bg-gray-500'} rounded-full flex items-center justify-center">
+                    <i class="fas ${cat?.icon || 'fa-question'} text-white"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="font-semibold truncate">${cat?.name || 'Tidak diketahui'}</h4>
+                    <p class="text-sm text-gray-500 truncate">${t.description || '-'} ${account ? '• ' + account.name : ''}</p>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Filter transactions
+    function filterTransactions(filter) {
+        currentFilter = filter;
+        
+        document.querySelectorAll('[id^="filter-"]').forEach(btn => {
+            if (btn.id === `filter-${filter}`) {
+                btn.classList.add('bg-indigo-600', 'text-white');
+                btn.classList.remove('bg-gray-200', 'text-gray-600');
+            } else {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-600');
+            }
+        });
+        
+        renderAllTransactions();
+    }
+
+    // Search transactions
+    function searchTransactions(query) {
+        const container = document.getElementById('all-transactions');
+        const q = query.toLowerCase();
+        
+        if (!q) {
+            renderAllTransactions();
+            return;
+        }
+        
+        const filtered = transactions.filter(t => {
+            const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
+            return (cat?.name.toLowerCase().includes(q)) || 
+                   (t.description?.toLowerCase().includes(q)) ||
+                   (t.amount.toString().includes(q));
+        });
+        
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-xl p-6 text-center text-gray-400">
+                    <i class="fas fa-search text-4xl mb-3"></i>
+                    <p>Tidak ditemukan</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = filtered.map(t => createTransactionItem(t)).join('');
+    }
+
+    // Month navigation
+    function updateMonthDisplay() {
+        const options = { month: 'long', year: 'numeric' };
+        document.getElementById('current-month').textContent = 
+            currentMonth.toLocaleDateString('id-ID', options);
+    }
+
+    function changeMonth(delta) {
+        currentMonth.setMonth(currentMonth.getMonth() + delta);
+        updateMonthDisplay();
+        renderAllTransactions();
+    }
+
+    // Stats
+    function setStatPeriod(period) {
+        document.querySelectorAll('[id^="period-"]').forEach(btn => {
+            if (btn.id === `period-${period}`) {
+                btn.classList.add('bg-indigo-600', 'text-white');
+                btn.classList.remove('text-gray-500');
+            } else {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-gray-500');
+            }
+        });
+        updateStats();
+    }
+
+    function updateStats() {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        const monthTransactions = transactions.filter(t => new Date(t.date) >= monthStart);
+        
+        const income = monthTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const expense = monthTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        
+        document.getElementById('stat-income').textContent = formatCurrency(income);
+        document.getElementById('stat-expense').textContent = formatCurrency(expense);
+        
+        // Category breakdown
+        const expenseByCategory = {};
+        monthTransactions.filter(t => t.type === 'expense').forEach(t => {
+            if (!expenseByCategory[t.category]) {
+                expenseByCategory[t.category] = 0;
+            }
+            expenseByCategory[t.category] += t.amount;
+        });
+        
+        const sortedCategories = Object.entries(expenseByCategory)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 4);
+        
+        // Update donut chart
+        const total = sortedCategories.reduce((sum, [, amount]) => sum + amount, 0);
+        let offset = 0;
+        
+        // Reset all segments
+        for (let i = 1; i <= 4; i++) {
+            const segment = document.getElementById(`donut-segment-${i}`);
+            if (segment) {
+                segment.style.strokeDasharray = '0 100';
+                segment.style.strokeDashoffset = 0;
+            }
+        }
+        
+        sortedCategories.forEach(([catId, amount], index) => {
+            const segment = document.getElementById(`donut-segment-${index + 1}`);
+            if (segment && total > 0) {
+                const percentage = (amount / total) * 100;
+                segment.style.strokeDasharray = `${percentage} ${100 - percentage}`;
+                segment.style.strokeDashoffset = -offset;
+                offset += percentage;
+            }
+        });
+        
+        // Update legend
+        const legend = document.getElementById('category-legend');
+        if (sortedCategories.length === 0) {
+            legend.innerHTML = '<p class="text-center text-gray-400 text-sm">Belum ada data pengeluaran</p>';
+        } else {
+            const colors = ['bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-purple-500'];
+            legend.innerHTML = sortedCategories.map(([catId, amount], index) => {
+                const cat = categories.expense.find(c => c.id === catId);
+                const percentage = ((amount / total) * 100).toFixed(1);
+                return `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 ${colors[index]} rounded-full"></div>
+                            <span class="text-sm">${cat?.name || catId}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-semibold">${formatCurrency(amount)}</span>
+                            <span class="text-xs text-gray-500 ml-1">(${percentage}%)</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // Profile stats
+    function updateProfileStats() {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthTransactions = transactions.filter(t => new Date(t.date) >= monthStart);
+        
+        document.getElementById('profile-transactions').textContent = monthTransactions.length;
+        document.getElementById('profile-income-count').textContent = 
+            monthTransactions.filter(t => t.type === 'income').length;
+        document.getElementById('profile-expense-count').textContent = 
+            monthTransactions.filter(t => t.type === 'expense').length;
+    }
+
+    // Export data
+    function exportData() {
+        if (transactions.length === 0) {
+            showToast('Tidak ada data untuk diekspor', 'warning');
+            return;
+        }
+        
+        let csv = 'Tanggal,Tipe,Kategori,Akun,Keterangan,Jumlah\n';
+        transactions.forEach(t => {
+            const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
+            const account = accounts.find(a => a.id === t.accountId);
+            csv += `${t.date},${t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'},${cat?.name || t.category},${account?.name || '-'},${t.description || '-'},${t.amount}\n`;
+        });
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dompetku-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        
+        showToast('Data berhasil diekspor', 'success');
+    }
+
+    // Clear data
+    function confirmClearData() {
+        if (confirm('Apakah Anda yakin ingin menghapus semua data? Tindakan ini tidak dapat dibatalkan.')) {
+            transactions = [];
+            accounts = [
+                { id: 'default-wallet', name: 'Dompet', balance: 0, icon: 'fa-wallet', color: 'bg-green-500' },
+                { id: 'default-bank', name: 'Bank', balance: 0, icon: 'fa-university', color: 'bg-blue-500' }
+            ];
+            budgets = [];
+            debts = [];
+            receivables = [];
+            targets = [];
+            saveData();
+            updateDashboard();
+            renderTransactions();
+            renderAccounts();
+            renderBudgets();
+            renderTargets();
+            updateDebtReceivableSummary();
+            showToast('Semua data berhasil dihapus', 'success');
+        }
+    }
+
+    // =====================
+    // SUPABASE SYNC
+    // =====================
+    
+    let apiSettings = JSON.parse(localStorage.getItem('apiSettings')) || {
+        supabaseUrl: '',
+        supabaseKey: '',
+        userId: ''
+    };
+
+    let isSyncing = false;
+    let syncEnabled = false;
+
+    // Check if sync is configured
+    function isSyncConfigured() {
+        return apiSettings.supabaseUrl && apiSettings.supabaseKey && apiSettings.userId;
+    }
+
+    // Update sync status indicator
+    function updateSyncStatus(status, message) {
+        const indicator = document.getElementById('sync-indicator');
+        if (!indicator) return;
+
+        const icon = indicator.querySelector('i');
+        const text = indicator.querySelector('span');
+
+        switch(status) {
+            case 'syncing':
+                icon.className = 'fas fa-sync fa-spin text-blue-500';
+                text.textContent = message || 'Menyinkronkan...';
+                indicator.classList.remove('hidden');
+                break;
+            case 'success':
+                icon.className = 'fas fa-check-circle text-green-500';
+                text.textContent = message || 'Tersinkronisasi';
+                indicator.classList.remove('hidden');
+                setTimeout(() => indicator.classList.add('hidden'), 2000);
+                break;
+            case 'error':
+                icon.className = 'fas fa-exclamation-circle text-red-500';
+                text.textContent = message || 'Gagal sinkron';
+                indicator.classList.remove('hidden');
+                break;
+            case 'offline':
+                icon.className = 'fas fa-cloud-slash text-gray-500';
+                text.textContent = 'Offline';
+                indicator.classList.remove('hidden');
+                break;
+            default:
+                indicator.classList.add('hidden');
+        }
+    }
+
+    // Supabase API helper
+    async function supabaseRequest(table, method, data = null, query = '') {
+        if (!isSyncConfigured()) return null;
+
+        const url = `${apiSettings.supabaseUrl}/rest/v1/${table}${query}`;
+        const headers = {
+            'apikey': apiSettings.supabaseKey,
+            'Authorization': `Bearer ${apiSettings.supabaseKey}`,
+            'Content-Type': 'application/json',
+            'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
+        };
+
+        const options = { method, headers };
+        if (data) options.body = JSON.stringify(data);
+
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok && response.status !== 204) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            if (method === 'GET' || method === 'POST') {
+                return await response.json();
+            }
+            return true;
+        } catch (error) {
+            console.error(`Supabase ${method} error:`, error);
+            throw error;
+        }
+    }
+
+    // =====================
+    // SYNC FUNCTIONS
+    // =====================
+
+    // Sync all data to cloud
+    async function syncToCloud() {
+        if (!isSyncConfigured() || isSyncing) return;
+        
+        isSyncing = true;
+        updateSyncStatus('syncing', 'Menyinkronkan...');
+
+        try {
+            // Sync Accounts
+            await syncAccounts();
+            
+            // Sync Transactions
+            await syncTransactions();
+            
+            // Sync Budgets
+            await syncBudgets();
+            
+            // Sync Targets
+            await syncTargets();
+            
+            // Sync Debts
+            await syncDebts();
+            
+            // Sync Receivables
+            await syncReceivables();
+
+            localStorage.setItem('lastSyncTime', new Date().toISOString());
+            updateSyncStatus('success', 'Tersinkronisasi');
+            syncEnabled = true;
+        } catch (error) {
+            console.error('Sync error:', error);
+            updateSyncStatus('error', 'Gagal sinkron');
+        } finally {
+            isSyncing = false;
+        }
+    }
+
+    // Sync from cloud
+    async function syncFromCloud() {
+        if (!isSyncConfigured() || isSyncing) return;
+        
+        isSyncing = true;
+        updateSyncStatus('syncing', 'Mengambil data...');
+
+        try {
+            // Fetch all data
+            const [
+                cloudAccounts,
+                cloudTransactions,
+                cloudBudgets,
+                cloudTargets,
+                cloudDebts,
+                cloudReceivables
+            ] = await Promise.all([
+                supabaseRequest('dompetku_accounts', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+                supabaseRequest('dompetku_transactions', 'GET', null, `?user_id=eq.${apiSettings.userId}&order=created_at.desc`),
+                supabaseRequest('dompetku_budgets', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+                supabaseRequest('dompetku_targets', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+                supabaseRequest('dompetku_debts', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+                supabaseRequest('dompetku_receivables', 'GET', null, `?user_id=eq.${apiSettings.userId}`)
+            ]);
+
+            // Transform and update local data
+            if (cloudAccounts && cloudAccounts.length > 0) {
+                accounts = cloudAccounts.map(a => ({
+                    id: a.id,
+                    name: a.name,
+                    balance: parseFloat(a.balance),
+                    icon: a.icon,
+                    color: a.color
+                }));
+            }
+
+            if (cloudTransactions) {
+                transactions = cloudTransactions.map(t => ({
+                    id: t.id,
+                    type: t.type,
+                    amount: parseFloat(t.amount),
+                    category: t.category,
+                    description: t.description,
+                    date: t.date,
+                    accountId: t.account_id,
+                    createdAt: t.created_at
+                }));
+            }
+
+            if (cloudBudgets) {
+                budgets = cloudBudgets.map(b => ({
+                    id: b.id,
+                    category: b.category,
+                    customName: b.custom_name,
+                    amount: parseFloat(b.amount),
+                    startDate: b.start_date,
+                    endDate: b.end_date,
+                    lastReset: b.last_reset,
+                    createdAt: b.created_at
+                }));
+            }
+
+            if (cloudTargets) {
+                targets = cloudTargets.map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    targetAmount: parseFloat(t.target_amount),
+                    currentAmount: parseFloat(t.current_amount),
+                    icon: t.icon,
+                    color: t.color,
+                    startDate: t.start_date,
+                    endDate: t.end_date,
+                    deposits: t.deposits || [],
+                    createdAt: t.created_at
+                }));
+            }
+
+            if (cloudDebts) {
+                debts = cloudDebts.map(d => ({
+                    id: d.id,
+                    creditor: d.creditor,
+                    amount: parseFloat(d.amount),
+                    remaining: parseFloat(d.remaining),
+                    description: d.description,
+                    dueDate: d.due_date,
+                    payments: d.payments || [],
+                    createdAt: d.created_at
+                }));
+            }
+
+            if (cloudReceivables) {
+                receivables = cloudReceivables.map(r => ({
+                    id: r.id,
+                    debtor: r.debtor,
+                    amount: parseFloat(r.amount),
+                    remaining: parseFloat(r.remaining),
+                    description: r.description,
+                    dueDate: r.due_date,
+                    payments: r.payments || [],
+                    createdAt: r.created_at
+                }));
+            }
+
+            // Save to localStorage
+            saveData();
+
+            // Update UI
+            updateDashboard();
+            renderTransactions();
+            renderAccounts();
+            renderAccountOptions();
+            renderBudgets();
+            renderTargets();
+            updateDebtReceivableSummary();
+
+            localStorage.setItem('lastSyncTime', new Date().toISOString());
+            updateSyncStatus('success', 'Data diperbarui');
+            syncEnabled = true;
+        } catch (error) {
+            console.error('Sync from cloud error:', error);
+            updateSyncStatus('error', 'Gagal mengambil data');
+        } finally {
+            isSyncing = false;
+        }
+    }
+
+    // Sync individual tables
+    async function syncAccounts() {
+        for (const acc of accounts) {
+            const cloudData = {
+                id: acc.id,
+                user_id: apiSettings.userId,
+                name: acc.name,
+                balance: acc.balance,
+                icon: acc.icon,
+                color: acc.color
+            };
+
+            try {
+                // Try to update first
+                const existing = await supabaseRequest('dompetku_accounts', 'GET', null, `?id=eq.${acc.id}&user_id=eq.${apiSettings.userId}`);
+                
+                if (existing && existing.length > 0) {
+                    await supabaseRequest('dompetku_accounts', 'PATCH', cloudData, `?id=eq.${acc.id}`);
+                } else {
+                    await supabaseRequest('dompetku_accounts', 'POST', cloudData);
+                }
+            } catch (error) {
+                console.error('Sync account error:', error);
+            }
+        }
+    }
+
+    async function syncTransactions() {
+        for (const t of transactions) {
+            const cloudData = {
+                id: t.id,
+                user_id: apiSettings.userId,
+                type: t.type,
+                amount: t.amount,
+                category: t.category,
+                description: t.description || '',
+                date: t.date,
+                account_id: t.accountId
+            };
+
+            try {
+                const existing = await supabaseRequest('dompetku_transactions', 'GET', null, `?id=eq.${t.id}&user_id=eq.${apiSettings.userId}`);
+                
+                if (existing && existing.length > 0) {
+                    await supabaseRequest('dompetku_transactions', 'PATCH', cloudData, `?id=eq.${t.id}`);
+                } else {
+                    await supabaseRequest('dompetku_transactions', 'POST', cloudData);
+                }
+            } catch (error) {
+                console.error('Sync transaction error:', error);
+            }
+        }
+    }
+
+    async function syncBudgets() {
+        for (const b of budgets) {
+            const cloudData = {
+                id: b.id,
+                user_id: apiSettings.userId,
+                category: b.category,
+                custom_name: b.customName || null,
+                amount: b.amount,
+                start_date: b.startDate || null,
+                end_date: b.endDate || null,
+                last_reset: b.lastReset || null
+            };
+
+            try {
+                const existing = await supabaseRequest('dompetku_budgets', 'GET', null, `?id=eq.${b.id}&user_id=eq.${apiSettings.userId}`);
+                
+                if (existing && existing.length > 0) {
+                    await supabaseRequest('dompetku_budgets', 'PATCH', cloudData, `?id=eq.${b.id}`);
+                } else {
+                    await supabaseRequest('dompetku_budgets', 'POST', cloudData);
+                }
+            } catch (error) {
+                console.error('Sync budget error:', error);
+            }
+        }
+    }
+
+    async function syncTargets() {
+        for (const t of targets) {
+            const cloudData = {
+                id: t.id,
+                user_id: apiSettings.userId,
+                name: t.name,
+                target_amount: t.targetAmount,
+                current_amount: t.currentAmount,
+                icon: t.icon,
+                color: t.color,
+                start_date: t.startDate || null,
+                end_date: t.endDate || null,
+                deposits: t.deposits || []
+            };
+
+            try {
+                const existing = await supabaseRequest('dompetku_targets', 'GET', null, `?id=eq.${t.id}&user_id=eq.${apiSettings.userId}`);
+                
+                if (existing && existing.length > 0) {
+                    await supabaseRequest('dompetku_targets', 'PATCH', cloudData, `?id=eq.${t.id}`);
+                } else {
+                    await supabaseRequest('dompetku_targets', 'POST', cloudData);
+                }
+            } catch (error) {
+                console.error('Sync target error:', error);
+            }
+        }
+    }
+
+    async function syncDebts() {
+        for (const d of debts) {
+            const cloudData = {
+                id: d.id,
+                user_id: apiSettings.userId,
+                creditor: d.creditor,
+                amount: d.amount,
+                remaining: d.remaining,
+                description: d.description || '',
+                due_date: d.dueDate || null,
+                payments: d.payments || []
+            };
+
+            try {
+                const existing = await supabaseRequest('dompetku_debts', 'GET', null, `?id=eq.${d.id}&user_id=eq.${apiSettings.userId}`);
+                
+                if (existing && existing.length > 0) {
+                    await supabaseRequest('dompetku_debts', 'PATCH', cloudData, `?id=eq.${d.id}`);
+                } else {
+                    await supabaseRequest('dompetku_debts', 'POST', cloudData);
+                }
+            } catch (error) {
+                console.error('Sync debt error:', error);
+            }
+        }
+    }
+
+    async function syncReceivables() {
+        for (const r of receivables) {
+            const cloudData = {
+                id: r.id,
+                user_id: apiSettings.userId,
+                debtor: r.debtor,
+                amount: r.amount,
+                remaining: r.remaining,
+                description: r.description || '',
+                due_date: r.dueDate || null,
+                payments: r.payments || []
+            };
+
+            try {
+                const existing = await supabaseRequest('dompetku_receivables', 'GET', null, `?id=eq.${r.id}&user_id=eq.${apiSettings.userId}`);
+                
+                if (existing && existing.length > 0) {
+                    await supabaseRequest('dompetku_receivables', 'PATCH', cloudData, `?id=eq.${r.id}`);
+                } else {
+                    await supabaseRequest('dompetku_receivables', 'POST', cloudData);
+                }
+            } catch (error) {
+                console.error('Sync receivable error:', error);
+            }
+        }
+    }
+
+    // Delete from cloud
+    async function deleteFromCloud(table, id) {
+        if (!isSyncConfigured()) return;
+        try {
+            await supabaseRequest(table, 'DELETE', null, `?id=eq.${id}&user_id=eq.${apiSettings.userId}`);
+        } catch (error) {
+            console.error(`Delete from ${table} error:`, error);
+        }
+    }
+
+    // Auto sync after data changes
+    function autoSync() {
+        if (isSyncConfigured() && syncEnabled) {
+            // Debounce sync
+            clearTimeout(window.syncTimeout);
+            window.syncTimeout = setTimeout(() => {
+                syncToCloud();
+            }, 2000);
+        }
+    }
+
+    // =====================
+    // API Settings Modal
+    // =====================
+
+    function openApiSettingsModal() {
+        document.getElementById('api-settings-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Load saved settings
+        document.getElementById('supabase-url-input').value = apiSettings.supabaseUrl || '';
+        document.getElementById('supabase-key-input').value = apiSettings.supabaseKey || '';
+        document.getElementById('user-id-input').value = apiSettings.userId || '';
+        
+        // Hide connection status initially
+        document.getElementById('api-connection-status').classList.add('hidden');
+    }
+
+    function closeApiSettingsModal() {
+        document.getElementById('api-settings-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function toggleApiKeyVisibility() {
+        const input = document.getElementById('supabase-key-input');
+        const icon = document.getElementById('api-key-eye');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    function saveApiSettings() {
+        const url = document.getElementById('supabase-url-input').value.trim();
+        const key = document.getElementById('supabase-key-input').value.trim();
+        const userId = document.getElementById('user-id-input').value.trim();
+
+        if (!url || !key || !userId) {
+            showToast('Semua field harus diisi', 'error');
+            return;
+        }
+
+        apiSettings = {
+            supabaseUrl: url,
+            supabaseKey: key,
+            userId: userId
+        };
+
+        localStorage.setItem('apiSettings', JSON.stringify(apiSettings));
+        showToast('Pengaturan API berhasil disimpan', 'success');
+        closeApiSettingsModal();
+        
+        // Try to sync
+        syncEnabled = true;
+        syncToCloud();
+    }
+
+    async function testApiConnection() {
+        const url = document.getElementById('supabase-url-input').value.trim();
+        const key = document.getElementById('supabase-key-input').value.trim();
+
+        if (!url || !key) {
+            showToast('Masukkan URL dan API Key', 'error');
+            return;
+        }
+
+        const statusDiv = document.getElementById('api-connection-status');
+        const statusIcon = document.getElementById('api-status-icon');
+        const statusText = document.getElementById('api-status-text');
+
+        statusDiv.classList.remove('hidden');
+        statusIcon.className = 'fas fa-spinner fa-spin text-blue-500';
+        statusText.textContent = 'Menguji koneksi...';
+
+        try {
+            const response = await fetch(`${url}/rest/v1/dompetku_accounts?limit=1`, {
+                method: 'GET',
+                headers: {
+                    'apikey': key,
+                    'Authorization': `Bearer ${key}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                statusIcon.className = 'fas fa-check-circle text-green-500';
+                statusText.textContent = 'Koneksi berhasil! Tabel ditemukan.';
+                statusDiv.className = 'mb-6 p-3 rounded-xl bg-green-50';
+            } else if (response.status === 404) {
+                statusIcon.className = 'fas fa-exclamation-triangle text-yellow-500';
+                statusText.textContent = 'Tabel tidak ditemukan. Jalankan SQL terlebih dahulu.';
+                statusDiv.className = 'mb-6 p-3 rounded-xl bg-yellow-50';
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            statusIcon.className = 'fas fa-times-circle text-red-500';
+            statusText.textContent = `Koneksi gagal: ${error.message}`;
+            statusDiv.className = 'mb-6 p-3 rounded-xl bg-red-50';
+        }
+    }
+
+    // =====================
+    // Backup Modal (now Sync Modal)
+    // =====================
+
+    function openBackupModal() {
+        document.getElementById('backup-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Update data counts
+        document.getElementById('backup-transactions-count').textContent = transactions.length;
+        document.getElementById('backup-accounts-count').textContent = accounts.length;
+        document.getElementById('backup-budgets-count').textContent = budgets.length;
+        document.getElementById('backup-targets-count').textContent = targets.length;
+        document.getElementById('backup-debts-count').textContent = debts.length;
+        document.getElementById('backup-receivables-count').textContent = receivables.length;
+        
+        // Check connection status
+        checkBackupConnection();
+        
+        // Load auto sync toggle state
+        const autoSyncEnabled = localStorage.getItem('autoSyncEnabled') === 'true';
+        document.getElementById('auto-sync-toggle').checked = autoSyncEnabled;
+        syncEnabled = autoSyncEnabled;
+        
+        // Show last sync time
+        const lastSync = localStorage.getItem('lastSyncTime');
+        if (lastSync) {
+            document.getElementById('last-backup-info').classList.remove('hidden');
+            document.getElementById('last-backup-time').textContent = `Terakhir sinkron: ${new Date(lastSync).toLocaleString('id-ID')}`;
+        } else {
+            document.getElementById('last-backup-info').classList.add('hidden');
+        }
+    }
+
+    function toggleAutoSync(enabled) {
+        syncEnabled = enabled;
+        localStorage.setItem('autoSyncEnabled', enabled);
+        if (enabled && isSyncConfigured()) {
+            showToast('Sinkronisasi otomatis diaktifkan', 'success');
+            syncToCloud();
+        } else if (enabled && !isSyncConfigured()) {
+            showToast('Konfigurasi API terlebih dahulu', 'warning');
+            document.getElementById('auto-sync-toggle').checked = false;
+            syncEnabled = false;
+        } else {
+            showToast('Sinkronisasi otomatis dinonaktifkan', 'info');
+        }
+    }
+
+    function closeBackupModal() {
+        document.getElementById('backup-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    async function checkBackupConnection() {
+        const statusIcon = document.getElementById('backup-status-icon');
+        const statusText = document.getElementById('backup-status-text');
+        const backupBtn = document.getElementById('backup-btn');
+        const restoreBtn = document.getElementById('restore-btn');
+
+        if (!apiSettings.supabaseUrl || !apiSettings.supabaseKey || !apiSettings.userId) {
+            statusIcon.className = 'fas fa-exclamation-circle text-yellow-500';
+            statusText.textContent = 'API belum dikonfigurasi';
+            backupBtn.disabled = true;
+            restoreBtn.disabled = true;
+            return;
+        }
+
+        statusIcon.className = 'fas fa-spinner fa-spin text-blue-500';
+        statusText.textContent = 'Memeriksa koneksi...';
+
+        try {
+            const response = await fetch(`${apiSettings.supabaseUrl}/rest/v1/dompetku_accounts?limit=1`, {
+                method: 'GET',
+                headers: {
+                    'apikey': apiSettings.supabaseKey,
+                    'Authorization': `Bearer ${apiSettings.supabaseKey}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                statusIcon.className = 'fas fa-check-circle text-green-500';
+                statusText.textContent = `Terhubung sebagai: ${apiSettings.userId}`;
+                backupBtn.disabled = false;
+                restoreBtn.disabled = false;
+                syncEnabled = true;
+            } else {
+                throw new Error('Koneksi gagal');
+            }
+        } catch (error) {
+            statusIcon.className = 'fas fa-times-circle text-red-500';
+            statusText.textContent = 'Tidak dapat terhubung ke server';
+            backupBtn.disabled = true;
+            restoreBtn.disabled = true;
+        }
+    }
+
+    async function backupToCloud() {
+        const backupBtn = document.getElementById('backup-btn');
+        const originalText = backupBtn.innerHTML;
+        
+        backupBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyinkronkan...';
+        backupBtn.disabled = true;
+
+        try {
+            await syncToCloud();
+            showToast('Data berhasil disinkronkan ke cloud!', 'success');
+            
+            // Update last sync info
+            document.getElementById('last-backup-info').classList.remove('hidden');
+            document.getElementById('last-backup-time').textContent = `Terakhir sinkron: ${new Date().toLocaleString('id-ID')}`;
+        } catch (error) {
+            showToast(`Sinkronisasi gagal: ${error.message}`, 'error');
+        } finally {
+            backupBtn.innerHTML = originalText;
+            backupBtn.disabled = false;
+        }
+    }
+
+    async function restoreFromCloud() {
+        if (!confirm('Apakah Anda yakin? Semua data lokal akan ditimpa dengan data dari cloud.')) {
+            return;
+        }
+
+        const restoreBtn = document.getElementById('restore-btn');
+        const originalText = restoreBtn.innerHTML;
+        
+        restoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengambil data...';
+        restoreBtn.disabled = true;
+
+        try {
+            await syncFromCloud();
+            showToast('Data berhasil diambil dari cloud!', 'success');
+            
+            // Update counts
+            document.getElementById('backup-transactions-count').textContent = transactions.length;
+            document.getElementById('backup-accounts-count').textContent = accounts.length;
+            document.getElementById('backup-budgets-count').textContent = budgets.length;
+            document.getElementById('backup-targets-count').textContent = targets.length;
+            document.getElementById('backup-debts-count').textContent = debts.length;
+            document.getElementById('backup-receivables-count').textContent = receivables.length;
+        } catch (error) {
+            showToast(`Gagal mengambil data: ${error.message}`, 'error');
+        } finally {
+            restoreBtn.innerHTML = originalText;
+            restoreBtn.disabled = false;
+        }
+    }
+
+    // Initialize sync on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        if (isSyncConfigured()) {
+            syncEnabled = true;
+            // Auto sync from cloud on load
+            setTimeout(() => {
+                syncFromCloud();
+            }, 1000);
+        }
+    });
+</script>
+</body>
+</html>
