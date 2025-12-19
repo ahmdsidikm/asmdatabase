@@ -3,1309 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Pribadi Saya</title>
+    <title>Penyimpan Link</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .btn-custom {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .btn-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-        
-        .btn-custom:active {
-            transform: translateY(-1px);
-        }
-        
-        .modal-overlay {
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
-        }
-        
-        .card-glass {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .button-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .button-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .button-card:hover::before {
-            left: 100%;
-        }
-        
-        .button-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-        
-        .floating-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: -1;
-            pointer-events: none;
-        }
-        
-        .shape {
-            position: absolute;
-            border-radius: 50%;
-            opacity: 0.1;
-            animation: float 20s infinite ease-in-out;
-        }
-        
-        .shape:nth-child(1) {
-            width: 400px;
-            height: 400px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            top: -100px;
-            right: -100px;
-            animation-delay: 0s;
-        }
-        
-        .shape:nth-child(2) {
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            bottom: -50px;
-            left: -50px;
-            animation-delay: -5s;
-        }
-        
-        .shape:nth-child(3) {
-            width: 200px;
-            height: 200px;
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            top: 50%;
-            left: 50%;
-            animation-delay: -10s;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(20px, -20px) rotate(5deg); }
-            50% { transform: translate(-10px, 20px) rotate(-5deg); }
-            75% { transform: translate(-20px, -10px) rotate(3deg); }
-        }
-        
-        .pulse-dot {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-        
-        .input-modern {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+        .card-hover {
             transition: all 0.3s ease;
         }
-        
-        .input-modern:focus {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(139, 92, 246, 0.5);
-            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #a855f7;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .toast {
-            animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
-        
-        .status-indicator {
-            transition: all 0.3s ease;
-        }
-        
-        .skeleton {
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .color-option {
-            transition: all 0.2s ease;
-        }
-
-        .color-option:hover {
-            transform: scale(1.15);
-        }
-
-        .color-option.selected {
-            transform: scale(1.1);
-            box-shadow: 0 0 0 3px white, 0 0 0 5px rgba(139, 92, 246, 0.5);
-        }
-
-        .icon-grid {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 8px;
-        }
-
-        .icon-option {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.05);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 2px solid transparent;
-        }
-
-        .icon-option:hover {
-            background: rgba(255,255,255,0.15);
-            transform: scale(1.1);
-        }
-
-        .icon-option.selected {
-            background: rgba(139, 92, 246, 0.3);
-            border-color: #a855f7;
-        }
-
-        .tab-btn {
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn.active {
-            background: rgba(139, 92, 246, 0.2);
-            border-color: rgba(139, 92, 246, 0.5);
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 min-h-screen">
-    <!-- Floating Background Shapes -->
-    <div class="floating-shapes">
-        <div class="shape"></div>
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
-
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2"></div>
-
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/90 flex items-center justify-center z-[90] hidden">
-        <div class="text-center">
-            <div class="loading-spinner mx-auto mb-4"></div>
-            <p class="text-white font-medium">Memuat data...</p>
-        </div>
-    </div>
-
-    <!-- Header -->
-    <header class="card-glass sticky top-0 z-40">
-        <div class="container mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <div class="relative">
-                        <div class="w-12 h-12 bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-purple-500/30">
-                            ⚡
-                        </div>
-                        <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-950 pulse-dot"></div>
-                    </div>
-                    <div>
-                        <h1 class="text-xl font-bold text-white">LinkHub Pro</h1>
-                        <div class="flex items-center gap-2">
-                            <div id="statusIndicator" class="w-2 h-2 rounded-full bg-yellow-500 status-indicator"></div>
-                            <p class="text-gray-400 text-xs" id="statusText">Menghubungkan...</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <button onclick="openSettingsModal()" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all border border-white/10">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </button>
-                    <button onclick="openAddModal()" class="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 shadow-lg shadow-purple-500/25 btn-custom">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Tambah Link</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="card-glass rounded-2xl p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white">
-                        📊
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-white" id="totalButtons">0</p>
-                        <p class="text-xs text-gray-400">Total Link</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-glass rounded-2xl p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center text-white">
-                        🌐
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-white" id="externalLinks">0</p>
-                        <p class="text-xs text-gray-400">Link External</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-glass rounded-2xl p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center text-white">
-                        📄
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-white" id="internalLinks">0</p>
-                        <p class="text-xs text-gray-400">Link Internal</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-glass rounded-2xl p-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white">
-                        ☁️
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-white" id="syncStatus">-</p>
-                        <p class="text-xs text-gray-400">Status Sync</p>
-                    </div>
-                </div>
-            </div>
+<body class="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-white mb-2">🔗 Penyimpan Link</h1>
+            <p class="text-purple-200">Simpan dan kelola link favoritmu</p>
         </div>
 
-        <!-- Search and Filter -->
-        <div class="card-glass rounded-2xl p-4 mb-8">
-            <div class="flex flex-col sm:flex-row gap-4">
-                <div class="flex-1 relative">
-                    <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                    <input type="text" id="searchInput" placeholder="Cari link..." 
-                        class="w-full input-modern rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-500 focus:outline-none">
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="filterButtons('all')" class="tab-btn active px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10" data-filter="all">
-                        Semua
-                    </button>
-                    <button onclick="filterButtons('external')" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10" data-filter="external">
-                        External
-                    </button>
-                    <button onclick="filterButtons('internal')" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-300 hover:text-white border border-white/10" data-filter="internal">
-                        Internal
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Buttons Grid -->
-        <div class="card-glass rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                    <span class="text-2xl">🔗</span> Koleksi Link
-                </h2>
-                <span class="text-purple-400 text-sm font-medium px-3 py-1 bg-purple-500/10 rounded-full" id="buttonCount">0 link</span>
-            </div>
-            
-            <div id="buttonContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <!-- Skeleton Loading -->
-                <div class="skeleton-item">
-                    <div class="skeleton rounded-2xl h-32"></div>
-                </div>
-                <div class="skeleton-item">
-                    <div class="skeleton rounded-2xl h-32"></div>
-                </div>
-                <div class="skeleton-item">
-                    <div class="skeleton rounded-2xl h-32"></div>
-                </div>
-                <div class="skeleton-item">
-                    <div class="skeleton rounded-2xl h-32"></div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Add/Edit Modal -->
-    <div id="modal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 id="modalTitle" class="text-xl font-bold text-white">Tambah Link Baru</h3>
-                        <p class="text-gray-400 text-sm mt-1">Isi detail link yang ingin ditambahkan</p>
-                    </div>
-                    <button onclick="closeModal()" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <form id="buttonForm" onsubmit="saveButton(event)">
-                    <input type="hidden" id="editId" value="">
-                    
-                    <div class="space-y-5">
-                        <!-- Name Input -->
-                        <div>
-                            <label class="block text-gray-300 mb-2 font-medium text-sm">Nama Link</label>
-                            <input type="text" id="buttonName" required placeholder="Contoh: Portfolio Saya" 
-                                class="w-full input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none">
-                        </div>
-                        
-                        <!-- URL Input -->
-                        <div>
-                            <label class="block text-gray-300 mb-2 font-medium text-sm">URL / Alamat Tujuan</label>
-                            <input type="text" id="buttonUrl" required placeholder="https://contoh.com atau halaman.html" 
-                                class="w-full input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none">
-                            <p class="text-gray-500 text-xs mt-2">💡 Link akan dibuka di tab baru secara otomatis</p>
-                        </div>
-                        
-                        <!-- Description Input -->
-                        <div>
-                            <label class="block text-gray-300 mb-2 font-medium text-sm">Deskripsi (Opsional)</label>
-                            <input type="text" id="buttonDesc" placeholder="Deskripsi singkat tentang link ini" 
-                                class="w-full input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none">
-                        </div>
-                        
-                        <!-- Color Picker -->
-                        <div>
-                            <label class="block text-gray-300 mb-3 font-medium text-sm">Pilih Warna</label>
-                            <div class="grid grid-cols-6 gap-3" id="colorPicker">
-                                <button type="button" onclick="selectColor('from-blue-500 to-blue-600')" data-color="from-blue-500 to-blue-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600"></button>
-                                <button type="button" onclick="selectColor('from-violet-500 to-purple-600')" data-color="from-violet-500 to-purple-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600"></button>
-                                <button type="button" onclick="selectColor('from-fuchsia-500 to-pink-600')" data-color="from-fuchsia-500 to-pink-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-600"></button>
-                                <button type="button" onclick="selectColor('from-rose-500 to-red-600')" data-color="from-rose-500 to-red-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-red-600"></button>
-                                <button type="button" onclick="selectColor('from-orange-500 to-amber-600')" data-color="from-orange-500 to-amber-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600"></button>
-                                <button type="button" onclick="selectColor('from-yellow-500 to-orange-600')" data-color="from-yellow-500 to-orange-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-600"></button>
-                                <button type="button" onclick="selectColor('from-emerald-500 to-green-600')" data-color="from-emerald-500 to-green-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600"></button>
-                                <button type="button" onclick="selectColor('from-teal-500 to-cyan-600')" data-color="from-teal-500 to-cyan-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600"></button>
-                                <button type="button" onclick="selectColor('from-cyan-500 to-blue-600')" data-color="from-cyan-500 to-blue-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600"></button>
-                                <button type="button" onclick="selectColor('from-indigo-500 to-violet-600')" data-color="from-indigo-500 to-violet-600" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600"></button>
-                                <button type="button" onclick="selectColor('from-slate-500 to-slate-700')" data-color="from-slate-500 to-slate-700" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-slate-500 to-slate-700"></button>
-                                <button type="button" onclick="selectColor('from-stone-500 to-stone-700')" data-color="from-stone-500 to-stone-700" class="color-option w-10 h-10 rounded-xl bg-gradient-to-br from-stone-500 to-stone-700"></button>
-                            </div>
-                            <input type="hidden" id="selectedColor" value="from-violet-500 to-purple-600">
-                        </div>
-                        
-                        <!-- Icon Picker -->
-                        <div>
-                            <label class="block text-gray-300 mb-3 font-medium text-sm">Pilih Ikon</label>
-                            <div class="icon-grid" id="iconPicker">
-                                <button type="button" onclick="selectIcon('🔗')" data-icon="🔗" class="icon-option">🔗</button>
-                                <button type="button" onclick="selectIcon('🌐')" data-icon="🌐" class="icon-option">🌐</button>
-                                <button type="button" onclick="selectIcon('🏠')" data-icon="🏠" class="icon-option">🏠</button>
-                                <button type="button" onclick="selectIcon('📄')" data-icon="📄" class="icon-option">📄</button>
-                                <button type="button" onclick="selectIcon('📁')" data-icon="📁" class="icon-option">📁</button>
-                                <button type="button" onclick="selectIcon('⭐')" data-icon="⭐" class="icon-option">⭐</button>
-                                <button type="button" onclick="selectIcon('💼')" data-icon="💼" class="icon-option">💼</button>
-                                <button type="button" onclick="selectIcon('📧')" data-icon="📧" class="icon-option">📧</button>
-                                <button type="button" onclick="selectIcon('📱')" data-icon="📱" class="icon-option">📱</button>
-                                <button type="button" onclick="selectIcon('💻')" data-icon="💻" class="icon-option">💻</button>
-                                <button type="button" onclick="selectIcon('🎮')" data-icon="🎮" class="icon-option">🎮</button>
-                                <button type="button" onclick="selectIcon('🎵')" data-icon="🎵" class="icon-option">🎵</button>
-                                <button type="button" onclick="selectIcon('📷')" data-icon="📷" class="icon-option">📷</button>
-                                <button type="button" onclick="selectIcon('🎬')" data-icon="🎬" class="icon-option">🎬</button>
-                                <button type="button" onclick="selectIcon('📚')" data-icon="📚" class="icon-option">📚</button>
-                                <button type="button" onclick="selectIcon('🛒')" data-icon="🛒" class="icon-option">🛒</button>
-                                <button type="button" onclick="selectIcon('💰')" data-icon="💰" class="icon-option">💰</button>
-                                <button type="button" onclick="selectIcon('🚀')" data-icon="🚀" class="icon-option">🚀</button>
-                                <button type="button" onclick="selectIcon('💡')" data-icon="💡" class="icon-option">💡</button>
-                                <button type="button" onclick="selectIcon('🔧')" data-icon="🔧" class="icon-option">🔧</button>
-                                <button type="button" onclick="selectIcon('📊')" data-icon="📊" class="icon-option">📊</button>
-                                <button type="button" onclick="selectIcon('🎯')" data-icon="🎯" class="icon-option">🎯</button>
-                                <button type="button" onclick="selectIcon('❤️')" data-icon="❤️" class="icon-option">❤️</button>
-                                <button type="button" onclick="selectIcon('✨')" data-icon="✨" class="icon-option">✨</button>
-                            </div>
-                            <input type="hidden" id="selectedIcon" value="🔗">
-                        </div>
-                    </div>
-                    
-                    <div class="flex gap-3 mt-8">
-                        <button type="button" onclick="closeModal()" class="flex-1 bg-white/5 hover:bg-white/10 text-white py-3.5 rounded-xl font-semibold btn-custom border border-white/10">
-                            Batal
-                        </button>
-                        <button type="submit" id="submitBtn" class="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white py-3.5 rounded-xl font-semibold btn-custom shadow-lg shadow-purple-500/25">
-                            <span id="submitText">Simpan</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-sm border border-white/10 shadow-2xl">
-            <div class="p-6 text-center">
-                <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span class="text-4xl">🗑️</span>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-2">Hapus Link?</h3>
-                <p class="text-gray-400 mb-6">Link ini akan dihapus secara permanen dari database.</p>
-                
-                <div class="flex gap-3">
-                    <button onclick="closeDeleteModal()" class="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-semibold btn-custom border border-white/10">
-                        Batal
-                    </button>
-                    <button onclick="confirmDelete()" id="deleteBtn" class="flex-1 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white py-3 rounded-xl font-semibold btn-custom">
-                        <span id="deleteText">Hapus</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-50 p-4 overflow-y-auto">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h3 class="text-xl font-bold text-white">⚙️ Pengaturan Supabase</h3>
-                        <p class="text-gray-400 text-sm mt-1">Konfigurasi koneksi database</p>
-                    </div>
-                    <button onclick="closeSettingsModal()" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <form id="settingsForm" onsubmit="saveSettings(event)">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-gray-300 mb-2 font-medium text-sm">Supabase URL</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="supabaseUrl" placeholder="https://xxxxx.supabase.co" 
-                                    class="flex-1 input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none text-sm">
-                                <button type="button" onclick="openQRScanner('url')" class="px-4 py-3 bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 rounded-xl transition-all flex items-center justify-center group" title="Scan QR Code">
-                                    <svg class="w-5 h-5 text-violet-400 group-hover:text-violet-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-gray-300 mb-2 font-medium text-sm">Supabase Anon Key</label>
-                            <div class="flex gap-2">
-                                <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
-                                    class="flex-1 input-modern rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none text-sm">
-                                <button type="button" onclick="openQRScanner('key')" class="px-4 py-3 bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 rounded-xl transition-all flex items-center justify-center group" title="Scan QR Code">
-                                    <svg class="w-5 h-5 text-violet-400 group-hover:text-violet-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- SQL Code Box -->
-                        <div class="bg-slate-950/50 border border-white/10 rounded-xl p-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <p class="text-emerald-400 text-sm font-medium">
-                                    <strong>📋 SQL untuk membuat tabel:</strong>
-                                </p>
-                                <button onclick="copySQLCode()" class="text-xs bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1">
-                                    <span id="copyIcon">📋</span>
-                                    <span id="copyText">Copy</span>
-                                </button>
-                            </div>
-                            <pre id="sqlCode" class="text-xs text-gray-300 bg-black/40 p-3 rounded-lg overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">-- Buat tabel buttons
-CREATE TABLE buttons (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  description TEXT,
-  color TEXT DEFAULT 'from-violet-500 to-purple-600',
-  icon TEXT DEFAULT '🔗',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable Row Level Security
-ALTER TABLE buttons ENABLE ROW LEVEL SECURITY;
-
--- Policy untuk akses publik (development)
-CREATE POLICY "Enable all access" ON buttons
-  FOR ALL USING (true) WITH CHECK (true);
-
--- Index untuk performa
-CREATE INDEX idx_buttons_created_at 
-  ON buttons(created_at DESC);</pre>
-                        </div>
-                    </div>
-                    
-                    <div class="flex gap-3 mt-6">
-                        <button type="button" onclick="closeSettingsModal()" class="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-semibold btn-custom border border-white/10">
-                            Batal
-                        </button>
-                        <button type="submit" class="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white py-3 rounded-xl font-semibold btn-custom">
-                            Simpan & Hubungkan
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- QR Scanner Modal -->
-    <div id="qrScannerModal" class="fixed inset-0 modal-overlay hidden items-center justify-center z-[60] p-4">
-        <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl w-full max-w-md border border-white/10 shadow-2xl">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                            📷 Scan QR Code
-                        </h3>
-                        <p class="text-gray-400 text-sm mt-1" id="qrScannerLabel">Arahkan kamera ke QR Code</p>
-                    </div>
-                    <button onclick="closeQRScanner()" class="p-2 rounded-xl hover:bg-white/10 text-gray-400 hover:text-white transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <!-- Camera Preview -->
-                <div class="relative rounded-2xl overflow-hidden bg-black mb-4">
-                    <div id="qrReader" class="w-full" style="min-height: 300px;"></div>
-                    <div id="qrScannerLoading" class="absolute inset-0 flex items-center justify-center bg-slate-900">
-                        <div class="text-center">
-                            <div class="loading-spinner mx-auto mb-3"></div>
-                            <p class="text-gray-400 text-sm">Memulai kamera...</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Scan Result Preview -->
-                <div id="scanResultPreview" class="hidden bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-emerald-400">✓</span>
-                        <span class="text-emerald-400 font-medium text-sm">QR Code Terdeteksi!</span>
-                    </div>
-                    <p id="scanResultText" class="text-white text-sm font-mono bg-black/30 p-2 rounded-lg break-all"></p>
-                </div>
-                
-                <!-- Instructions -->
-                <div class="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4">
-                    <p class="text-violet-300 text-sm">
-                        💡 <strong>Tips:</strong> Pastikan QR Code terlihat jelas dalam bingkai kamera. Hasil scan akan otomatis dimasukkan ke kolom input.
-                    </p>
-                </div>
-                
-                <button onclick="closeQRScanner()" class="w-full mt-4 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-semibold btn-custom border border-white/10">
-                    Tutup Scanner
+        <!-- Form Tambah Link -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-8 border border-white/20">
+            <h2 class="text-xl font-semibold text-white mb-4">➕ Tambah Link Baru</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <input 
+                    type="text" 
+                    id="linkName" 
+                    placeholder="Nama Link (contoh: Google)"
+                    class="flex-1 px-4 py-3 rounded-xl bg-white/20 text-white placeholder-purple-200 border border-white/30 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                >
+                <input 
+                    type="url" 
+                    id="linkUrl" 
+                    placeholder="URL (contoh: https://google.com)"
+                    class="flex-1 px-4 py-3 rounded-xl bg-white/20 text-white placeholder-purple-200 border border-white/30 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                >
+                <button 
+                    onclick="addLink()"
+                    class="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-semibold rounded-xl hover:from-pink-600 hover:to-purple-600 transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                    Simpan
                 </button>
             </div>
         </div>
+
+        <!-- Daftar Link -->
+        <div class="mb-6 flex justify-between items-center">
+            <h2 class="text-xl font-semibold text-white">📚 Daftar Link Tersimpan</h2>
+            <span id="linkCount" class="text-purple-200 text-sm"></span>
+        </div>
+
+        <!-- Grid Kartu Link -->
+        <div id="linksContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Kartu akan ditambahkan di sini -->
+        </div>
+
+        <!-- Pesan Kosong -->
+        <div id="emptyMessage" class="hidden text-center py-16">
+            <div class="text-6xl mb-4">📭</div>
+            <p class="text-purple-200 text-lg">Belum ada link tersimpan</p>
+            <p class="text-purple-300 text-sm">Tambahkan link pertamamu di atas!</p>
+        </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="card-glass mt-10">
-        <div class="container mx-auto px-4 py-6">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <p class="text-gray-400 text-sm">&copy; 2024 LinkHub Pro. Dibuat dengan ❤️ & Supabase</p>
-                <div class="flex items-center gap-4">
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Bantuan</a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Privasi</a>
-                    <a href="#" class="text-gray-400 hover:text-white transition-colors text-sm">Tentang</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
     <script>
-        // Supabase Configuration
-        let supabase = null;
-        let buttons = [];
-        let selectedColor = 'from-violet-500 to-purple-600';
-        let selectedIcon = '🔗';
-        let deleteId = null;
-        let currentFilter = 'all';
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSettings();
-            initializeApp();
-            
-            // Search functionality
-            document.getElementById('searchInput').addEventListener('input', debounce(handleSearch, 300));
-        });
-
-        // Debounce function
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
+        // Ambil data dari localStorage
+        function getLinks() {
+            const links = localStorage.getItem('savedLinks');
+            return links ? JSON.parse(links) : [];
         }
 
-        // Load Supabase settings
-        function loadSettings() {
-            const url = localStorage.getItem('supabaseUrl');
-            const key = localStorage.getItem('supabaseKey');
-            
-            if (url && key) {
-                document.getElementById('supabaseUrl').value = url;
-                document.getElementById('supabaseKey').value = key;
-                initSupabase(url, key);
-            }
+        // Simpan data ke localStorage
+        function saveLinks(links) {
+            localStorage.setItem('savedLinks', JSON.stringify(links));
         }
 
-        // Initialize Supabase
-        function initSupabase(url, key) {
-            try {
-                supabase = window.supabase.createClient(url, key);
-                updateStatus('connected', 'Terhubung');
-                return true;
-            } catch (error) {
-                console.error('Supabase init error:', error);
-                updateStatus('error', 'Error koneksi');
-                return false;
-            }
-        }
+        // Tambah link baru
+        function addLink() {
+            const nameInput = document.getElementById('linkName');
+            const urlInput = document.getElementById('linkUrl');
+            
+            const name = nameInput.value.trim();
+            let url = urlInput.value.trim();
 
-        // Initialize app
-        async function initializeApp() {
-            if (supabase) {
-                await loadButtonsFromSupabase();
-            } else {
-                // Load from localStorage as fallback
-                loadButtonsFromLocalStorage();
-                updateStatus('local', 'Mode Lokal');
-            }
-        }
-
-        // Update connection status
-        function updateStatus(status, text) {
-            const indicator = document.getElementById('statusIndicator');
-            const statusText = document.getElementById('statusText');
-            const syncStatus = document.getElementById('syncStatus');
-            
-            statusText.textContent = text;
-            
-            if (status === 'connected') {
-                indicator.className = 'w-2 h-2 rounded-full bg-emerald-500 status-indicator';
-                syncStatus.textContent = '✓';
-            } else if (status === 'error') {
-                indicator.className = 'w-2 h-2 rounded-full bg-red-500 status-indicator';
-                syncStatus.textContent = '✗';
-            } else if (status === 'syncing') {
-                indicator.className = 'w-2 h-2 rounded-full bg-yellow-500 status-indicator pulse-dot';
-                syncStatus.textContent = '...';
-            } else {
-                indicator.className = 'w-2 h-2 rounded-full bg-gray-500 status-indicator';
-                syncStatus.textContent = 'Lokal';
-            }
-        }
-
-        // Load buttons from Supabase
-        async function loadButtonsFromSupabase() {
-            updateStatus('syncing', 'Menyinkronkan...');
-            
-            try {
-                const { data, error } = await supabase
-                    .from('buttons')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                buttons = data || [];
-                renderButtons();
-                updateStats();
-                updateStatus('connected', 'Terhubung');
-                showToast('Data berhasil dimuat dari Supabase', 'success');
-            } catch (error) {
-                console.error('Load error:', error);
-                showToast('Gagal memuat data: ' + error.message, 'error');
-                updateStatus('error', 'Error koneksi');
-                loadButtonsFromLocalStorage();
-            }
-        }
-
-        // Load from localStorage
-        function loadButtonsFromLocalStorage() {
-            const saved = localStorage.getItem('personalButtons');
-            if (saved) {
-                buttons = JSON.parse(saved);
-            }
-            renderButtons();
-            updateStats();
-        }
-
-        // Save to localStorage
-        function saveToLocalStorage() {
-            localStorage.setItem('personalButtons', JSON.stringify(buttons));
-        }
-
-        // Render buttons
-        function renderButtons() {
-            const container = document.getElementById('buttonContainer');
-            const buttonCount = document.getElementById('buttonCount');
-            
-            // Remove skeleton
-            container.querySelectorAll('.skeleton-item').forEach(el => el.remove());
-            
-            // Filter buttons
-            let filteredButtons = buttons;
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            
-            if (searchTerm) {
-                filteredButtons = filteredButtons.filter(btn => 
-                    btn.name.toLowerCase().includes(searchTerm) || 
-                    btn.url.toLowerCase().includes(searchTerm) ||
-                    (btn.description && btn.description.toLowerCase().includes(searchTerm))
-                );
-            }
-            
-            if (currentFilter === 'external') {
-                filteredButtons = filteredButtons.filter(btn => btn.url.startsWith('http'));
-            } else if (currentFilter === 'internal') {
-                filteredButtons = filteredButtons.filter(btn => !btn.url.startsWith('http'));
-            }
-            
-            container.innerHTML = '';
-            
-            if (filteredButtons.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full text-center py-16">
-                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-4xl">${searchTerm ? '🔍' : '📭'}</span>
-                        </div>
-                        <h3 class="text-white font-semibold mb-2">${searchTerm ? 'Tidak ditemukan' : 'Belum ada link'}</h3>
-                        <p class="text-gray-400 text-sm">${searchTerm ? 'Coba kata kunci lain' : 'Klik "Tambah Link" untuk memulai!'}</p>
-                    </div>
-                `;
-            } else {
-                filteredButtons.forEach((btn) => {
-                    const isExternal = btn.url.startsWith('http');
-                    const buttonEl = document.createElement('div');
-                    buttonEl.className = 'relative group';
-                    buttonEl.innerHTML = `
-                        <a href="${btn.url}" target="_blank" rel="noopener noreferrer" 
-                           class="button-card block bg-gradient-to-br ${btn.color} text-white rounded-2xl p-5 shadow-lg">
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="text-3xl">${btn.icon || '🔗'}</div>
-                                <div class="flex items-center gap-1 text-xs bg-white/20 px-2 py-1 rounded-full">
-                                    ${isExternal ? '🌐 External' : '📄 Internal'}
-                                </div>
-                            </div>
-                            <div class="font-bold text-lg truncate mb-1">${btn.name}</div>
-                            <div class="text-sm opacity-80 truncate">${btn.description || btn.url}</div>
-                            <div class="flex items-center gap-1 mt-3 text-xs opacity-60">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                </svg>
-                                Buka di tab baru
-                            </div>
-                        </a>
-                        <div class="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 flex gap-2">
-                            <button onclick="event.preventDefault(); event.stopPropagation(); editButton('${btn.id}')" 
-                                class="bg-white/30 hover:bg-white/50 backdrop-blur-sm text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-110 shadow-lg">
-                                ✏️
-                            </button>
-                            <button onclick="event.preventDefault(); event.stopPropagation(); deleteButton('${btn.id}')" 
-                                class="bg-white/30 hover:bg-red-500 backdrop-blur-sm text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-all hover:scale-110 shadow-lg">
-                                🗑️
-                            </button>
-                        </div>
-                    `;
-                    container.appendChild(buttonEl);
-                });
-            }
-            
-            buttonCount.textContent = `${filteredButtons.length} link`;
-        }
-
-        // Update stats
-        function updateStats() {
-            const total = buttons.length;
-            const external = buttons.filter(btn => btn.url.startsWith('http')).length;
-            const internal = total - external;
-            
-            document.getElementById('totalButtons').textContent = total;
-            document.getElementById('externalLinks').textContent = external;
-            document.getElementById('internalLinks').textContent = internal;
-        }
-
-        // Handle search
-        function handleSearch() {
-            renderButtons();
-        }
-
-        // Filter buttons
-        function filterButtons(filter) {
-            currentFilter = filter;
-            
-            // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.dataset.filter === filter) {
-                    btn.classList.add('active');
-                }
-            });
-            
-            renderButtons();
-        }
-
-        // Open add modal
-        function openAddModal() {
-            document.getElementById('modalTitle').textContent = 'Tambah Link Baru';
-            document.getElementById('editId').value = '';
-            document.getElementById('buttonForm').reset();
-            document.getElementById('buttonDesc').value = '';
-            selectColor('from-violet-500 to-purple-600');
-            selectIcon('🔗');
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
-        }
-
-        // Close modal
-        function closeModal() {
-            document.getElementById('modal').classList.add('hidden');
-            document.getElementById('modal').classList.remove('flex');
-        }
-
-        // Select color
-        function selectColor(color) {
-            selectedColor = color;
-            document.getElementById('selectedColor').value = color;
-            
-            document.querySelectorAll('.color-option').forEach(btn => {
-                btn.classList.remove('selected');
-                if (btn.dataset.color === color) {
-                    btn.classList.add('selected');
-                }
-            });
-        }
-
-        // Select icon
-        function selectIcon(icon) {
-            selectedIcon = icon;
-            document.getElementById('selectedIcon').value = icon;
-            
-            document.querySelectorAll('.icon-option').forEach(btn => {
-                btn.classList.remove('selected');
-                if (btn.dataset.icon === icon) {
-                    btn.classList.add('selected');
-                }
-            });
-        }
-
-        // Save button
-        async function saveButton(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('buttonName').value.trim();
-            const url = document.getElementById('buttonUrl').value.trim();
-            const description = document.getElementById('buttonDesc').value.trim();
-            const color = document.getElementById('selectedColor').value;
-            const icon = document.getElementById('selectedIcon').value;
-            const editId = document.getElementById('editId').value;
-            
-            const buttonData = { 
-                name, 
-                url, 
-                description,
-                color, 
-                icon
-            };
-            
-            document.getElementById('submitBtn').disabled = true;
-            document.getElementById('submitText').textContent = 'Menyimpan...';
-            
-            try {
-                if (supabase) {
-                    if (editId) {
-                        // Update existing
-                        const { error } = await supabase
-                            .from('buttons')
-                            .update(buttonData)
-                            .eq('id', editId);
-                        
-                        if (error) throw error;
-                        showToast('Link berhasil diperbarui!', 'success');
-                    } else {
-                        // Insert new
-                        const { error } = await supabase
-                            .from('buttons')
-                            .insert([buttonData]);
-                        
-                        if (error) throw error;
-                        showToast('Link berhasil ditambahkan!', 'success');
-                    }
-                    
-                    await loadButtonsFromSupabase();
-                } else {
-                    // Local storage fallback
-                    if (editId) {
-                        const index = buttons.findIndex(b => b.id === editId);
-                        if (index >= 0) {
-                            buttons[index] = { ...buttons[index], ...buttonData };
-                        }
-                    } else {
-                        buttonData.id = Date.now().toString();
-                        buttonData.created_at = new Date().toISOString();
-                        buttons.unshift(buttonData);
-                    }
-                    saveToLocalStorage();
-                    renderButtons();
-                    updateStats();
-                    showToast('Link berhasil disimpan (mode lokal)', 'success');
-                }
-                
-                closeModal();
-            } catch (error) {
-                console.error('Save error:', error);
-                showToast('Gagal menyimpan: ' + error.message, 'error');
-            } finally {
-                document.getElementById('submitBtn').disabled = false;
-                document.getElementById('submitText').textContent = 'Simpan';
-            }
-        }
-
-        // Edit button
-        function editButton(id) {
-            const btn = buttons.find(b => b.id === id);
-            if (!btn) return;
-            
-            document.getElementById('modalTitle').textContent = 'Edit Link';
-            document.getElementById('editId').value = id;
-            document.getElementById('buttonName').value = btn.name;
-            document.getElementById('buttonUrl').value = btn.url;
-            document.getElementById('buttonDesc').value = btn.description || '';
-            selectColor(btn.color);
-            selectIcon(btn.icon || '🔗');
-            
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
-        }
-
-        // Delete button
-        function deleteButton(id) {
-            deleteId = id;
-            document.getElementById('deleteModal').classList.remove('hidden');
-            document.getElementById('deleteModal').classList.add('flex');
-        }
-
-        // Close delete modal
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.add('hidden');
-            document.getElementById('deleteModal').classList.remove('flex');
-            deleteId = null;
-        }
-
-        // Confirm delete
-        async function confirmDelete() {
-            if (!deleteId) return;
-            
-            document.getElementById('deleteBtn').disabled = true;
-            document.getElementById('deleteText').textContent = 'Menghapus...';
-            
-            try {
-                if (supabase) {
-                    const { error } = await supabase
-                        .from('buttons')
-                        .delete()
-                        .eq('id', deleteId);
-                    
-                    if (error) throw error;
-                    
-                    await loadButtonsFromSupabase();
-                    showToast('Link berhasil dihapus!', 'success');
-                } else {
-                    buttons = buttons.filter(b => b.id !== deleteId);
-                    saveToLocalStorage();
-                    renderButtons();
-                    updateStats();
-                    showToast('Link berhasil dihapus (mode lokal)', 'success');
-                }
-            } catch (error) {
-                console.error('Delete error:', error);
-                showToast('Gagal menghapus: ' + error.message, 'error');
-            } finally {
-                document.getElementById('deleteBtn').disabled = false;
-                document.getElementById('deleteText').textContent = 'Hapus';
-                closeDeleteModal();
-            }
-        }
-
-        // Settings modal
-        function openSettingsModal() {
-            document.getElementById('settingsModal').classList.remove('hidden');
-            document.getElementById('settingsModal').classList.add('flex');
-        }
-
-        function closeSettingsModal() {
-            document.getElementById('settingsModal').classList.add('hidden');
-            document.getElementById('settingsModal').classList.remove('flex');
-        }
-
-        // Save settings
-        async function saveSettings(event) {
-            event.preventDefault();
-            
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            
-            if (!url || !key) {
-                showToast('Mohon isi URL dan Key Supabase', 'error');
+            if (!name || !url) {
+                alert('Mohon isi nama dan URL!');
                 return;
             }
+
+            // Tambahkan https:// jika tidak ada protocol
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            const links = getLinks();
+            const newLink = {
+                id: Date.now(),
+                name: name,
+                url: url,
+                createdAt: new Date().toLocaleDateString('id-ID')
+            };
+
+            links.unshift(newLink);
+            saveLinks(links);
+
+            // Reset form
+            nameInput.value = '';
+            urlInput.value = '';
+
+            renderLinks();
+        }
+
+        // Hapus link
+        function deleteLink(id, event) {
+            event.stopPropagation();
+            event.preventDefault();
             
-            localStorage.setItem('supabaseUrl', url);
-            localStorage.setItem('supabaseKey', key);
-            
-            if (initSupabase(url, key)) {
-                closeSettingsModal();
-                showToast('Pengaturan tersimpan, menghubungkan...', 'success');
-                await loadButtonsFromSupabase();
+            if (confirm('Yakin ingin menghapus link ini?')) {
+                const links = getLinks().filter(link => link.id !== id);
+                saveLinks(links);
+                renderLinks();
             }
         }
 
-        // Show toast
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            
-            const bgColor = type === 'success' ? 'from-emerald-600 to-green-600' : 
-                           type === 'error' ? 'from-red-600 to-rose-600' : 
-                           'from-blue-600 to-indigo-600';
-            
-            const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
-            
-            toast.className = `toast bg-gradient-to-r ${bgColor} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3`;
-            toast.innerHTML = `
-                <span class="text-lg">${icon}</span>
-                <span class="font-medium">${message}</span>
-            `;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
+        // Buka link
+        function openLink(url) {
+            window.open(url, '_blank');
         }
 
-        // Close modals on outside click
-        document.getElementById('modal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-        
-        document.getElementById('deleteModal').addEventListener('click', function(e) {
-            if (e.target === this) closeDeleteModal();
-        });
-        
-        document.getElementById('settingsModal').addEventListener('click', function(e) {
-            if (e.target === this) closeSettingsModal();
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                closeDeleteModal();
-                closeSettingsModal();
-                closeQRScanner();
-            }
-        });
-
-        // ============================================
-        // QR Scanner Functions
-        // ============================================
-        let html5QrCode = null;
-        let currentScanTarget = null;
-
-        function openQRScanner(target) {
-            currentScanTarget = target;
-            const labelText = target === 'url' ? 'Scan QR untuk Supabase URL' : 'Scan QR untuk Anon Key';
-            document.getElementById('qrScannerLabel').textContent = labelText;
-            document.getElementById('scanResultPreview').classList.add('hidden');
-            document.getElementById('qrScannerLoading').classList.remove('hidden');
-            
-            document.getElementById('qrScannerModal').classList.remove('hidden');
-            document.getElementById('qrScannerModal').classList.add('flex');
-            
-            // Initialize QR Scanner
-            setTimeout(() => {
-                startQRScanner();
-            }, 300);
-        }
-
-        function closeQRScanner() {
-            document.getElementById('qrScannerModal').classList.add('hidden');
-            document.getElementById('qrScannerModal').classList.remove('flex');
-            
-            // Stop and cleanup scanner
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    html5QrCode = null;
-                }).catch(err => {
-                    console.log('Error stopping scanner:', err);
-                });
-            }
-            
-            currentScanTarget = null;
-        }
-
-        async function startQRScanner() {
+        // Dapatkan favicon dari URL
+        function getFavicon(url) {
             try {
-                html5QrCode = new Html5Qrcode("qrReader");
+                const domain = new URL(url).hostname;
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            } catch {
+                return null;
+            }
+        }
+
+        // Warna gradient acak untuk kartu
+        function getRandomGradient() {
+            const gradients = [
+                'from-blue-500 to-cyan-400',
+                'from-purple-500 to-pink-400',
+                'from-green-500 to-teal-400',
+                'from-orange-500 to-yellow-400',
+                'from-red-500 to-pink-400',
+                'from-indigo-500 to-purple-400',
+                'from-pink-500 to-rose-400',
+                'from-teal-500 to-green-400',
+            ];
+            return gradients[Math.floor(Math.random() * gradients.length)];
+        }
+
+        // Render semua link
+        function renderLinks() {
+            const container = document.getElementById('linksContainer');
+            const emptyMessage = document.getElementById('emptyMessage');
+            const linkCount = document.getElementById('linkCount');
+            const links = getLinks();
+
+            if (links.length === 0) {
+                container.innerHTML = '';
+                emptyMessage.classList.remove('hidden');
+                linkCount.textContent = '';
+                return;
+            }
+
+            emptyMessage.classList.add('hidden');
+            linkCount.textContent = `${links.length} link tersimpan`;
+
+            container.innerHTML = links.map(link => {
+                const favicon = getFavicon(link.url);
+                const gradient = getRandomGradient();
                 
-                const config = {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0
-                };
-                
-                await html5QrCode.start(
-                    { facingMode: "environment" },
-                    config,
-                    onScanSuccess,
-                    onScanFailure
-                );
-                
-                document.getElementById('qrScannerLoading').classList.add('hidden');
-                
-            } catch (err) {
-                console.error('Failed to start scanner:', err);
-                document.getElementById('qrScannerLoading').innerHTML = `
-                    <div class="text-center p-6">
-                        <div class="text-4xl mb-3">📷</div>
-                        <p class="text-red-400 font-medium mb-2">Tidak dapat mengakses kamera</p>
-                        <p class="text-gray-400 text-sm">Pastikan Anda memberikan izin akses kamera pada browser.</p>
-                    </div>
+                return `
+                    <a href="${link.url}" target="_blank" class="card-hover block">
+                        <div class="bg-white/10 backdrop-blur-lg rounded-2xl overflow-hidden border border-white/20 cursor-pointer group">
+                            <!-- Header dengan gradient -->
+                            <div class="h-3 bg-gradient-to-r ${gradient}"></div>
+                            
+                            <div class="p-5">
+                                <div class="flex items-start gap-4">
+                                    <!-- Favicon -->
+                                    <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                        ${favicon ? 
+                                            `<img src="${favicon}" alt="" class="w-8 h-8" onerror="this.parentElement.innerHTML='🔗'">` : 
+                                            '<span class="text-2xl">🔗</span>'
+                                        }
+                                    </div>
+                                    
+                                    <!-- Info -->
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg font-semibold text-white truncate group-hover:text-pink-300 transition-colors">
+                                            ${escapeHtml(link.name)}
+                                        </h3>
+                                        <p class="text-purple-300 text-sm truncate">
+                                            ${escapeHtml(link.url)}
+                                        </p>
+                                        <p class="text-purple-400 text-xs mt-1">
+                                            📅 ${link.createdAt}
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tombol Hapus -->
+                                <button 
+                                    onclick="deleteLink(${link.id}, event)"
+                                    class="mt-4 w-full py-2 rounded-lg bg-red-500/20 text-red-300 text-sm hover:bg-red-500/40 transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                    🗑️ Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </a>
                 `;
-                showToast('Gagal mengakses kamera: ' + err.message, 'error');
-            }
+            }).join('');
         }
 
-        function onScanSuccess(decodedText, decodedResult) {
-            // Show result preview
-            document.getElementById('scanResultPreview').classList.remove('hidden');
-            document.getElementById('scanResultText').textContent = decodedText.length > 100 
-                ? decodedText.substring(0, 100) + '...' 
-                : decodedText;
-            
-            // Set the value to the appropriate input
-            if (currentScanTarget === 'url') {
-                document.getElementById('supabaseUrl').value = decodedText;
-            } else if (currentScanTarget === 'key') {
-                document.getElementById('supabaseKey').value = decodedText;
-            }
-            
-            showToast('QR Code berhasil discan!', 'success');
-            
-            // Auto close after short delay
-            setTimeout(() => {
-                closeQRScanner();
-            }, 1500);
+        // Escape HTML untuk mencegah XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        function onScanFailure(error) {
-            // Silent fail - scanning continuously until success
-        }
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', renderLinks);
 
-        // ============================================
-        // Copy SQL Code Function
-        // ============================================
-        function copySQLCode() {
-            const sqlCode = document.getElementById('sqlCode').textContent;
-            
-            navigator.clipboard.writeText(sqlCode).then(() => {
-                // Update button appearance
-                document.getElementById('copyIcon').textContent = '✓';
-                document.getElementById('copyText').textContent = 'Copied!';
-                
-                showToast('Kode SQL berhasil disalin!', 'success');
-                
-                // Reset button after 2 seconds
-                setTimeout(() => {
-                    document.getElementById('copyIcon').textContent = '📋';
-                    document.getElementById('copyText').textContent = 'Copy';
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                showToast('Gagal menyalin kode', 'error');
-            });
-        }
-
-        // Close QR Scanner modal on outside click
-        document.getElementById('qrScannerModal').addEventListener('click', function(e) {
-            if (e.target === this) closeQRScanner();
+        // Tambahkan event listener untuk Enter key
+        document.getElementById('linkName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') document.getElementById('linkUrl').focus();
+        });
+        
+        document.getElementById('linkUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addLink();
         });
     </script>
 </body>
