@@ -3130,6 +3130,7 @@ function confirmDeleteTransaction() {
     // Render categories
 // Render categories
 function renderCategories() {
+    console.log('Rendering categories for transaction:', customBudgetCategories);  // BARIS BARU: Debug custom categories
     const grid = document.getElementById('category-grid');
     let cats = categories[currentTransactionType];
     
@@ -3327,27 +3328,32 @@ localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCatego
     }
 
     // Create recent transaction item (display only, no interaction)
-    function createRecentTransactionItem(t) {
-        const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
-        const account = accounts.find(a => a.id === t.accountId);
-        
-        return `
-            <div class="bg-white rounded-xl p-4 flex items-center gap-3">
-                <div class="w-12 h-12 ${cat?.color || 'bg-gray-500'} rounded-full flex items-center justify-center">
-                    <i class="fas ${cat?.icon || 'fa-question'} text-white"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold truncate">${cat?.name || 'Tidak diketahui'}</h4>
-                    <p class="text-sm text-gray-500 truncate">${t.description || '-'} ${account ? '• ' + account.name : ''}</p>
-                </div>
-                <div class="text-right">
-                    <p class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
-                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
-                    </p>
-                </div>
+   function createRecentTransactionItem(t) {
+    const allCategories = [...categories.income, ...categories.expense, ...customBudgetCategories];
+    const cat = allCategories.find(c => c.id === t.category);
+    const account = accounts.find(a => a.id === t.accountId);  // BARIS BARU: Ini perbaikan utama untuk error "account not defined"
+    
+    // Opsional untuk debug: Buka console browser (F12) dan cek log ini saat render
+    console.log('Custom categories in recent render:', customBudgetCategories);
+    if (!cat) console.log('Kategori tidak ditemukan untuk transaksi:', t);  // Debug jika masih "Tidak diketahui"
+
+    return `
+        <div class="bg-white rounded-xl p-4 flex items-center gap-3">
+            <div class="w-12 h-12 ${cat?.color || 'bg-gray-500'} rounded-full flex items-center justify-center">
+                <i class="fas ${cat?.icon || 'fa-question'} text-white"></i>
             </div>
-        `;
-    }
+            <div class="flex-1 min-w-0">
+                <h4 class="font-semibold truncate">${cat?.name || 'Tidak diketahui'}</h4>
+                <p class="text-sm text-gray-500 truncate">${t.description || '-'} ${account ? '• ' + account.name : ''}</p>
+            </div>
+            <div class="text-right">
+                <p class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                    ${formatCurrency(t.amount)}
+                </p>
+            </div>
+        </div>
+    `;
+}
 
     // Render all transactions
     function renderAllTransactions() {
@@ -3413,33 +3419,38 @@ localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCatego
 
     // Create transaction item HTML (with long press for stats page)
     function createTransactionItem(t) {
-        const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
-        const account = accounts.find(a => a.id === t.accountId);
-        
-        return `
-            <div onmousedown="startLongPress('${t.id}', this)"
-                onmouseup="endLongPress(this)"
-                onmouseleave="endLongPress(this)"
-                ontouchstart="startLongPress('${t.id}', this)"
-                ontouchend="endLongPress(this)"
-                ontouchcancel="endLongPress(this)"
-                class="transaction-item bg-white rounded-xl p-4 flex items-center gap-3 cursor-pointer interactive-card relative overflow-hidden">
-                <div class="long-press-indicator"></div>
-                <div class="w-12 h-12 ${cat?.color || 'bg-gray-500'} rounded-full flex items-center justify-center">
-                    <i class="fas ${cat?.icon || 'fa-question'} text-white"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold truncate">${cat?.name || 'Tidak diketahui'}</h4>
-                    <p class="text-sm text-gray-500 truncate">${t.description || '-'} ${account ? '• ' + account.name : ''}</p>
-                </div>
-                <div class="text-right">
-                    <p class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
-                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
-                    </p>
-                </div>
+    const allCategories = [...categories.income, ...categories.expense, ...customBudgetCategories];
+    const cat = allCategories.find(c => c.id === t.category);
+    const account = accounts.find(a => a.id === t.accountId);  // BARIS BARU: Ini perbaikan utama untuk error "account not defined"
+    
+    // Opsional untuk debug: Buka console browser (F12) dan cek log ini saat render
+    console.log('Custom categories in all render:', customBudgetCategories);
+    if (!cat) console.log('Kategori tidak ditemukan untuk transaksi:', t);  // Debug jika masih "Tidak diketahui"
+
+    return `
+        <div onmousedown="startLongPress('${t.id}', this)"
+            onmouseup="endLongPress(this)"
+            onmouseleave="endLongPress(this)"
+            ontouchstart="startLongPress('${t.id}', this)"
+            ontouchend="endLongPress(this)"
+            ontouchcancel="endLongPress(this)"
+            class="transaction-item bg-white rounded-xl p-4 flex items-center gap-3 cursor-pointer interactive-card relative overflow-hidden">
+            <div class="long-press-indicator"></div>
+            <div class="w-12 h-12 ${cat?.color || 'bg-gray-500'} rounded-full flex items-center justify-center">
+                <i class="fas ${cat?.icon || 'fa-question'} text-white"></i>
             </div>
-        `;
-    }
+            <div class="flex-1 min-w-0">
+                <h4 class="font-semibold truncate">${cat?.name || 'Tidak diketahui'}</h4>
+                <p class="text-sm text-gray-500 truncate">${t.description || '-'} ${account ? '• ' + account.name : ''}</p>
+            </div>
+            <div class="text-right">
+                <p class="font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                    ${formatCurrency(t.amount)}
+                </p>
+            </div>
+        </div>
+    `;
+}
 
     // Filter transactions
     function filterTransactions(filter) {
