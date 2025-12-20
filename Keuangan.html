@@ -3638,7 +3638,8 @@ localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCatego
         }
         
         const filtered = transactions.filter(t => {
-            const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
+            const allCategories = [...categories.income, ...categories.expense, ...customBudgetCategories];
+const cat = allCategories.find(c => c.id === t.category);
             return (cat?.name.toLowerCase().includes(q)) || 
                    (t.description?.toLowerCase().includes(q)) ||
                    (t.amount.toString().includes(q));
@@ -3739,7 +3740,8 @@ localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCatego
         } else {
             const colors = ['bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-purple-500'];
             legend.innerHTML = sortedCategories.map(([catId, amount], index) => {
-                const cat = categories.expense.find(c => c.id === catId);
+                const allCategories = [...categories.expense, ...customBudgetCategories];
+const cat = allCategories.find(c => c.id === catId);
                 const percentage = ((amount / total) * 100).toFixed(1);
                 return `
                     <div class="flex items-center justify-between">
@@ -3779,7 +3781,8 @@ localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCatego
         
         let csv = 'Tanggal,Tipe,Kategori,Akun,Keterangan,Jumlah\n';
         transactions.forEach(t => {
-            const cat = [...categories.income, ...categories.expense].find(c => c.id === t.category);
+            const allCategories = [...categories.income, ...categories.expense, ...customBudgetCategories];
+const cat = allCategories.find(c => c.id === t.category);
             const account = accounts.find(a => a.id === t.accountId);
             csv += `${t.date},${t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'},${cat?.name || t.category},${account?.name || '-'},${t.description || '-'},${t.amount}\n`;
         });
