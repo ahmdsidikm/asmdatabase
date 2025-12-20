@@ -370,6 +370,85 @@
     </div>
 </div>
 
+<!-- Create Budget Category Modal -->
+<div id="create-category-modal" class="fixed inset-0 z-[95] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeCreateCategoryModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-11/12 max-w-md animate-bounce-in">
+        <div class="p-6">
+            <h3 class="text-xl font-bold text-center mb-4">Buat Kategori Anggaran</h3>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-500 mb-2">Nama Kategori</label>
+                <input type="text" id="new-category-name" placeholder="Contoh: Renovasi, Liburan..." 
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 transition-colors">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Pilih Ikon</label>
+                <div id="category-icon-grid" class="grid grid-cols-6 gap-3 max-h-48 overflow-y-auto">
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-500 mb-3">Pilih Warna</label>
+                <div id="category-color-grid" class="grid grid-cols-8 gap-3">
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeCreateCategoryModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button onclick="saveCustomCategory()" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Simpan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Budget Categories Modal -->
+<div id="manage-categories-modal" class="fixed inset-0 z-[90] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeManageCategoriesModal()"></div>
+    <div class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4"></div>
+            <h3 class="text-xl font-bold text-center mb-6">Kelola Kategori</h3>
+            
+            <div id="manage-categories-list" class="space-y-3">
+                <!-- Categories will be populated by JS -->
+            </div>
+
+            <button onclick="closeManageCategoriesModal()" class="w-full mt-6 py-4 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-all">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Category Confirmation Modal -->
+<div id="delete-category-modal" class="fixed inset-0 z-[95] hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDeleteCategoryModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl w-11/12 max-w-sm animate-bounce-in">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-tag text-2xl text-red-600"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Hapus Kategori?</h3>
+            <p id="delete-category-name" class="text-gray-500 mb-2 font-semibold"></p>
+            <p class="text-gray-400 text-sm mb-6">Anggaran yang menggunakan kategori ini juga akan dihapus</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteCategoryModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-semibold hover:bg-gray-200 transition-colors">
+                    Batal
+                </button>
+                <button onclick="confirmDeleteCategory()" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors">
+                    Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Add Debt Modal -->
 <div id="debt-modal" class="fixed inset-0 z-[90] hidden">
     <div class="modal-backdrop absolute inset-0" onclick="closeDebtModal()"></div>
@@ -983,14 +1062,19 @@
         </div>
     </div>
 
-    <!-- Budget Page -->
-    <div id="budget" class="tab-content">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-2xl font-bold">Anggaran</h2>
+<!-- Budget Page -->
+<div id="budget" class="tab-content">
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-2xl font-bold">Anggaran</h2>
+        <div class="flex gap-2">
+            <button onclick="openManageCategoriesModal()" class="px-4 py-2 bg-purple-600 text-white text-sm rounded-full font-medium">
+                <i class="fas fa-cog mr-1"></i>Kategori
+            </button>
             <button onclick="openBudgetModal()" class="px-4 py-2 bg-indigo-600 text-white text-sm rounded-full font-medium">
                 <i class="fas fa-plus mr-1"></i>Tambah
             </button>
         </div>
+    </div>
 
         <!-- Budget Summary -->
         <div class="bg-white rounded-xl p-4 mb-4 shadow-sm">
@@ -1248,6 +1332,7 @@
         { id: 'default-bank', name: 'Bank', balance: 0, icon: 'fa-university', color: 'bg-blue-500' }
     ];
     let budgets = JSON.parse(localStorage.getItem('budgets')) || [];
+let customBudgetCategories = JSON.parse(localStorage.getItem('customBudgetCategories')) || [];
     let debts = JSON.parse(localStorage.getItem('debts')) || [];
     let receivables = JSON.parse(localStorage.getItem('receivables')) || [];
     let targets = JSON.parse(localStorage.getItem('targets')) || [];
@@ -1271,6 +1356,7 @@
 // Tambahkan variabel ini bersama variabel long press lainnya
 let longPressBudgetTimer = null;
 let longPressBudgetId = null;
+let categoryToDeleteId = null;
 
     const accountIcons = [
         'fa-wallet', 'fa-university', 'fa-credit-card', 'fa-coins', 
@@ -1653,45 +1739,61 @@ function confirmDeleteAccount() {
         renderBudgetCategories();
     }
 
-    function renderBudgetCategories() {
-        const grid = document.getElementById('budget-category-grid');
-        const cats = categories.expense;
-        
-        grid.innerHTML = cats.map(cat => `
-            <button onclick="selectBudgetCategory('${cat.id}')" 
-                class="category-btn p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${selectedBudgetCategory === cat.id ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50 hover:bg-gray-100'}">
-                <div class="w-10 h-10 ${cat.color} rounded-full flex items-center justify-center">
-                    <i class="fas ${cat.icon} text-white text-sm"></i>
-                </div>
-                <span class="text-xs text-gray-600 truncate w-full text-center">${cat.name}</span>
-            </button>
-        `).join('');
+function renderBudgetCategories() {
+    const grid = document.getElementById('budget-category-grid');
+    const cats = categories.expense;
+    
+    // Gabungkan kategori default dengan custom
+    const allCategories = [
+        ...cats,
+        ...customBudgetCategories.map(custom => ({
+            id: custom.id,
+            name: custom.name,
+            icon: custom.icon,
+            color: custom.color
+        }))
+    ];
+    
+    grid.innerHTML = allCategories.map(cat => `
+        <button onclick="selectBudgetCategory('${cat.id}')" 
+            class="category-btn p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${selectedBudgetCategory === cat.id ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50 hover:bg-gray-100'}">
+            <div class="w-10 h-10 ${cat.color} rounded-full flex items-center justify-center">
+                <i class="fas ${cat.icon} text-white text-sm"></i>
+            </div>
+            <span class="text-xs text-gray-600 truncate w-full text-center">${cat.name}</span>
+        </button>
+    `).join('');
+    
+    // Tambahkan tombol untuk membuat kategori baru
+    grid.innerHTML += `
+        <button onclick="openCreateCategoryModal()" 
+            class="category-btn p-3 rounded-xl flex flex-col items-center gap-1 transition-all bg-gray-100 hover:bg-gray-200 border-2 border-dashed border-gray-300">
+            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                <i class="fas fa-plus text-gray-500 text-sm"></i>
+            </div>
+            <span class="text-xs text-gray-600 truncate w-full text-center">Buat Baru</span>
+        </button>
+    `;
+}
+
+function selectBudgetCategory(id) {
+    selectedBudgetCategory = id;
+    renderBudgetCategories();
+    
+    // HAPUS bagian custom name input karena tidak diperlukan lagi
+    const customNameContainer = document.getElementById('budget-custom-name-container');
+    customNameContainer.classList.add('hidden');
+}
+
+function saveBudget() {
+    const amount = parseFloat(document.getElementById('budget-amount-input').value);
+    const startDate = document.getElementById('budget-start-date').value;
+    const endDate = document.getElementById('budget-end-date').value;
+
+    if (!selectedBudgetCategory) {
+        showToast('Pilih kategori', 'error');
+        return;
     }
-
-    function selectBudgetCategory(id) {
-        selectedBudgetCategory = id;
-        renderBudgetCategories();
-        
-        // Show custom name input if "Lainnya" is selected
-        const customNameContainer = document.getElementById('budget-custom-name-container');
-        if (id === 'other-expense') {
-            customNameContainer.classList.remove('hidden');
-        } else {
-            customNameContainer.classList.add('hidden');
-            document.getElementById('budget-custom-name-input').value = '';
-        }
-    }
-
-    function saveBudget() {
-        const amount = parseFloat(document.getElementById('budget-amount-input').value);
-        const customName = document.getElementById('budget-custom-name-input').value.trim();
-        const startDate = document.getElementById('budget-start-date').value;
-        const endDate = document.getElementById('budget-end-date').value;
-
-        if (!selectedBudgetCategory) {
-            showToast('Pilih kategori', 'error');
-            return;
-        }
 
         if (selectedBudgetCategory === 'other-expense' && !customName) {
             showToast('Masukkan nama kategori', 'error');
@@ -1713,41 +1815,215 @@ function confirmDeleteAccount() {
             return;
         }
 
-        // For custom category, create a unique id
-        const budgetId = selectedBudgetCategory === 'other-expense' 
-            ? `custom-${Date.now()}` 
-            : selectedBudgetCategory;
+      // Check if budget already exists for this category
+const existingIndex = budgets.findIndex(b => b.category === selectedBudgetCategory);
+if (existingIndex >= 0) {
+    budgets[existingIndex].amount = amount;
+    budgets[existingIndex].startDate = startDate;
+    budgets[existingIndex].endDate = endDate;
+    saveData();
+    renderBudgets();
+    closeBudgetModal();
+    showToast('Anggaran berhasil diperbarui', 'success');
+    return;
+}
 
-        // Check if budget already exists for this category (only for non-custom)
-        if (selectedBudgetCategory !== 'other-expense') {
-            const existingIndex = budgets.findIndex(b => b.category === selectedBudgetCategory && !b.isExpired);
-            if (existingIndex >= 0) {
-                budgets[existingIndex].amount = amount;
-                budgets[existingIndex].startDate = startDate;
-                budgets[existingIndex].endDate = endDate;
-                saveData();
-                renderBudgets();
-                closeBudgetModal();
-                showToast('Anggaran berhasil diperbarui', 'success');
-                return;
-            }
-        }
-
-        budgets.push({
-            id: Date.now().toString(),
-            category: selectedBudgetCategory,
-            customName: customName || null,
-            amount: amount,
-            startDate: startDate,
-            endDate: endDate,
-            createdAt: new Date().toISOString()
-        });
+budgets.push({
+    id: Date.now().toString(),
+    category: selectedBudgetCategory,
+    amount: amount,
+    startDate: startDate,
+    endDate: endDate,
+    createdAt: new Date().toISOString()
+});
 
         saveData();
         renderBudgets();
         closeBudgetModal();
         showToast('Anggaran berhasil disimpan', 'success');
     }
+
+// ===== CREATE CUSTOM BUDGET CATEGORY =====
+let selectedCategoryIcon = 'fa-star';
+let selectedCategoryColor = 'bg-purple-500';
+
+function openCreateCategoryModal() {
+    document.getElementById('create-category-modal').classList.remove('hidden');
+    document.getElementById('new-category-name').value = '';
+    selectedCategoryIcon = 'fa-star';
+    selectedCategoryColor = 'bg-purple-500';
+    renderCategoryIconGrid();
+    renderCategoryColorGrid();
+}
+
+function closeCreateCategoryModal() {
+    document.getElementById('create-category-modal').classList.add('hidden');
+}
+
+function renderCategoryIconGrid() {
+    const icons = [
+        'fa-star', 'fa-heart', 'fa-coffee', 'fa-book', 'fa-music',
+        'fa-gamepad', 'fa-paint-brush', 'fa-tree', 'fa-paw', 'fa-bicycle',
+        'fa-plane-departure', 'fa-hotel', 'fa-camera', 'fa-tv', 'fa-gift',
+        'fa-wrench', 'fa-leaf', 'fa-birthday-cake', 'fa-glass-cheers', 'fa-spa',
+        'fa-dumbbell', 'fa-tshirt', 'fa-couch', 'fa-lightbulb'
+    ];
+    
+    const grid = document.getElementById('category-icon-grid');
+    grid.innerHTML = icons.map(icon => `
+        <button onclick="selectCategoryIcon('${icon}')" type="button"
+            class="w-12 h-12 rounded-xl flex items-center justify-center transition-all ${selectedCategoryIcon === icon ? 'bg-indigo-100 ring-2 ring-indigo-500' : 'bg-gray-100 hover:bg-gray-200'}">
+            <i class="fas ${icon} ${selectedCategoryIcon === icon ? 'text-indigo-600' : 'text-gray-600'}"></i>
+        </button>
+    `).join('');
+}
+
+function renderCategoryColorGrid() {
+    const grid = document.getElementById('category-color-grid');
+    grid.innerHTML = accountColors.map(color => `
+        <button onclick="selectCategoryColor('${color}')" type="button"
+            class="w-10 h-10 ${color} rounded-full flex items-center justify-center transition-all ${selectedCategoryColor === color ? 'ring-2 ring-offset-2 ring-gray-400' : ''}">
+            ${selectedCategoryColor === color ? '<i class="fas fa-check text-white text-sm"></i>' : ''}
+        </button>
+    `).join('');
+}
+
+function selectCategoryIcon(icon) {
+    selectedCategoryIcon = icon;
+    renderCategoryIconGrid();
+}
+
+function selectCategoryColor(color) {
+    selectedCategoryColor = color;
+    renderCategoryColorGrid();
+}
+
+function saveCustomCategory() {
+    const name = document.getElementById('new-category-name').value.trim();
+    
+    if (!name) {
+        showToast('Masukkan nama kategori', 'error');
+        return;
+    }
+    
+    // Cek duplikat
+    const isDuplicate = customBudgetCategories.some(cat => 
+        cat.name.toLowerCase() === name.toLowerCase()
+    );
+    
+    if (isDuplicate) {
+        showToast('Kategori dengan nama ini sudah ada', 'error');
+        return;
+    }
+    
+    const newCategory = {
+        id: `custom-budget-${Date.now()}`,
+        name: name,
+        icon: selectedCategoryIcon,
+        color: selectedCategoryColor,
+        isCustom: true
+    };
+    
+    customBudgetCategories.push(newCategory);
+    saveData();
+    closeCreateCategoryModal();
+    renderBudgetCategories();
+    showToast(`Kategori "${name}" berhasil dibuat!`, 'success');
+}
+
+// ===== MANAGE CATEGORIES MODAL =====
+function openManageCategoriesModal() {
+    document.getElementById('manage-categories-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    renderManageCategoriesList();
+}
+
+function closeManageCategoriesModal() {
+    document.getElementById('manage-categories-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function renderManageCategoriesList() {
+    const container = document.getElementById('manage-categories-list');
+    
+    if (customBudgetCategories.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-gray-400 py-6">
+                <i class="fas fa-tag text-4xl mb-3"></i>
+                <p>Belum ada kategori custom</p>
+                <p class="text-sm">Buat kategori baru saat menambah anggaran</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = customBudgetCategories.map(cat => {
+        // Cek berapa banyak anggaran yang menggunakan kategori ini
+        const budgetCount = budgets.filter(b => b.category === cat.id).length;
+        
+        return `
+            <div class="bg-gray-50 rounded-xl p-4 flex items-center gap-3">
+                <div class="w-12 h-12 ${cat.color} rounded-full flex items-center justify-center">
+                    <i class="fas ${cat.icon} text-white"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-semibold">${cat.name}</h4>
+                    <p class="text-sm text-gray-500">${budgetCount} anggaran menggunakan kategori ini</p>
+                </div>
+                <button onclick="promptDeleteCategory('${cat.id}')" class="w-10 h-10 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors">
+                    <i class="fas fa-trash text-red-600"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function promptDeleteCategory(id) {
+    const category = customBudgetCategories.find(c => c.id === id);
+    if (!category) return;
+
+    categoryToDeleteId = id;
+    document.getElementById('delete-category-name').textContent = category.name;
+    document.getElementById('delete-category-modal').classList.remove('hidden');
+}
+
+function closeDeleteCategoryModal() {
+    document.getElementById('delete-category-modal').classList.add('hidden');
+    categoryToDeleteId = null;
+}
+
+function confirmDeleteCategory() {
+    if (!categoryToDeleteId) return;
+
+    // Cari semua anggaran yang menggunakan kategori ini
+    const affectedBudgets = budgets.filter(b => b.category === categoryToDeleteId);
+    const affectedBudgetIds = affectedBudgets.map(b => b.id);
+
+    // Hapus kategori
+    customBudgetCategories = customBudgetCategories.filter(c => c.id !== categoryToDeleteId);
+
+    // Hapus anggaran yang menggunakan kategori ini
+    budgets = budgets.filter(b => b.category !== categoryToDeleteId);
+
+// Hapus dari Supabase jika sync dikonfigurasi
+if (isSyncConfigured()) {
+    // Hapus kategori dari cloud
+    deleteFromCloud('dompetku_categories', categoryToDeleteId);
+    
+    // Hapus anggaran terkait
+    affectedBudgetIds.forEach(id => {
+        deleteFromCloud('dompetku_budgets', id);
+    });
+}
+
+    saveData();
+    renderBudgets();
+    renderBudgetCategories(); // Update grid kategori di modal tambah anggaran
+    renderManageCategoriesList();
+    closeDeleteCategoryModal();
+    closeManageCategoriesModal();
+    showToast('Kategori dan anggaran terkait berhasil dihapus', 'success');
+}
 
     function checkAndResetBudgets() {
         const now = new Date();
@@ -1818,11 +2094,18 @@ function confirmDeleteAccount() {
     let totalBudget = 0;
     let totalUsed = 0;
 
-    container.innerHTML = budgets.map(budget => {
-        const cat = categories.expense.find(c => c.id === budget.category);
-        const displayName = budget.customName || cat?.name || 'Tidak diketahui';
-        const displayIcon = cat?.icon || 'fa-ellipsis-h';
-        const displayColor = cat?.color || 'bg-gray-500';
+container.innerHTML = budgets.map(budget => {
+    // Cari di kategori default dulu
+    let cat = categories.expense.find(c => c.id === budget.category);
+    
+    // Jika tidak ada, cari di custom categories
+    if (!cat) {
+        cat = customBudgetCategories.find(c => c.id === budget.category);
+    }
+    
+    const displayName = cat?.name || 'Tidak diketahui';
+    const displayIcon = cat?.icon || 'fa-ellipsis-h';
+    const displayColor = cat?.color || 'bg-gray-500';
         
         // Filter transactions within budget period
         const budgetStart = budget.startDate ? new Date(budget.startDate) : new Date(now.getFullYear(), now.getMonth(), 1);
@@ -2924,17 +3207,18 @@ function confirmDeleteTransaction() {
     }
 
     // Save to localStorage and auto-sync
-    function saveData() {
-        localStorage.setItem('transactions', JSON.stringify(transactions));
-        localStorage.setItem('accounts', JSON.stringify(accounts));
-        localStorage.setItem('budgets', JSON.stringify(budgets));
-        localStorage.setItem('debts', JSON.stringify(debts));
-        localStorage.setItem('receivables', JSON.stringify(receivables));
-        localStorage.setItem('targets', JSON.stringify(targets));
-        
-        // Trigger auto sync to cloud
-        autoSync();
-    }
+function saveData() {
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    localStorage.setItem('budgets', JSON.stringify(budgets));
+    localStorage.setItem('debts', JSON.stringify(debts));
+    localStorage.setItem('receivables', JSON.stringify(receivables));
+    localStorage.setItem('targets', JSON.stringify(targets));
+    localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCategories)); // TAMBAH INI
+    
+    // Trigger auto sync to cloud
+    autoSync();
+}
 
     // Manual sync button
     function manualSync() {
@@ -3457,6 +3741,9 @@ function confirmDeleteTransaction() {
             // Sync Receivables
             await syncReceivables();
 
+// Sync Custom Categories
+        await syncCustomCategories();
+
             localStorage.setItem('lastSyncTime', new Date().toISOString());
             updateSyncStatus('success', 'Tersinkronisasi');
             syncEnabled = true;
@@ -3469,29 +3756,31 @@ function confirmDeleteTransaction() {
     }
 
     // Sync from cloud
-    async function syncFromCloud() {
-        if (!isSyncConfigured() || isSyncing) return;
-        
-        isSyncing = true;
-        updateSyncStatus('syncing', 'Mengambil data...');
+async function syncFromCloud() {
+    if (!isSyncConfigured() || isSyncing) return;
+    
+    isSyncing = true;
+    updateSyncStatus('syncing', 'Mengambil data...');
 
-        try {
-            // Fetch all data
-            const [
-                cloudAccounts,
-                cloudTransactions,
-                cloudBudgets,
-                cloudTargets,
-                cloudDebts,
-                cloudReceivables
-            ] = await Promise.all([
-                supabaseRequest('dompetku_accounts', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
-                supabaseRequest('dompetku_transactions', 'GET', null, `?user_id=eq.${apiSettings.userId}&order=created_at.desc`),
-                supabaseRequest('dompetku_budgets', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
-                supabaseRequest('dompetku_targets', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
-                supabaseRequest('dompetku_debts', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
-                supabaseRequest('dompetku_receivables', 'GET', null, `?user_id=eq.${apiSettings.userId}`)
-            ]);
+    try {
+        // Fetch all data
+        const [
+            cloudAccounts,
+            cloudTransactions,
+            cloudBudgets,
+            cloudTargets,
+            cloudDebts,
+            cloudReceivables,
+            cloudCategories
+        ] = await Promise.all([
+            supabaseRequest('dompetku_accounts', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+            supabaseRequest('dompetku_transactions', 'GET', null, `?user_id=eq.${apiSettings.userId}&order=created_at.desc`),
+            supabaseRequest('dompetku_budgets', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+            supabaseRequest('dompetku_targets', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+            supabaseRequest('dompetku_debts', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+            supabaseRequest('dompetku_receivables', 'GET', null, `?user_id=eq.${apiSettings.userId}`),
+            supabaseRequest('dompetku_categories', 'GET', null, `?user_id=eq.${apiSettings.userId}`)
+        ]);
 
             // Transform and update local data
             if (cloudAccounts && cloudAccounts.length > 0) {
@@ -3570,7 +3859,15 @@ function confirmDeleteTransaction() {
                     createdAt: r.created_at
                 }));
             }
-
+if (cloudCategories) {
+                customBudgetCategories = cloudCategories.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    icon: c.icon,
+                    color: c.color,
+                    isCustom: c.is_custom
+                }));
+            }
             // Save to localStorage
             saveData();
 
@@ -3757,6 +4054,31 @@ function confirmDeleteTransaction() {
             }
         }
     }
+
+async function syncCustomCategories() {
+    for (const cat of customBudgetCategories) {
+        const cloudData = {
+            id: cat.id,
+            user_id: apiSettings.userId,
+            name: cat.name,
+            icon: cat.icon,
+            color: cat.color,
+            is_custom: true
+        };
+
+        try {
+            const existing = await supabaseRequest('dompetku_categories', 'GET', null, `?id=eq.${cat.id}&user_id=eq.${apiSettings.userId}`);
+            
+            if (existing && existing.length > 0) {
+                await supabaseRequest('dompetku_categories', 'PATCH', cloudData, `?id=eq.${cat.id}`);
+            } else {
+                await supabaseRequest('dompetku_categories', 'POST', cloudData);
+            }
+        } catch (error) {
+            console.error('Sync custom category error:', error);
+        }
+    }
+}
 
     // Delete from cloud
     async function deleteFromCloud(table, id) {
