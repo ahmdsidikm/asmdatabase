@@ -3128,20 +3128,41 @@ function confirmDeleteTransaction() {
     }
 
     // Render categories
-    function renderCategories() {
-        const grid = document.getElementById('category-grid');
-        const cats = categories[currentTransactionType];
+// Render categories
+function renderCategories() {
+    const grid = document.getElementById('category-grid');
+    let cats = categories[currentTransactionType];
+    
+    // 🔥 PERBAIKAN: Tambahkan kategori custom untuk expense
+    if (currentTransactionType === 'expense') {
+        const customCats = customBudgetCategories.map(custom => ({
+            id: custom.id,
+            name: custom.name,
+            icon: custom.icon,
+            color: custom.color
+        }));
         
-        grid.innerHTML = cats.map(cat => `
-            <button onclick="selectCategory('${cat.id}')" 
-                class="category-btn p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${selectedCategory === cat.id ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50 hover:bg-gray-100'}">
-                <div class="w-10 h-10 ${cat.color} rounded-full flex items-center justify-center">
-                    <i class="fas ${cat.icon} text-white text-sm"></i>
-                </div>
-                <span class="text-xs text-gray-600 truncate w-full text-center">${cat.name}</span>
-            </button>
-        `).join('');
+        // Gabungkan: hilangkan "Lainnya" default, tambahkan custom, lalu tambahkan "Lainnya" di akhir
+        const catsWithoutOther = cats.filter(c => c.id !== 'other-expense');
+        cats = [...catsWithoutOther, ...customCats];
+        
+        // Tambahkan "Lainnya" di akhir jika dibutuhkan
+        const otherCategory = categories.expense.find(c => c.id === 'other-expense');
+        if (otherCategory) {
+            cats.push(otherCategory);
+        }
     }
+    
+    grid.innerHTML = cats.map(cat => `
+        <button onclick="selectCategory('${cat.id}')" 
+            class="category-btn p-3 rounded-xl flex flex-col items-center gap-1 transition-all ${selectedCategory === cat.id ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50 hover:bg-gray-100'}">
+            <div class="w-10 h-10 ${cat.color} rounded-full flex items-center justify-center">
+                <i class="fas ${cat.icon} text-white text-sm"></i>
+            </div>
+            <span class="text-xs text-gray-600 truncate w-full text-center">${cat.name}</span>
+        </button>
+    `).join('');
+}
 
     // Select category
     function selectCategory(id) {
@@ -3214,7 +3235,7 @@ function saveData() {
     localStorage.setItem('debts', JSON.stringify(debts));
     localStorage.setItem('receivables', JSON.stringify(receivables));
     localStorage.setItem('targets', JSON.stringify(targets));
-    localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCategories)); // TAMBAH INI
+localStorage.setItem('customBudgetCategories', JSON.stringify(customBudgetCategories));
     
     // Trigger auto sync to cloud
     autoSync();
@@ -3860,14 +3881,14 @@ async function syncFromCloud() {
                 }));
             }
 if (cloudCategories) {
-                customBudgetCategories = cloudCategories.map(c => ({
-                    id: c.id,
-                    name: c.name,
-                    icon: c.icon,
-                    color: c.color,
-                    isCustom: c.is_custom
-                }));
-            }
+    customBudgetCategories = cloudCategories.map(c => ({
+        id: c.id,
+        name: c.name,
+        icon: c.icon,
+        color: c.color,
+        isCustom: c.is_custom
+    }));
+}
             // Save to localStorage
             saveData();
 
@@ -4056,6 +4077,8 @@ if (cloudCategories) {
     }
 
 async function syncCustomCategories() {
+    if (!customBudgetCategories || customBudgetCategories.length === 0) return;
+    
     for (const cat of customBudgetCategories) {
         const cloudData = {
             id: cat.id,
