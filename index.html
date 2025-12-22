@@ -341,7 +341,8 @@
         // Update time
         function updateTime() {
             const now = new Date();
-            timeDisplay.textContent = now.toLocaleTimeString();
+            // Format time and date nicely
+            timeDisplay.textContent = now.toLocaleString();
         }
         setInterval(updateTime, 1000);
         updateTime();
@@ -392,10 +393,15 @@
             }
         };
 
+        // --- BOOT SEQUENCE WITH REALTIME DATE ---
+        const nowBoot = new Date();
+        const dateStr = nowBoot.toLocaleDateString();
+        const timeStr = nowBoot.toLocaleTimeString();
+
         const bootSequence = [
             " ",
             "PERFORMING SYSTEM CHECK...",
-            "BIOS Date 01/01/98 14:23:12 Ver: 08.00.12",
+            `BIOS Date ${dateStr} ${timeStr} Ver: 08.00.12`,
             "Connecting to Network Interface...",
             "Initializing Supabase Connection...... CONNECTED",
             "Loading Database Drivers...",
