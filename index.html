@@ -333,6 +333,10 @@
         let matrixInterval;
         let supabaseClient = null;
         let pendingAction = null;
+        
+        // Selection Mode State
+        let selectionMode = false;
+        let linkSelectionMap = {};
 
         // Update time
         function updateTime() {
@@ -482,6 +486,7 @@
             if (e.key === 'Enter') {
                 const command = input.value;
 
+                // Priority 1: Pending Delete Confirmation
                 if (pendingAction) {
                     printLine(`> ${command}`);
                     handleConfirmation(command.trim().toLowerCase());
@@ -490,6 +495,15 @@
                     return;
                 }
 
+                // Priority 2: Selection Mode (for INFO command)
+                if (selectionMode) {
+                    handleLinkSelection(command);
+                    input.value = '';
+                    setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
+                    return;
+                }
+
+                // Priority 3: Normal Command Processing
                 if (command.trim() !== "") {
                     commandHistory.push(command);
                     historyIndex = commandHistory.length;
@@ -574,7 +588,7 @@
                     printLine("║  [name] [url] --save  │ Save a link to database        ║");
                     printLine("║  [name] --open        │ Open a saved link              ║");
                     printLine("║  [name] --clear       │ Delete a saved link            ║");
-                    printLine("║  info                 │ List all saved links           ║");
+                    printLine("║  info                 │ List all saved links & select  ║");
                     printLine("║  setup                │ Show SQL to create table       ║");
                     printLine("║  cls / clear          │ Clear screen                   ║");
                     printLine("║  matrix               │ Enter the Matrix               ║");
@@ -634,6 +648,22 @@
                 printLine("Operation cancelled.", false, "#888");
             }
             pendingAction = null;
+        }
+
+        function handleLinkSelection(inputVal) {
+            printLine(`> ${inputVal}`);
+            const num = parseInt(inputVal.trim());
+            
+            if (linkSelectionMap[num]) {
+                const url = linkSelectionMap[num];
+                printLine(`Opening #${num} -> ${url}...`, false, "#4af626");
+                window.open(url, '_blank');
+            } else {
+                printLine("Selection cancelled. Returning to command mode.", false, "#ffcc00");
+            }
+            
+            selectionMode = false;
+            linkSelectionMap = {};
         }
 
         async function deleteLink(name) {
@@ -711,6 +741,7 @@
 
         async function listLinks() {
             printLine("Fetching data from Supabase...");
+            linkSelectionMap = {}; // Reset
             
             try {
                 const { data, error } = await supabaseClient
@@ -723,18 +754,25 @@
                 if (data.length === 0) {
                     printLine("Database is empty. Use [name] [url] --save to add links.");
                 } else {
-                    // Revised output to show full URL
-                    printLine("ID   NAME                 URL");
+                    // Revised output to show index number
+                    printLine(" #   NAME                 URL");
                     printLine("---- -------------------- ------------------------------------------------");
-                    data.forEach(link => {
-                        const id = String(link.id).padEnd(4);
+                    data.forEach((link, index) => {
+                        const num = index + 1;
+                        linkSelectionMap[num] = link.url;
+                        
+                        const numStr = String(num).padEnd(4);
                         // Truncate name for alignment, but display full URL
                         const name = link.name.substring(0, 20).padEnd(20);
                         const url = link.url; 
-                        printLine(`${id} ${name} ${url}`);
+                        printLine(`${numStr} ${name} ${url}`);
                     });
                     printLine("----------------------------------------------------------------------");
                     printLine(`Total: ${data.length} link(s) found.`);
+                    printLine(" ");
+                    printLine("[?] Enter a number to open the link, or any other key to cancel...", false, "#00ffff");
+                    
+                    selectionMode = true; // Activate selection mode
                 }
             } catch (err) {
                 console.error(err);
