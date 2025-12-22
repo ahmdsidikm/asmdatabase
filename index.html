@@ -301,7 +301,7 @@
 
             <!-- Input Area -->
             <div id="input-area" class="hidden">
-                <span>C:\User\&gt;</span>
+                <span>C:\User\Supabase&gt;</span>
                 <input type="text" id="cmd-input" autocomplete="off" spellcheck="false">
             </div>
             
@@ -335,6 +335,7 @@
         let commandHistory = [];
         let historyIndex = -1;
         let isBooting = true;
+        let isLocked = true;
         let matrixInterval;
         let supabaseClient = null;
         let pendingAction = null;
@@ -413,12 +414,6 @@
             "Loading Database Drivers...",
             "..........................",
             "Starting Command Prompt...",
-            " ",
-            "═══════════════════════════════════════════════════════════════",
-            "  Welcome to Supabase Terminal v2.0",
-            "  Type 'HELP' to see available commands.",
-            "  Type 'SETUP' to see required SQL.",
-            "═══════════════════════════════════════════════════════════════",
             " "
         ];
 
@@ -446,7 +441,19 @@
                 await typeLine(line, speed); 
                 await delay(50);
             }
+
+            // New Security Block
+            await typeLine("INITIALIZING SECURITY PROTOCOLS...", 20);
+            await delay(500);
+            await typeLine("USER AUTHENTICATION REQUIRED.", 20, "#ffcc00");
+            await delay(200);
+
             isBooting = false;
+            
+            // Setup Password Prompt
+            document.querySelector('#input-area span').textContent = "ENTER PASSWORD>";
+            input.type = "password";
+            
             inputArea.classList.remove('hidden');
             focusInput();
         }
@@ -513,6 +520,49 @@
             if (e.key === 'Enter') {
                 const command = input.value;
 
+                // Priority 0: Security Check
+                if (isLocked) {
+                    printLine(`> ${'*'.repeat(command.length)}`); // Echo masked
+                    
+                    input.value = '';
+                    isProcessing = true;
+                    input.disabled = true;
+
+                    if (command === 'dakota775') {
+                        await typeLine("Verifying hash...", 20);
+                        await delay(500);
+                        await typeLine("ACCESS GRANTED.", 20, "#4af626");
+                        SoundFX.playBootSound();
+                        await delay(800);
+                        
+                        // Unlock System
+                        isLocked = false;
+                        input.type = "text";
+                        document.querySelector('#input-area span').textContent = "C:\\User\\Supabase>";
+                        
+                        // Clear screen for a fresh session
+                        output.innerHTML = ''; 
+                        
+                        // Welcome Message
+                        await typeLine("SupabaseOS [Version 2.0.45]");
+                        await typeLine("(c) 2024 Supabase Corporation. All rights reserved.");
+                        await typeLine(" ");
+                        await typeLine("Type 'HELP' for a list of commands.");
+                        
+                    } else {
+                         await typeLine("Verifying hash...", 20);
+                         await delay(500);
+                         await typeLine("ACCESS DENIED: Incorrect Password.", 20, "#ff6b6b");
+                         SoundFX.playError();
+                    }
+                    
+                    isProcessing = false;
+                    input.disabled = false;
+                    input.focus();
+                    setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
+                    return;
+                }
+
                 // Priority 1: Pending Delete Confirmation
                 if (pendingAction) {
                     printLine(`> ${command}`); // Echo
@@ -565,12 +615,14 @@
                 setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
+                if (isLocked) return;
                 if (historyIndex > 0) {
                     historyIndex--;
                     input.value = commandHistory[historyIndex];
                 }
             } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
+                if (isLocked) return;
                 if (historyIndex < commandHistory.length - 1) {
                     historyIndex++;
                     input.value = commandHistory[historyIndex];
