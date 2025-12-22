@@ -10,16 +10,23 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        body {
-            background-color: #0c0c0c;
-            color: #4af626; /* Retro Green */
-            font-family: 'VT323', monospace;
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100%;
+            width: 100%;
             margin: 0;
             padding: 0;
+        }
+        
+        body {
+            background-color: #0c0c0c;
+            color: #4af626;
+            font-family: 'VT323', monospace;
             overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            text-shadow: 0 0 2px #28a745; /* Slight glow */
+            text-shadow: 0 0 2px #28a745;
         }
 
         /* CRT Scanline Effect */
@@ -39,6 +46,20 @@
             bottom: 0;
             pointer-events: none;
             z-index: 10;
+        }
+
+        /* CRT Screen Curve Effect */
+        .crt-curve {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 11;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8),
+                        inset 0 0 200px rgba(0,0,0,0.5);
+            border-radius: 20px;
         }
 
         /* Flicker Animation */
@@ -72,53 +93,113 @@
 
         /* Scrollbar styling */
         ::-webkit-scrollbar {
-            width: 12px;
+            width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #000;
+            background: #111;
         }
         ::-webkit-scrollbar-thumb {
             background: #4af626;
-            border: 2px solid #000;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5df737;
         }
 
-        /* Input styling */
+        /* Terminal Container */
+        .terminal-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+            padding: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Terminal Body */
+        .terminal-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(10, 10, 10, 0.95);
+            overflow: hidden;
+        }
+
+        /* Terminal Output */
+        #terminal-output {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            font-size: 1.3rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        #terminal-output div {
+            margin-bottom: 2px;
+        }
+
+        /* Input Area */
+        #input-area {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-top: 1px solid #333;
+            font-size: 1.3rem;
+        }
+
+        #input-area span {
+            margin-right: 10px;
+            white-space: nowrap;
+        }
+
         #cmd-input {
             background: transparent;
             border: none;
             color: #4af626;
             font-family: 'VT323', monospace;
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             outline: none;
             width: 100%;
             caret-color: #4af626;
             text-transform: lowercase;
             flex: 1;
         }
-        
-        /* Mobile Responsiveness */
-        @media (max-width: 640px) {
-            #input-area span {
-                display: none;
-            }
-            #input-area::before {
-                content: ">";
-                margin-right: 8px;
-            }
-            body {
-                font-size: 16px;
-            }
-            .container {
-                padding: 0.5rem;
-            }
-        }
-        
-        #terminal-output {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 20px;
+            background: #1a1a1a;
+            border-top: 1px solid #333;
+            font-size: 0.9rem;
+            color: #888;
         }
 
-        /* Cursor Blinking Block (Simulated) */
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4af626;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Cursor Blinking Block */
         .cursor-block {
             display: inline-block;
             width: 10px;
@@ -138,33 +219,110 @@
         }
 
         .hidden { display: none; }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .terminal-container {
+                padding: 10px;
+            }
+            
+            #terminal-output {
+                font-size: 1.1rem;
+                padding: 15px;
+            }
+            
+            #input-area {
+                padding: 12px 15px;
+                font-size: 1.1rem;
+            }
+            
+            #cmd-input {
+                font-size: 1.1rem;
+            }
+            
+            .terminal-header-title span {
+                font-size: 1rem;
+            }
+            
+            .status-bar {
+                font-size: 0.8rem;
+                padding: 6px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .terminal-container {
+                padding: 5px;
+            }
+            
+            #input-area span {
+                display: none;
+            }
+            
+            #input-area::before {
+                content: ">";
+                margin-right: 8px;
+            }
+            
+            .terminal-header {
+                padding: 8px 12px;
+            }
+            
+            .status-bar span:not(:first-child) {
+                display: none;
+            }
+        }
+
+        /* Start Overlay */
+        #start-overlay {
+            background: radial-gradient(ellipse at center, #1a1a1a 0%, #000 100%);
+        }
+
+        #start-overlay .boot-text {
+            text-shadow: 0 0 10px #4af626, 0 0 20px #4af626;
+        }
     </style>
 </head>
 <body class="crt-flicker" onclick="focusInput()">
 
     <div class="scanlines"></div>
+    <div class="crt-curve"></div>
     
     <!-- Audio Init Overlay -->
-    <div id="start-overlay" class="fixed inset-0 flex items-center justify-center bg-black z-50 cursor-pointer">
+    <div id="start-overlay" class="fixed inset-0 flex items-center justify-center z-50 cursor-pointer">
         <div class="text-center">
-            <div class="text-2xl mb-4 blink">SYSTEM HALTED</div>
-            <div class="text-xl text-green-700">[ CLICK TO INITIALIZE ]</div>
+            <div class="text-4xl mb-2 boot-text">⌘ CMD.EXE</div>
+            <div class="text-2xl mb-6 blink">SYSTEM HALTED</div>
+            <div class="text-xl text-green-600">[ CLICK ANYWHERE TO INITIALIZE ]</div>
+            <div class="mt-8 text-sm text-green-800">Supabase Terminal v2.0</div>
         </div>
     </div>
 
     <canvas id="matrix-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none hidden z-5"></canvas>
 
-    <!-- Full width container: removed max-w-4xl and container class to ensure full usage -->
-    <div class="w-full h-full flex flex-col relative z-0 p-4 sm:p-6 lg:p-8">
-        <!-- Output Log -->
-        <div id="terminal-output" class="flex-grow overflow-y-auto pb-2 text-xl leading-relaxed w-full">
-            <!-- Content will be injected here via JS -->
-        </div>
+    <div class="terminal-container">
+        <div class="terminal-body">
+            <!-- Output Log -->
+            <div id="terminal-output">
+                <!-- Content will be injected here via JS -->
+            </div>
 
-        <!-- Input Area -->
-        <div id="input-area" class="flex flex-row items-center text-xl hidden w-full border-t border-green-900/30 pt-2 mt-2">
-            <span class="mr-2 whitespace-nowrap select-none">C:\User\Supabase&gt;</span>
-            <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
+            <!-- Input Area -->
+            <div id="input-area" class="hidden">
+                <span>C:\User\Supabase&gt;</span>
+                <input type="text" id="cmd-input" autocomplete="off" spellcheck="false">
+            </div>
+            
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>Connected to Supabase</span>
+                </div>
+                <div class="status-item">
+                    <span id="current-time"></span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -180,6 +338,7 @@
         const overlay = document.getElementById('start-overlay');
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
+        const timeDisplay = document.getElementById('current-time');
 
         // --- STATE ---
         let commandHistory = [];
@@ -187,7 +346,15 @@
         let isBooting = true;
         let matrixInterval;
         let supabaseClient = null;
-        let pendingAction = null; // { type: 'delete', name: 'string' }
+        let pendingAction = null;
+
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            timeDisplay.textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
 
         // --- SOUND ENGINE ---
         const SoundFX = {
@@ -236,6 +403,18 @@
         };
 
         const bootSequence = [
+            " ",
+            "████████████████████████████████████████████████████████████",
+            "█                                                          █",
+            "█   ███████╗██╗   ██╗██████╗  █████╗ ██████╗  █████╗ ███████╗███████╗  █",
+            "█   ██╔════╝██║   ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝  █",
+            "█   ███████╗██║   ██║██████╔╝███████║██████╔╝███████║███████╗█████╗    █",
+            "█   ╚════██║██║   ██║██╔═══╝ ██╔══██║██╔══██╗██╔══██║╚════██║██╔══╝    █",
+            "█   ███████║╚██████╔╝██║     ██║  ██║██████╔╝██║  ██║███████║███████╗  █",
+            "█   ╚══════╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝  █",
+            "█                                                          █",
+            "████████████████████████████████████████████████████████████",
+            " ",
             "PERFORMING SYSTEM CHECK...",
             "BIOS Date 01/01/98 14:23:12 Ver: 08.00.12",
             "Connecting to Network Interface...",
@@ -244,9 +423,12 @@
             "..........................",
             "Starting Command Prompt...",
             " ",
-            "Welcome to Supabase Terminal v2.0",
-            "Type 'HELP' to see available commands.",
-            "Type 'SETUP' to see required SQL."
+            "═══════════════════════════════════════════════════════════════",
+            "  Welcome to Supabase Terminal v2.0",
+            "  Type 'HELP' to see available commands.",
+            "  Type 'SETUP' to see required SQL.",
+            "═══════════════════════════════════════════════════════════════",
+            " "
         ];
 
         // --- INITIALIZATION ---
@@ -255,7 +437,6 @@
             SoundFX.init();
             if (SoundFX.ctx && SoundFX.ctx.state === 'suspended') SoundFX.ctx.resume();
             
-            // Init Supabase
             try {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             } catch (err) {
@@ -270,9 +451,9 @@
             await delay(500);
             for (let i = 0; i < bootSequence.length; i++) {
                 const line = bootSequence[i];
-                const speed = (i >= bootSequence.length - 3) ? 30 : 10;
+                const speed = (i >= bootSequence.length - 6) ? 20 : 5;
                 await typeLine(line, speed); 
-                await delay(100);
+                await delay(50);
             }
             isBooting = false;
             inputArea.classList.remove('hidden');
@@ -288,7 +469,6 @@
                 const interval = setInterval(() => {
                     p.textContent += text.charAt(i);
                     SoundFX.playKey();
-                    window.scrollTo(0, document.body.scrollHeight);
                     output.scrollTop = output.scrollHeight;
                     i++;
                     if (i > text.length - 1) {
@@ -327,7 +507,6 @@
             if (e.key === 'Enter') {
                 const command = input.value;
 
-                // Handle Pending Confirmation (Delete)
                 if (pendingAction) {
                     printLine(`> ${command}`);
                     handleConfirmation(command.trim().toLowerCase());
@@ -340,7 +519,6 @@
                     commandHistory.push(command);
                     historyIndex = commandHistory.length;
                     
-                    // Responsive Prompt Output
                     const prompt = window.innerWidth < 640 ? ">" : "C:\\User\\Supabase>";
                     printLine(`${prompt} ${command}`);
                     
@@ -372,33 +550,30 @@
             const parts = rawCmd.split(' ');
             const cmd = parts[0].toLowerCase();
 
-            // Check for specific flags at the end
             const isSave = rawCmd.endsWith('--save');
             const isOpen = rawCmd.endsWith('--open');
             const isClear = rawCmd.endsWith('--clear');
 
             if (isSave) {
-                // Format: [name] [link] --save
                 const cleanCmd = rawCmd.replace('--save', '').trim();
                 const args = cleanCmd.split(' ');
                 
                 if (args.length < 2) {
-                    printLine("Error: Invalid format. Use: [name] [url] --save", false, "red");
+                    printLine("Error: Invalid format. Use: [name] [url] --save", false, "#ff6b6b");
                     SoundFX.playError();
                     return;
                 }
 
-                const url = args.pop(); // Last one is URL
-                const name = args.join(' '); // Rest is name
+                const url = args.pop();
+                const name = args.join(' ');
                 await saveLink(name, url);
                 return;
             }
 
             if (isOpen) {
-                // Format: [name] --open
                 const name = rawCmd.replace('--open', '').trim();
                 if (!name) {
-                    printLine("Error: Please specify a name.", false, "red");
+                    printLine("Error: Please specify a name.", false, "#ff6b6b");
                     return;
                 }
                 await openLink(name);
@@ -406,28 +581,30 @@
             }
 
             if (isClear) {
-                // Format: [name] --clear
                 const name = rawCmd.replace('--clear', '').trim();
                 if (!name) {
-                    printLine("Error: Please specify a name to delete.", false, "red");
+                    printLine("Error: Please specify a name to delete.", false, "#ff6b6b");
                     return;
                 }
-                // Initiate Confirmation
-                printLine(`WARNING: Are you sure you want to delete '${name}'? (Y/N)`, false, "yellow");
+                printLine(`⚠ WARNING: Are you sure you want to delete '${name}'? (Y/N)`, false, "#ffcc00");
                 pendingAction = { type: 'delete', name: name };
                 return;
             }
 
             switch(cmd) {
                 case 'help':
-                    printLine("AVAILABLE COMMANDS:", true);
-                    printLine("&nbsp; [name] [url] --save  - Save a link");
-                    printLine("&nbsp; [name] --open        - Open a saved link");
-                    printLine("&nbsp; [name] --clear       - Delete a saved link");
-                    printLine("&nbsp; info                 - List all saved links");
-                    printLine("&nbsp; setup                - Show SQL to create table");
-                    printLine("&nbsp; cls                  - Clear screen");
-                    printLine("&nbsp; matrix               - Enter the Matrix");
+                    printLine("╔════════════════════════════════════════════════════════╗");
+                    printLine("║              AVAILABLE COMMANDS                        ║");
+                    printLine("╠════════════════════════════════════════════════════════╣");
+                    printLine("║  [name] [url] --save  │ Save a link to database        ║");
+                    printLine("║  [name] --open        │ Open a saved link              ║");
+                    printLine("║  [name] --clear       │ Delete a saved link            ║");
+                    printLine("║  info                 │ List all saved links           ║");
+                    printLine("║  setup                │ Show SQL to create table       ║");
+                    printLine("║  cls / clear          │ Clear screen                   ║");
+                    printLine("║  matrix               │ Enter the Matrix               ║");
+                    printLine("║  whoami               │ Display current user           ║");
+                    printLine("╚════════════════════════════════════════════════════════╝");
                     break;
                 
                 case 'cls':
@@ -440,18 +617,22 @@
                     break;
 
                 case 'setup':
-                    printLine("RUN THIS SQL IN SUPABASE QUERY EDITOR:", true, "yellow");
-                    printLine("create table links (", true);
-                    printLine("&nbsp; id bigint generated by default as identity primary key,", true);
-                    printLine("&nbsp; created_at timestamp with time zone default timezone('utc'::text, now()) not null,", true);
-                    printLine("&nbsp; name text not null,", true);
-                    printLine("&nbsp; url text not null", true);
-                    printLine(");", true);
+                    printLine("╔════════════════════════════════════════════════════════╗");
+                    printLine("║  RUN THIS SQL IN SUPABASE QUERY EDITOR:                ║");
+                    printLine("╚════════════════════════════════════════════════════════╝", false, "#ffcc00");
+                    printLine(" ");
+                    printLine("create table links (");
+                    printLine("  id bigint generated by default as identity primary key,");
+                    printLine("  created_at timestamp with time zone default timezone('utc'::text, now()) not null,");
+                    printLine("  name text not null,");
+                    printLine("  url text not null");
+                    printLine(");");
+                    printLine(" ");
                     break;
 
                 case 'matrix':
                     startMatrix();
-                    printLine("Press ESC to stop the matrix...");
+                    printLine("▶ Matrix mode activated. Press ESC to exit...", false, "#00ff00");
                     break;
                 
                 case 'whoami':
@@ -459,7 +640,8 @@
                     break;
 
                 default:
-                     printLine(`'${cmd}' is not recognized. Type 'HELP' for commands.`);
+                     printLine(`'${cmd}' is not recognized as a command. Type 'HELP' for available commands.`, false, "#ff6b6b");
+                     SoundFX.playError();
                      break;
             }
         }
@@ -474,13 +656,13 @@
                     deleteLink(pendingAction.name);
                 }
             } else {
-                printLine("Operation cancelled.");
+                printLine("✗ Operation cancelled.", false, "#888");
             }
             pendingAction = null;
         }
 
         async function deleteLink(name) {
-            printLine(`Deleting [${name}]...`);
+            printLine(`⏳ Deleting [${name}]...`);
             try {
                 const { error } = await supabaseClient
                     .from('links')
@@ -488,16 +670,16 @@
                     .eq('name', name);
 
                 if (error) throw error;
-                printLine("SUCCESS: Link deleted.", false, "#4af626");
+                printLine("✓ SUCCESS: Link deleted.", false, "#4af626");
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Failed to delete data. " + err.message, false, "red");
+                printLine("✗ ERROR: Failed to delete data. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function saveLink(name, url) {
-            printLine(`Saving [${name}] -> ${url}...`);
+            printLine(`⏳ Saving [${name}] -> ${url}...`);
             
             if (!url.startsWith('http')) {
                 url = 'https://' + url;
@@ -511,27 +693,27 @@
                 if (error) {
                     throw error;
                 }
-                printLine("SUCCESS: Link saved to database.", false, "#4af626");
+                printLine("✓ SUCCESS: Link saved to database.", false, "#4af626");
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Failed to save data. " + err.message, false, "red");
+                printLine("✗ ERROR: Failed to save data. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function openLink(name) {
-            printLine(`Searching for [${name}]...`);
+            printLine(`⏳ Searching for [${name}]...`);
             
             try {
                 const { data, error } = await supabaseClient
                     .from('links')
                     .select('url')
                     .eq('name', name)
-                    .single(); // Assuming names are unique or we just take one
+                    .single();
 
                 if (error) {
-                     if (error.code === 'PGRST116') { // JSON object not found (0 rows)
-                         printLine(`ERROR: Link '${name}' not found.`, false, "red");
+                     if (error.code === 'PGRST116') {
+                         printLine(`✗ ERROR: Link '${name}' not found.`, false, "#ff6b6b");
                      } else {
                          throw error;
                      }
@@ -540,20 +722,20 @@
                 }
 
                 if (data && data.url) {
-                    printLine(`Opening ${data.url}...`);
+                    printLine(`▶ Opening ${data.url}...`, false, "#4af626");
                     window.open(data.url, '_blank');
                 } else {
-                    printLine(`ERROR: Unknown error retrieving URL.`, false, "red");
+                    printLine(`✗ ERROR: Unknown error retrieving URL.`, false, "#ff6b6b");
                 }
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Database connection failed. " + err.message, false, "red");
+                printLine("✗ ERROR: Database connection failed. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function listLinks() {
-            printLine("Fetching data from Supabase...");
+            printLine("⏳ Fetching data from Supabase...");
             
             try {
                 const { data, error } = await supabaseClient
@@ -564,17 +746,23 @@
                 if (error) throw error;
 
                 if (data.length === 0) {
-                    printLine("Database is empty.");
+                    printLine("ℹ Database is empty. Use [name] [url] --save to add links.");
                 } else {
-                    printLine("ID | NAME | URL");
-                    printLine("---------------------------");
+                    printLine("╔══════╦════════════════════════╦══════════════════════════════════╗");
+                    printLine("║  ID  ║  NAME                  ║  URL                             ║");
+                    printLine("╠══════╬════════════════════════╬══════════════════════════════════╣");
                     data.forEach(link => {
-                        printLine(`${link.id} | ${link.name} | ${link.url}`);
+                        const id = String(link.id).padEnd(4);
+                        const name = link.name.substring(0, 20).padEnd(20);
+                        const url = link.url.substring(0, 32).padEnd(32);
+                        printLine(`║  ${id}║  ${name}  ║  ${url}║`);
                     });
+                    printLine("╚══════╩════════════════════════╩══════════════════════════════════╝");
+                    printLine(`Total: ${data.length} link(s) found.`);
                 }
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Could not fetch data. " + err.message, false, "red");
+                printLine("✗ ERROR: Could not fetch data. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
