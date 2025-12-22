@@ -142,7 +142,7 @@
         }
 
         /* Input Area */
-        #input-area {
+        .input-area {
             display: flex;
             align-items: center;
             padding: 15px 20px;
@@ -151,12 +151,12 @@
             font-size: 1.3rem;
         }
 
-        #input-area span {
+        .input-area span {
             margin-right: 10px;
             white-space: nowrap;
         }
 
-        #cmd-input {
+        .cmd-input {
             background: transparent;
             border: none;
             color: #4af626;
@@ -169,9 +169,16 @@
             flex: 1;
         }
 
-        #cmd-input:disabled {
+        .cmd-input:disabled {
             color: #2a8715;
             caret-color: transparent;
+        }
+
+        /* Password input with CSS masking - prevents Chrome password detection */
+        #password-input {
+            -webkit-text-security: disc;
+            -moz-text-security: disc;
+            text-security: disc;
         }
 
         /* Status Bar */
@@ -223,12 +230,12 @@
                 padding: 15px;
             }
             
-            #input-area {
+            .input-area {
                 padding: 12px 15px;
                 font-size: 1.1rem;
             }
             
-            #cmd-input {
+            .cmd-input {
                 font-size: 1.1rem;
             }
             
@@ -247,11 +254,11 @@
                 padding: 5px;
             }
             
-            #input-area span {
+            .input-area span {
                 display: none;
             }
             
-            #input-area::before {
+            .input-area::before {
                 content: ">";
                 margin-right: 8px;
             }
@@ -299,10 +306,36 @@
                 <!-- Content will be injected here via JS -->
             </div>
 
-            <!-- Input Area -->
-            <div id="input-area" class="hidden">
+            <!-- Password Input Area (separate from command input) -->
+            <div id="password-area" class="input-area hidden">
+                <span>ENTER PASSWORD&gt;</span>
+                <input 
+                    type="text" 
+                    id="password-input" 
+                    class="cmd-input"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    data-1p-ignore="true"
+                    aria-autocomplete="none"
+                >
+            </div>
+
+            <!-- Command Input Area (completely separate) -->
+            <div id="command-area" class="input-area hidden">
                 <span>C:\User\Supabase&gt;</span>
-                <input type="text" id="cmd-input" autocomplete="off" spellcheck="false">
+                <input 
+                    type="text" 
+                    id="cmd-input" 
+                    class="cmd-input"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                >
             </div>
             
             <!-- Status Bar -->
@@ -324,8 +357,10 @@
 
         // --- DOM ELEMENTS ---
         const output = document.getElementById('terminal-output');
-        const inputArea = document.getElementById('input-area');
-        const input = document.getElementById('cmd-input');
+        const passwordArea = document.getElementById('password-area');
+        const commandArea = document.getElementById('command-area');
+        const passwordInput = document.getElementById('password-input');
+        const cmdInput = document.getElementById('cmd-input');
         const overlay = document.getElementById('start-overlay');
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
@@ -348,7 +383,6 @@
         // Update time
         function updateTime() {
             const now = new Date();
-            // Format time and date nicely
             timeDisplay.textContent = now.toLocaleString();
         }
         setInterval(updateTime, 1000);
@@ -450,11 +484,8 @@
 
             isBooting = false;
             
-            // Setup Password Prompt
-            document.querySelector('#input-area span').textContent = "ENTER PASSWORD>";
-            input.type = "password";
-            
-            inputArea.classList.remove('hidden');
+            // Show password input area
+            passwordArea.classList.remove('hidden');
             focusInput();
         }
 
@@ -468,7 +499,6 @@
                 
                 let i = 0;
                 
-                // Fast path for empty/null text
                 if (!text || text.length === 0) {
                      resolve();
                      return;
@@ -501,13 +531,17 @@
         }
 
         function focusInput() {
-            if (!isBooting && overlay.classList.contains('hidden') && !isProcessing) {
-                input.focus();
+            if (isBooting || !overlay.classList.contains('hidden') || isProcessing) return;
+            
+            if (isLocked) {
+                passwordInput.focus();
+            } else {
+                cmdInput.focus();
             }
         }
 
-        // --- INPUT HANDLING ---
-        input.addEventListener('keydown', async function(e) {
+        // --- PASSWORD INPUT HANDLING ---
+        passwordInput.addEventListener('keydown', async function(e) {
             if (isProcessing) {
                 e.preventDefault();
                 return;
@@ -518,75 +552,88 @@
             }
 
             if (e.key === 'Enter') {
-                const command = input.value;
+                const password = passwordInput.value;
+                printLine(`> ${'*'.repeat(password.length)}`);
+                
+                passwordInput.value = '';
+                isProcessing = true;
+                passwordInput.disabled = true;
 
-                // Priority 0: Security Check
-                if (isLocked) {
-                    printLine(`> ${'*'.repeat(command.length)}`); // Echo masked
+                if (password === 'dakota775') {
+                    await typeLine("Verifying hash...", 20);
+                    await delay(500);
+                    await typeLine("ACCESS GRANTED.", 20, "#4af626");
+                    SoundFX.playBootSound();
+                    await delay(800);
                     
-                    input.value = '';
-                    isProcessing = true;
-                    input.disabled = true;
-
-                    if (command === 'dakota775') {
-                        await typeLine("Verifying hash...", 20);
-                        await delay(500);
-                        await typeLine("ACCESS GRANTED.", 20, "#4af626");
-                        SoundFX.playBootSound();
-                        await delay(800);
-                        
-                        // Unlock System
-                        isLocked = false;
-                        input.type = "text";
-                        document.querySelector('#input-area span').textContent = "C:\\User\\Supabase>";
-                        
-                        // Clear screen for a fresh session
-                        output.innerHTML = ''; 
-                        
-                        // Welcome Message
-                        await typeLine("asmdatabase [Version 2.0.45]");
-                        await typeLine("(c) 2025 me Corporation. All rights reserved.");
-                        await typeLine(" ");
-                        await typeLine("Type 'HELP' for a list of commands.");
-                        
-                    } else {
-                         await typeLine("Verifying hash...", 20);
-                         await delay(500);
-                         await typeLine("ACCESS DENIED: Incorrect Password.", 20, "#ff6b6b");
-                         SoundFX.playError();
-                    }
+                    // Unlock System
+                    isLocked = false;
                     
-                    isProcessing = false;
-                    input.disabled = false;
-                    input.focus();
-                    setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
-                    return;
+                    // Hide password area, show command area
+                    passwordArea.classList.add('hidden');
+                    commandArea.classList.remove('hidden');
+                    
+                    // Clear screen for a fresh session
+                    output.innerHTML = ''; 
+                    
+                    // Welcome Message
+                    await typeLine("asmdatabase [Version 2.0.45]");
+                    await typeLine("(c) 2025 me Corporation. All rights reserved.");
+                    await typeLine(" ");
+                    await typeLine("Type 'HELP' for a list of commands.");
+                    
+                } else {
+                     await typeLine("Verifying hash...", 20);
+                     await delay(500);
+                     await typeLine("ACCESS DENIED: Incorrect Password.", 20, "#ff6b6b");
+                     SoundFX.playError();
                 }
+                
+                isProcessing = false;
+                passwordInput.disabled = false;
+                focusInput();
+                setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
+            }
+        });
+
+        // --- COMMAND INPUT HANDLING ---
+        cmdInput.addEventListener('keydown', async function(e) {
+            if (isProcessing) {
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') {
+                SoundFX.playKey();
+            }
+
+            if (e.key === 'Enter') {
+                const command = cmdInput.value;
 
                 // Priority 1: Pending Delete Confirmation
                 if (pendingAction) {
-                    printLine(`> ${command}`); // Echo
-                    input.value = '';
+                    printLine(`> ${command}`);
+                    cmdInput.value = '';
                     isProcessing = true;
-                    input.disabled = true;
+                    cmdInput.disabled = true;
                     await handleConfirmation(command.trim().toLowerCase());
                     isProcessing = false;
-                    input.disabled = false;
-                    input.focus();
+                    cmdInput.disabled = false;
+                    cmdInput.focus();
                     setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
                     return;
                 }
 
                 // Priority 2: Selection Mode (for INFO command)
                 if (selectionMode) {
-                    printLine(`> ${command}`); // Echo
-                    input.value = '';
+                    printLine(`> ${command}`);
+                    cmdInput.value = '';
                     isProcessing = true;
-                    input.disabled = true;
+                    cmdInput.disabled = true;
                     await handleLinkSelection(command);
                     isProcessing = false;
-                    input.disabled = false;
-                    input.focus();
+                    cmdInput.disabled = false;
+                    cmdInput.focus();
                     setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
                     return;
                 }
@@ -597,38 +644,36 @@
                     historyIndex = commandHistory.length;
                     
                     const prompt = window.innerWidth < 640 ? ">" : "C:\\User\\Supabase>";
-                    printLine(`${prompt} ${command}`); // Instant echo
+                    printLine(`${prompt} ${command}`);
                     
-                    input.value = '';
+                    cmdInput.value = '';
                     isProcessing = true;
-                    input.disabled = true;
+                    cmdInput.disabled = true;
                     
                     await processCommand(command.trim());
                     
                     SoundFX.playBeep(600, 0.05, 0.05);
                     isProcessing = false;
-                    input.disabled = false;
-                    input.focus();
+                    cmdInput.disabled = false;
+                    cmdInput.focus();
                 } else {
-                    input.value = '';
+                    cmdInput.value = '';
                 }
                 setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                if (isLocked) return;
                 if (historyIndex > 0) {
                     historyIndex--;
-                    input.value = commandHistory[historyIndex];
+                    cmdInput.value = commandHistory[historyIndex];
                 }
             } else if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                if (isLocked) return;
                 if (historyIndex < commandHistory.length - 1) {
                     historyIndex++;
-                    input.value = commandHistory[historyIndex];
+                    cmdInput.value = commandHistory[historyIndex];
                 } else {
                     historyIndex = commandHistory.length;
-                    input.value = '';
+                    cmdInput.value = '';
                 }
             }
         });
@@ -847,7 +892,7 @@
 
         async function listLinks() {
             await typeLine("Fetching data from Supabase...");
-            linkSelectionMap = {}; // Reset
+            linkSelectionMap = {};
             
             try {
                 const { data, error } = await supabaseClient
@@ -860,7 +905,6 @@
                 if (data.length === 0) {
                     await typeLine("Database is empty. Use [name] [url] --save to add links.");
                 } else {
-                    // Revised output to show index number
                     await typeLine(" #   NAME                 URL");
                     await typeLine("---- -------------------- ------------------------------------------------");
                     for (let index = 0; index < data.length; index++) {
@@ -869,7 +913,6 @@
                         linkSelectionMap[num] = link.url;
                         
                         const numStr = String(num).padEnd(4);
-                        // Truncate name for alignment, but display full URL
                         const name = link.name.substring(0, 20).padEnd(20);
                         const url = link.url; 
                         await typeLine(`${numStr} ${name} ${url}`, 1); 
@@ -879,7 +922,7 @@
                     await typeLine(" ");
                     await typeLine("[?] Enter a number to open the link, or any other key to cancel...", 10, "#00ffff");
                     
-                    selectionMode = true; // Activate selection mode
+                    selectionMode = true;
                 }
             } catch (err) {
                 console.error(err);
