@@ -291,7 +291,7 @@
     <!-- Audio Init Overlay -->
     <div id="start-overlay" class="fixed inset-0 flex items-center justify-center z-50 cursor-pointer">
         <div class="text-center">
-            <div class="text-4xl mb-2 boot-text">⌘ CMD.EXE</div>
+            <div class="text-4xl mb-2 boot-text">CMD.EXE</div>
             <div class="text-2xl mb-6 blink">SYSTEM HALTED</div>
             <div class="text-xl text-green-600">[ CLICK ANYWHERE TO INITIALIZE ]</div>
             <div class="mt-8 text-sm text-green-800">Supabase Terminal v2.0</div>
@@ -586,7 +586,7 @@
                     printLine("Error: Please specify a name to delete.", false, "#ff6b6b");
                     return;
                 }
-                printLine(`⚠ WARNING: Are you sure you want to delete '${name}'? (Y/N)`, false, "#ffcc00");
+                printLine(`WARNING: Are you sure you want to delete '${name}'? (Y/N)`, false, "#ffcc00");
                 pendingAction = { type: 'delete', name: name };
                 return;
             }
@@ -632,7 +632,7 @@
 
                 case 'matrix':
                     startMatrix();
-                    printLine("▶ Matrix mode activated. Press ESC to exit...", false, "#00ff00");
+                    printLine("Matrix mode activated. Press ESC to exit...", false, "#00ff00");
                     break;
                 
                 case 'whoami':
@@ -656,13 +656,13 @@
                     deleteLink(pendingAction.name);
                 }
             } else {
-                printLine("✗ Operation cancelled.", false, "#888");
+                printLine("Operation cancelled.", false, "#888");
             }
             pendingAction = null;
         }
 
         async function deleteLink(name) {
-            printLine(`⏳ Deleting [${name}]...`);
+            printLine(`Deleting [${name}]...`);
             try {
                 const { error } = await supabaseClient
                     .from('links')
@@ -670,16 +670,16 @@
                     .eq('name', name);
 
                 if (error) throw error;
-                printLine("✓ SUCCESS: Link deleted.", false, "#4af626");
+                printLine("SUCCESS: Link deleted.", false, "#4af626");
             } catch (err) {
                 console.error(err);
-                printLine("✗ ERROR: Failed to delete data. " + err.message, false, "#ff6b6b");
+                printLine("ERROR: Failed to delete data. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function saveLink(name, url) {
-            printLine(`⏳ Saving [${name}] -> ${url}...`);
+            printLine(`Saving [${name}] -> ${url}...`);
             
             if (!url.startsWith('http')) {
                 url = 'https://' + url;
@@ -693,16 +693,16 @@
                 if (error) {
                     throw error;
                 }
-                printLine("✓ SUCCESS: Link saved to database.", false, "#4af626");
+                printLine("SUCCESS: Link saved to database.", false, "#4af626");
             } catch (err) {
                 console.error(err);
-                printLine("✗ ERROR: Failed to save data. " + err.message, false, "#ff6b6b");
+                printLine("ERROR: Failed to save data. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function openLink(name) {
-            printLine(`⏳ Searching for [${name}]...`);
+            printLine(`Searching for [${name}]...`);
             
             try {
                 const { data, error } = await supabaseClient
@@ -713,7 +713,7 @@
 
                 if (error) {
                      if (error.code === 'PGRST116') {
-                         printLine(`✗ ERROR: Link '${name}' not found.`, false, "#ff6b6b");
+                         printLine(`ERROR: Link '${name}' not found.`, false, "#ff6b6b");
                      } else {
                          throw error;
                      }
@@ -722,20 +722,20 @@
                 }
 
                 if (data && data.url) {
-                    printLine(`▶ Opening ${data.url}...`, false, "#4af626");
+                    printLine(`Opening ${data.url}...`, false, "#4af626");
                     window.open(data.url, '_blank');
                 } else {
-                    printLine(`✗ ERROR: Unknown error retrieving URL.`, false, "#ff6b6b");
+                    printLine(`ERROR: Unknown error retrieving URL.`, false, "#ff6b6b");
                 }
             } catch (err) {
                 console.error(err);
-                printLine("✗ ERROR: Database connection failed. " + err.message, false, "#ff6b6b");
+                printLine("ERROR: Database connection failed. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function listLinks() {
-            printLine("⏳ Fetching data from Supabase...");
+            printLine("Fetching data from Supabase...");
             
             try {
                 const { data, error } = await supabaseClient
@@ -746,23 +746,21 @@
                 if (error) throw error;
 
                 if (data.length === 0) {
-                    printLine("ℹ Database is empty. Use [name] [url] --save to add links.");
+                    printLine("Database is empty. Use [name] [url] --save to add links.");
                 } else {
-                    printLine("╔══════╦════════════════════════╦══════════════════════════════════╗");
-                    printLine("║  ID  ║  NAME                  ║  URL                             ║");
-                    printLine("╠══════╬════════════════════════╬══════════════════════════════════╣");
+                    printLine(" ");
+                    printLine("SAVED LINKS:");
+                    printLine("─────────────────────────────────────────────────────────────────");
                     data.forEach(link => {
-                        const id = String(link.id).padEnd(4);
-                        const name = link.name.substring(0, 20).padEnd(20);
-                        const url = link.url.substring(0, 32).padEnd(32);
-                        printLine(`║  ${id}║  ${name}  ║  ${url}║`);
+                        printLine(`[${link.id}] ${link.name}`);
+                        printLine(`    ${link.url}`, false, "#888");
                     });
-                    printLine("╚══════╩════════════════════════╩══════════════════════════════════╝");
+                    printLine("─────────────────────────────────────────────────────────────────");
                     printLine(`Total: ${data.length} link(s) found.`);
                 }
             } catch (err) {
                 console.error(err);
-                printLine("✗ ERROR: Could not fetch data. " + err.message, false, "#ff6b6b");
+                printLine("ERROR: Could not fetch data. " + err.message, false, "#ff6b6b");
                 SoundFX.playError();
             }
         }
