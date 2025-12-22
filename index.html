@@ -186,19 +186,6 @@
             gap: 5px;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4af626;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
         /* Cursor Blinking Block */
         .cursor-block {
             display: inline-block;
@@ -316,7 +303,6 @@
             <!-- Status Bar -->
             <div class="status-bar">
                 <div class="status-item">
-                    <div class="status-dot"></div>
                     <span>Connected to Supabase</span>
                 </div>
                 <div class="status-item">
@@ -403,17 +389,6 @@
         };
 
         const bootSequence = [
-            " ",
-            "████████████████████████████████████████████████████████████",
-            "█                                                          █",
-            "█   ███████╗██╗   ██╗██████╗  █████╗ ██████╗  █████╗ ███████╗███████╗  █",
-            "█   ██╔════╝██║   ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝  █",
-            "█   ███████╗██║   ██║██████╔╝███████║██████╔╝███████║███████╗█████╗    █",
-            "█   ╚════██║██║   ██║██╔═══╝ ██╔══██║██╔══██╗██╔══██║╚════██║██╔══╝    █",
-            "█   ███████║╚██████╔╝██║     ██║  ██║██████╔╝██║  ██║███████║███████╗  █",
-            "█   ╚══════╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝  █",
-            "█                                                          █",
-            "████████████████████████████████████████████████████████████",
             " ",
             "PERFORMING SYSTEM CHECK...",
             "BIOS Date 01/01/98 14:23:12 Ver: 08.00.12",
@@ -632,7 +607,7 @@
 
                 case 'matrix':
                     startMatrix();
-                    printLine("Matrix mode activated. Press ESC to exit...", false, "#00ff00");
+                    printLine("> Matrix mode activated. Press ESC to exit...", false, "#00ff00");
                     break;
                 
                 case 'whoami':
@@ -748,14 +723,17 @@
                 if (data.length === 0) {
                     printLine("Database is empty. Use [name] [url] --save to add links.");
                 } else {
-                    printLine(" ");
-                    printLine("SAVED LINKS:");
-                    printLine("─────────────────────────────────────────────────────────────────");
+                    // Revised output to show full URL
+                    printLine("ID   NAME                 URL");
+                    printLine("---- -------------------- ------------------------------------------------");
                     data.forEach(link => {
-                        printLine(`[${link.id}] ${link.name}`);
-                        printLine(`    ${link.url}`, false, "#888");
+                        const id = String(link.id).padEnd(4);
+                        // Truncate name for alignment, but display full URL
+                        const name = link.name.substring(0, 20).padEnd(20);
+                        const url = link.url; 
+                        printLine(`${id} ${name} ${url}`);
                     });
-                    printLine("─────────────────────────────────────────────────────────────────");
+                    printLine("----------------------------------------------------------------------");
                     printLine(`Total: ${data.length} link(s) found.`);
                 }
             } catch (err) {
