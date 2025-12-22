@@ -18,6 +18,7 @@
             padding: 0;
             overflow: hidden;
             height: 100vh;
+            width: 100vw;
             text-shadow: 0 0 2px #28a745; /* Slight glow */
         }
 
@@ -153,16 +154,17 @@
 
     <canvas id="matrix-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none hidden z-5"></canvas>
 
-    <div class="container mx-auto p-4 h-full flex flex-col max-w-4xl relative z-0 w-full">
+    <!-- Full width container: removed max-w-4xl and container class to ensure full usage -->
+    <div class="w-full h-full flex flex-col relative z-0 p-4 sm:p-6 lg:p-8">
         <!-- Output Log -->
-        <div id="terminal-output" class="flex-grow overflow-y-auto pb-2 text-xl leading-relaxed">
+        <div id="terminal-output" class="flex-grow overflow-y-auto pb-2 text-xl leading-relaxed w-full">
             <!-- Content will be injected here via JS -->
         </div>
 
         <!-- Input Area -->
-        <div id="input-area" class="flex flex-row items-center text-xl hidden w-full">
-            <span class="mr-2 whitespace-nowrap">C:\User\Supabase&gt;</span>
-            <input type="text" id="cmd-input" autocomplete="off" spellcheck="false">
+        <div id="input-area" class="flex flex-row items-center text-xl hidden w-full border-t border-green-900/30 pt-2 mt-2">
+            <span class="mr-2 whitespace-nowrap select-none">C:\User\Supabase&gt;</span>
+            <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus>
         </div>
     </div>
 
