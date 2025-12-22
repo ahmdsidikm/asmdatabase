@@ -169,6 +169,11 @@
             flex: 1;
         }
 
+        #cmd-input:disabled {
+            color: #2a8715;
+            caret-color: transparent;
+        }
+
         /* Status Bar */
         .status-bar {
             display: flex;
@@ -333,6 +338,7 @@
         let matrixInterval;
         let supabaseClient = null;
         let pendingAction = null;
+        let isProcessing = false;
         
         // Selection Mode State
         let selectionMode = false;
@@ -446,14 +452,24 @@
         }
 
         // --- HELPERS ---
-        function typeLine(text, speed = 10) {
+        function typeLine(text, speed = 10, color = null) {
             return new Promise(resolve => {
                 const p = document.createElement('div');
+                if (color) p.style.color = color;
+                p.style.whiteSpace = "pre-wrap"; 
                 output.appendChild(p);
+                
                 let i = 0;
+                
+                // Fast path for empty/null text
+                if (!text || text.length === 0) {
+                     resolve();
+                     return;
+                }
+
                 const interval = setInterval(() => {
                     p.textContent += text.charAt(i);
-                    SoundFX.playKey();
+                    if (text.charAt(i) !== ' ' && Math.random() > 0.5) SoundFX.playKey();
                     output.scrollTop = output.scrollHeight;
                     i++;
                     if (i > text.length - 1) {
@@ -478,13 +494,18 @@
         }
 
         function focusInput() {
-            if (!isBooting && overlay.classList.contains('hidden')) {
+            if (!isBooting && overlay.classList.contains('hidden') && !isProcessing) {
                 input.focus();
             }
         }
 
         // --- INPUT HANDLING ---
-        input.addEventListener('keydown', function(e) {
+        input.addEventListener('keydown', async function(e) {
+            if (isProcessing) {
+                e.preventDefault();
+                return;
+            }
+
             if (e.key.length === 1 || e.key === 'Backspace' || e.key === 'Enter') {
                 SoundFX.playKey();
             }
@@ -494,17 +515,28 @@
 
                 // Priority 1: Pending Delete Confirmation
                 if (pendingAction) {
-                    printLine(`> ${command}`);
-                    handleConfirmation(command.trim().toLowerCase());
+                    printLine(`> ${command}`); // Echo
                     input.value = '';
+                    isProcessing = true;
+                    input.disabled = true;
+                    await handleConfirmation(command.trim().toLowerCase());
+                    isProcessing = false;
+                    input.disabled = false;
+                    input.focus();
                     setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
                     return;
                 }
 
                 // Priority 2: Selection Mode (for INFO command)
                 if (selectionMode) {
-                    handleLinkSelection(command);
+                    printLine(`> ${command}`); // Echo
                     input.value = '';
+                    isProcessing = true;
+                    input.disabled = true;
+                    await handleLinkSelection(command);
+                    isProcessing = false;
+                    input.disabled = false;
+                    input.focus();
                     setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
                     return;
                 }
@@ -515,12 +547,21 @@
                     historyIndex = commandHistory.length;
                     
                     const prompt = window.innerWidth < 640 ? ">" : "C:\\User\\Supabase>";
-                    printLine(`${prompt} ${command}`);
+                    printLine(`${prompt} ${command}`); // Instant echo
                     
-                    processCommand(command.trim());
+                    input.value = '';
+                    isProcessing = true;
+                    input.disabled = true;
+                    
+                    await processCommand(command.trim());
+                    
                     SoundFX.playBeep(600, 0.05, 0.05);
+                    isProcessing = false;
+                    input.disabled = false;
+                    input.focus();
+                } else {
+                    input.value = '';
                 }
-                input.value = '';
                 setTimeout(() => { output.scrollTop = output.scrollHeight; }, 10);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -554,7 +595,7 @@
                 const args = cleanCmd.split(' ');
                 
                 if (args.length < 2) {
-                    printLine("Error: Invalid format. Use: [name] [url] --save", false, "#ff6b6b");
+                    await typeLine("Error: Invalid format. Use: [name] [url] --save", 10, "#ff6b6b");
                     SoundFX.playError();
                     return;
                 }
@@ -568,7 +609,7 @@
             if (isOpen) {
                 const name = rawCmd.replace('--open', '').trim();
                 if (!name) {
-                    printLine("Error: Please specify a name.", false, "#ff6b6b");
+                    await typeLine("Error: Please specify a name.", 10, "#ff6b6b");
                     return;
                 }
                 await openLink(name);
@@ -578,28 +619,31 @@
             if (isClear) {
                 const name = rawCmd.replace('--clear', '').trim();
                 if (!name) {
-                    printLine("Error: Please specify a name to delete.", false, "#ff6b6b");
+                    await typeLine("Error: Please specify a name to delete.", 10, "#ff6b6b");
                     return;
                 }
-                printLine(`WARNING: Are you sure you want to delete '${name}'? (Y/N)`, false, "#ffcc00");
+                await typeLine(`WARNING: Are you sure you want to delete '${name}'? (Y/N)`, 10, "#ffcc00");
                 pendingAction = { type: 'delete', name: name };
                 return;
             }
 
             switch(cmd) {
                 case 'help':
-                    printLine("╔════════════════════════════════════════════════════════╗");
-                    printLine("║              AVAILABLE COMMANDS                        ║");
-                    printLine("╠════════════════════════════════════════════════════════╣");
-                    printLine("║  [name] [url] --save  │ Save a link to database        ║");
-                    printLine("║  [name] --open        │ Open a saved link              ║");
-                    printLine("║  [name] --clear       │ Delete a saved link            ║");
-                    printLine("║  info                 │ List all saved links & select  ║");
-                    printLine("║  setup                │ Show SQL to create table       ║");
-                    printLine("║  cls / clear          │ Clear screen                   ║");
-                    printLine("║  matrix               │ Enter the Matrix               ║");
-                    printLine("║  whoami               │ Display current user           ║");
-                    printLine("╚════════════════════════════════════════════════════════╝");
+                    const lines = [
+                        "╔════════════════════════════════════════════════════════╗",
+                        "║              AVAILABLE COMMANDS                        ║",
+                        "╠════════════════════════════════════════════════════════╣",
+                        "║  [name] [url] --save  │ Save a link to database        ║",
+                        "║  [name] --open        │ Open a saved link              ║",
+                        "║  [name] --clear       │ Delete a saved link            ║",
+                        "║  info                 │ List all saved links & select  ║",
+                        "║  setup                │ Show SQL to create table       ║",
+                        "║  cls / clear          │ Clear screen                   ║",
+                        "║  matrix               │ Enter the Matrix               ║",
+                        "║  whoami               │ Display current user           ║",
+                        "╚════════════════════════════════════════════════════════╝"
+                    ];
+                    for (const line of lines) await typeLine(line, 1);
                     break;
                 
                 case 'cls':
@@ -612,30 +656,35 @@
                     break;
 
                 case 'setup':
-                    printLine("╔════════════════════════════════════════════════════════╗");
-                    printLine("║  RUN THIS SQL IN SUPABASE QUERY EDITOR:                ║");
-                    printLine("╚════════════════════════════════════════════════════════╝", false, "#ffcc00");
-                    printLine(" ");
-                    printLine("create table links (");
-                    printLine("  id bigint generated by default as identity primary key,");
-                    printLine("  created_at timestamp with time zone default timezone('utc'::text, now()) not null,");
-                    printLine("  name text not null,");
-                    printLine("  url text not null");
-                    printLine(");");
-                    printLine(" ");
+                    const setupLines = [
+                        "╔════════════════════════════════════════════════════════╗",
+                        "║  RUN THIS SQL IN SUPABASE QUERY EDITOR:                ║",
+                        "╚════════════════════════════════════════════════════════╝",
+                        " ",
+                        "create table links (",
+                        "  id bigint generated by default as identity primary key,",
+                        "  created_at timestamp with time zone default timezone('utc'::text, now()) not null,",
+                        "  name text not null,",
+                        "  url text not null",
+                        ");",
+                        " "
+                    ];
+                    for (let i = 0; i < setupLines.length; i++) {
+                         await typeLine(setupLines[i], 5, i === 2 ? "#ffcc00" : null);
+                    }
                     break;
 
                 case 'matrix':
                     startMatrix();
-                    printLine("> Matrix mode activated. Press ESC to exit...", false, "#00ff00");
+                    await typeLine("> Matrix mode activated. Press ESC to exit...", 10, "#00ff00");
                     break;
                 
                 case 'whoami':
-                    printLine("supabase\\anon_user");
+                    await typeLine("supabase\\anon_user");
                     break;
 
                 default:
-                     printLine(`'${cmd}' is not recognized as a command. Type 'HELP' for available commands.`, false, "#ff6b6b");
+                     await typeLine(`'${cmd}' is not recognized as a command. Type 'HELP' for available commands.`, 10, "#ff6b6b");
                      SoundFX.playError();
                      break;
             }
@@ -643,29 +692,28 @@
 
         // --- SUPABASE FUNCTIONS ---
         
-        function handleConfirmation(input) {
+        async function handleConfirmation(input) {
             if (!pendingAction) return;
 
             if (input === 'y' || input === 'yes') {
                 if (pendingAction.type === 'delete') {
-                    deleteLink(pendingAction.name);
+                    await deleteLink(pendingAction.name);
                 }
             } else {
-                printLine("Operation cancelled.", false, "#888");
+                await typeLine("Operation cancelled.", 10, "#888");
             }
             pendingAction = null;
         }
 
-        function handleLinkSelection(inputVal) {
-            printLine(`> ${inputVal}`);
+        async function handleLinkSelection(inputVal) {
             const num = parseInt(inputVal.trim());
             
             if (linkSelectionMap[num]) {
                 const url = linkSelectionMap[num];
-                printLine(`Opening #${num} -> ${url}...`, false, "#4af626");
+                await typeLine(`Opening #${num} -> ${url}...`, 10, "#4af626");
                 window.open(url, '_blank');
             } else {
-                printLine("Selection cancelled. Returning to command mode.", false, "#ffcc00");
+                await typeLine("Selection cancelled. Returning to command mode.", 10, "#ffcc00");
             }
             
             selectionMode = false;
@@ -673,7 +721,7 @@
         }
 
         async function deleteLink(name) {
-            printLine(`Deleting [${name}]...`);
+            await typeLine(`Deleting [${name}]...`);
             try {
                 const { error } = await supabaseClient
                     .from('links')
@@ -681,16 +729,16 @@
                     .eq('name', name);
 
                 if (error) throw error;
-                printLine("SUCCESS: Link deleted.", false, "#4af626");
+                await typeLine("SUCCESS: Link deleted.", 10, "#4af626");
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Failed to delete data. " + err.message, false, "#ff6b6b");
+                await typeLine("ERROR: Failed to delete data. " + err.message, 10, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function saveLink(name, url) {
-            printLine(`Saving [${name}] -> ${url}...`);
+            await typeLine(`Saving [${name}] -> ${url}...`);
             
             if (!url.startsWith('http')) {
                 url = 'https://' + url;
@@ -704,16 +752,16 @@
                 if (error) {
                     throw error;
                 }
-                printLine("SUCCESS: Link saved to database.", false, "#4af626");
+                await typeLine("SUCCESS: Link saved to database.", 10, "#4af626");
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Failed to save data. " + err.message, false, "#ff6b6b");
+                await typeLine("ERROR: Failed to save data. " + err.message, 10, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function openLink(name) {
-            printLine(`Searching for [${name}]...`);
+            await typeLine(`Searching for [${name}]...`);
             
             try {
                 const { data, error } = await supabaseClient
@@ -724,7 +772,7 @@
 
                 if (error) {
                      if (error.code === 'PGRST116') {
-                         printLine(`ERROR: Link '${name}' not found.`, false, "#ff6b6b");
+                         await typeLine(`ERROR: Link '${name}' not found.`, 10, "#ff6b6b");
                      } else {
                          throw error;
                      }
@@ -733,20 +781,20 @@
                 }
 
                 if (data && data.url) {
-                    printLine(`Opening ${data.url}...`, false, "#4af626");
+                    await typeLine(`Opening ${data.url}...`, 10, "#4af626");
                     window.open(data.url, '_blank');
                 } else {
-                    printLine(`ERROR: Unknown error retrieving URL.`, false, "#ff6b6b");
+                    await typeLine(`ERROR: Unknown error retrieving URL.`, 10, "#ff6b6b");
                 }
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Database connection failed. " + err.message, false, "#ff6b6b");
+                await typeLine("ERROR: Database connection failed. " + err.message, 10, "#ff6b6b");
                 SoundFX.playError();
             }
         }
 
         async function listLinks() {
-            printLine("Fetching data from Supabase...");
+            await typeLine("Fetching data from Supabase...");
             linkSelectionMap = {}; // Reset
             
             try {
@@ -758,12 +806,13 @@
                 if (error) throw error;
 
                 if (data.length === 0) {
-                    printLine("Database is empty. Use [name] [url] --save to add links.");
+                    await typeLine("Database is empty. Use [name] [url] --save to add links.");
                 } else {
                     // Revised output to show index number
-                    printLine(" #   NAME                 URL");
-                    printLine("---- -------------------- ------------------------------------------------");
-                    data.forEach((link, index) => {
+                    await typeLine(" #   NAME                 URL");
+                    await typeLine("---- -------------------- ------------------------------------------------");
+                    for (let index = 0; index < data.length; index++) {
+                        const link = data[index];
                         const num = index + 1;
                         linkSelectionMap[num] = link.url;
                         
@@ -771,18 +820,18 @@
                         // Truncate name for alignment, but display full URL
                         const name = link.name.substring(0, 20).padEnd(20);
                         const url = link.url; 
-                        printLine(`${numStr} ${name} ${url}`);
-                    });
-                    printLine("----------------------------------------------------------------------");
-                    printLine(`Total: ${data.length} link(s) found.`);
-                    printLine(" ");
-                    printLine("[?] Enter a number to open the link, or any other key to cancel...", false, "#00ffff");
+                        await typeLine(`${numStr} ${name} ${url}`, 1); 
+                    }
+                    await typeLine("----------------------------------------------------------------------");
+                    await typeLine(`Total: ${data.length} link(s) found.`);
+                    await typeLine(" ");
+                    await typeLine("[?] Enter a number to open the link, or any other key to cancel...", 10, "#00ffff");
                     
                     selectionMode = true; // Activate selection mode
                 }
             } catch (err) {
                 console.error(err);
-                printLine("ERROR: Could not fetch data. " + err.message, false, "#ff6b6b");
+                await typeLine("ERROR: Could not fetch data. " + err.message, 10, "#ff6b6b");
                 SoundFX.playError();
             }
         }
