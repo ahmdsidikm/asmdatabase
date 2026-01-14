@@ -2,11 +2,21 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Undangan Pernikahan - Sidik & Alisya</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+        
         .font-script { font-family: 'Great Vibes', cursive; }
         .font-elegant { font-family: 'Playfair Display', serif; }
         .font-body { font-family: 'Poppins', sans-serif; }
@@ -20,7 +30,18 @@
                         url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&q=80');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
+        }
+        
+        @supports (-webkit-touch-callout: none) {
+            .hero-bg {
+                background-attachment: scroll;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .hero-bg {
+                background-attachment: fixed;
+            }
         }
 
         .door-pattern {
@@ -28,6 +49,75 @@
             background-image: radial-gradient(#78350f 0.5px, transparent 0.5px), radial-gradient(#78350f 0.5px, #1c1917 0.5px);
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
+        }
+        
+        /* Opening doors - fixed for mobile */
+        #opening-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        #left-door {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            z-index: 20;
+            transition: transform 1s ease-in-out;
+            transform-origin: left center;
+        }
+        
+        #right-door {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            z-index: 20;
+            transition: transform 1s ease-in-out;
+            transform-origin: right center;
+        }
+        
+        .door-line-left {
+            position: absolute;
+            right: 4px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(217, 119, 6, 0.2);
+        }
+        
+        .door-line-left-2 {
+            position: absolute;
+            right: 8px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(217, 119, 6, 0.1);
+        }
+        
+        .door-line-right {
+            position: absolute;
+            left: 4px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(217, 119, 6, 0.2);
+        }
+        
+        .door-line-right-2 {
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: rgba(217, 119, 6, 0.1);
         }
         
         .fade-in {
@@ -312,64 +402,77 @@
         .border-glow {
             box-shadow: 0 0 15px rgba(217, 119, 6, 0.3);
         }
+        
+        /* Hide floating decorations on small screens to prevent overflow */
+        @media (max-width: 640px) {
+            .hero-decoration {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="font-body bg-stone-50 text-stone-800">
     
-    <div id="opening-overlay" class="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden transition-all duration-1000">
-        
-        <div id="left-door" class="absolute left-0 top-0 w-1/2 h-full door-pattern z-20 transition-transform duration-1000 ease-in-out border-r border-amber-500/20 shadow-2xl origin-left flex items-center justify-end">
-             <div class="absolute inset-y-0 right-4 w-px bg-amber-500/20"></div>
-             <div class="absolute inset-y-0 right-8 w-px bg-amber-500/10"></div>
+    <!-- Opening Overlay with Doors -->
+    <div id="opening-overlay">
+        <!-- Left Door -->
+        <div id="left-door" class="door-pattern">
+            <div class="door-line-left"></div>
+            <div class="door-line-left-2"></div>
         </div>
         
-        <div id="right-door" class="absolute right-0 top-0 w-1/2 h-full door-pattern z-20 transition-transform duration-1000 ease-in-out border-l border-amber-500/20 shadow-2xl origin-right flex items-center justify-start">
-            <div class="absolute inset-y-0 left-4 w-px bg-amber-500/20"></div>
-            <div class="absolute inset-y-0 left-8 w-px bg-amber-500/10"></div>
+        <!-- Right Door -->
+        <div id="right-door" class="door-pattern">
+            <div class="door-line-right"></div>
+            <div class="door-line-right-2"></div>
         </div>
 
-        <div id="door-content" class="relative z-30 flex flex-col items-center justify-center p-8 transition-all duration-700">
-            <div class="w-40 h-40 md:w-56 md:h-56 rounded-full border border-amber-500/30 bg-stone-900/90 backdrop-blur-sm flex items-center justify-center shadow-[0_0_50px_rgba(217,119,6,0.2)] mb-8 transform hover:scale-105 transition-transform duration-500 cursor-pointer group" onclick="openInvitation()">
+        <!-- Door Content - Centered -->
+        <div id="door-content" class="relative z-30 flex flex-col items-center justify-center p-4 sm:p-8 transition-all duration-700 w-full max-w-sm mx-auto">
+            <div class="w-36 h-36 sm:w-40 sm:h-40 md:w-56 md:h-56 rounded-full border border-amber-500/30 bg-stone-900/90 backdrop-blur-sm flex items-center justify-center shadow-[0_0_50px_rgba(217,119,6,0.2)] mb-6 sm:mb-8 transform hover:scale-105 transition-transform duration-500 cursor-pointer group relative" onclick="openInvitation()">
                 <div class="absolute inset-2 rounded-full border border-amber-500/50 border-dashed animate-[spin_30s_linear_infinite]"></div>
                 <div class="text-center group-hover:scale-110 transition-transform duration-300">
-                    <span class="font-script text-5xl md:text-6xl text-amber-400 block drop-shadow-lg">S & A</span>
+                    <span class="font-script text-4xl sm:text-5xl md:text-6xl text-amber-400 block drop-shadow-lg">S & A</span>
                 </div>
             </div>
             
             <div class="text-center">
-                <p class="text-amber-200/80 text-sm tracking-[0.3em] uppercase mb-4 animate-pulse">Wedding Invitation</p>
-                <button onclick="openInvitation()" class="px-8 py-3 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-full text-sm tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all shadow-lg hover:shadow-amber-500/30 transform hover:-translate-y-1">
+                <p class="text-amber-200/80 text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-3 sm:mb-4 animate-pulse">Wedding Invitation</p>
+                <button onclick="openInvitation()" class="px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-full text-xs sm:text-sm tracking-widest hover:from-amber-500 hover:to-amber-400 transition-all shadow-lg hover:shadow-amber-500/30 transform hover:-translate-y-1">
                     BUKA UNDANGAN
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- Particles Container -->
     <div id="particles-container" class="particles-container"></div>
 
+    <!-- Cover Section -->
     <section id="cover" class="hero-bg min-h-screen flex flex-col items-center justify-center text-white text-center px-4 relative overflow-hidden">
-        <div class="absolute top-10 left-10 text-6xl opacity-20 float">🌸</div>
-        <div class="absolute top-20 right-10 text-5xl opacity-20 float float-delay-1">✨</div>
-        <div class="absolute bottom-32 left-20 text-4xl opacity-20 float float-delay-2">💐</div>
-        <div class="absolute bottom-40 right-20 text-5xl opacity-20 float float-delay-3">🌹</div>
+        <!-- Floating decorations - hidden on mobile -->
+        <div class="hero-decoration absolute top-10 left-10 text-6xl opacity-20 float">🌸</div>
+        <div class="hero-decoration absolute top-20 right-10 text-5xl opacity-20 float float-delay-1">✨</div>
+        <div class="hero-decoration absolute bottom-32 left-20 text-4xl opacity-20 float float-delay-2">💐</div>
+        <div class="hero-decoration absolute bottom-40 right-20 text-5xl opacity-20 float float-delay-3">🌹</div>
         
-        <div class="fade-in relative z-10">
+        <div class="fade-in relative z-10 w-full max-w-lg mx-auto">
             <p class="text-sm md:text-base mb-1 opacity-90">Kepada Yth.</p>
-            <p id="guest-name" class="text-xl md:text-2xl font-elegant mb-6 bg-white/20 backdrop-blur px-6 py-2 rounded-full glow">Bapak/Ibu/Saudara/i</p>
-            <p class="text-lg md:text-xl mb-2 tracking-widest uppercase">The Wedding Of</p>
-            <h1 class="font-script text-6xl md:text-8xl lg:text-9xl mb-4 text-amber-200 relative">
+            <p id="guest-name" class="text-lg sm:text-xl md:text-2xl font-elegant mb-6 bg-white/20 backdrop-blur px-4 sm:px-6 py-2 rounded-full glow inline-block">Bapak/Ibu/Saudara/i</p>
+            <p class="text-base sm:text-lg md:text-xl mb-2 tracking-widest uppercase">The Wedding Of</p>
+            <h1 class="font-script text-5xl sm:text-6xl md:text-8xl lg:text-9xl mb-4 text-amber-200 relative">
                 <span class="relative z-10">Sidik & Alisya</span>
                 <span class="absolute inset-0 blur-lg opacity-50 text-amber-300">Sidik & Alisya</span>
             </h1>
             <div class="flex items-center justify-center gap-4 mb-6">
-                <div class="w-16 md:w-24 h-px bg-amber-300 line-grow animate-in"></div>
+                <div class="w-12 sm:w-16 md:w-24 h-px bg-amber-300 line-grow animate-in"></div>
                 <span class="heart-beat text-2xl relative">
                     💍
                     <span class="absolute inset-0 pulse-ring rounded-full border-2 border-amber-300"></span>
                 </span>
-                <div class="w-16 md:w-24 h-px bg-amber-300 line-grow animate-in"></div>
+                <div class="w-12 sm:w-16 md:w-24 h-px bg-amber-300 line-grow animate-in"></div>
             </div>
-            <p class="text-xl md:text-2xl font-elegant shimmer bg-clip-text">14 Februari 2025</p>
+            <p class="text-lg sm:text-xl md:text-2xl font-elegant shimmer bg-clip-text">14 Februari 2025</p>
         </div>
         
         <div class="absolute bottom-8 scroll-indicator z-10">
@@ -382,13 +485,14 @@
         </div>
     </section>
 
+    <!-- Opening Section -->
     <section id="opening" class="py-16 md:py-24 px-4 bg-pattern relative overflow-hidden">
         <div class="max-w-3xl mx-auto text-center relative">
             <div class="scroll-animate">
-                <p class="font-script text-4xl md:text-5xl text-amber-700 mb-6 float">Bismillahirrahmanirrahim</p>
+                <p class="font-script text-3xl sm:text-4xl md:text-5xl text-amber-700 mb-6 float">Bismillahirrahmanirrahim</p>
             </div>
             <div class="scroll-animate" style="transition-delay: 0.2s;">
-                <p class="text-stone-600 leading-relaxed md:text-lg">
+                <p class="text-stone-600 leading-relaxed text-sm sm:text-base md:text-lg px-2">
                     Assalamu'alaikum Warahmatullahi Wabarakatuh<br><br>
                     Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud menyelenggarakan acara pernikahan kami.
                     Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir
@@ -397,51 +501,56 @@
             </div>
         </div>
         
-        <div class="absolute top-5 left-5 text-3xl opacity-30 sparkle-float">✿</div>
-        <div class="absolute top-5 right-5 text-3xl opacity-30 sparkle-float" style="animation-delay: 0.5s;">✿</div>
-        <div class="absolute bottom-5 left-5 text-3xl opacity-30 sparkle-float" style="animation-delay: 1s;">✿</div>
-        <div class="absolute bottom-5 right-5 text-3xl opacity-30 sparkle-float" style="animation-delay: 1.5s;">✿</div>
+        <div class="absolute top-5 left-5 text-2xl sm:text-3xl opacity-30 sparkle-float">✿</div>
+        <div class="absolute top-5 right-5 text-2xl sm:text-3xl opacity-30 sparkle-float" style="animation-delay: 0.5s;">✿</div>
+        <div class="absolute bottom-5 left-5 text-2xl sm:text-3xl opacity-30 sparkle-float" style="animation-delay: 1s;">✿</div>
+        <div class="absolute bottom-5 right-5 text-2xl sm:text-3xl opacity-30 sparkle-float" style="animation-delay: 1.5s;">✿</div>
     </section>
 
+    <!-- Love Story Section -->
     <section id="love-story" class="py-16 md:py-24 px-4 bg-white relative overflow-hidden">
         <div class="max-w-4xl mx-auto">
-            <h2 class="font-script text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Our Love Story</h2>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Our Love Story</h2>
             
             <div class="relative">
+                <!-- Timeline Line -->
                 <div class="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-amber-200"></div>
                 
                 <div class="space-y-12">
-                    <div class="flex items-center gap-8 slide-left">
-                        <div class="w-1/2 text-right">
-                            <h3 class="font-elegant text-xl text-amber-700">Pertama Bertemu</h3>
-                            <p class="text-stone-600 text-sm">Januari 2020</p>
-                            <p class="text-stone-500 mt-2">Kami pertama kali bertemu di sebuah acara kampus...</p>
+                    <!-- Story 1 -->
+                    <div class="flex items-center gap-4 sm:gap-8 slide-left">
+                        <div class="w-1/2 text-right pr-2">
+                            <h3 class="font-elegant text-lg sm:text-xl text-amber-700">Pertama Bertemu</h3>
+                            <p class="text-stone-600 text-xs sm:text-sm">Januari 2020</p>
+                            <p class="text-stone-500 mt-2 text-xs sm:text-sm">Kami pertama kali bertemu di sebuah acara kampus...</p>
                         </div>
-                        <div class="relative z-10">
+                        <div class="relative z-10 shrink-0">
                             <div class="w-4 h-4 bg-amber-500 rounded-full timeline-dot"></div>
                         </div>
                         <div class="w-1/2"></div>
                     </div>
                     
-                    <div class="flex items-center gap-8 slide-right">
+                    <!-- Story 2 -->
+                    <div class="flex items-center gap-4 sm:gap-8 slide-right">
                         <div class="w-1/2"></div>
-                        <div class="relative z-10">
+                        <div class="relative z-10 shrink-0">
                             <div class="w-4 h-4 bg-amber-500 rounded-full timeline-dot" style="animation-delay: 0.5s;"></div>
                         </div>
-                        <div class="w-1/2">
-                            <h3 class="font-elegant text-xl text-amber-700">Mulai Berpacaran</h3>
-                            <p class="text-stone-600 text-sm">Februari 2021</p>
-                            <p class="text-stone-500 mt-2">Akhirnya kami memutuskan untuk menjalin hubungan...</p>
+                        <div class="w-1/2 pl-2">
+                            <h3 class="font-elegant text-lg sm:text-xl text-amber-700">Mulai Berpacaran</h3>
+                            <p class="text-stone-600 text-xs sm:text-sm">Februari 2021</p>
+                            <p class="text-stone-500 mt-2 text-xs sm:text-sm">Akhirnya kami memutuskan untuk menjalin hubungan...</p>
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-8 slide-left">
-                        <div class="w-1/2 text-right">
-                            <h3 class="font-elegant text-xl text-amber-700">Lamaran</h3>
-                            <p class="text-stone-600 text-sm">Agustus 2024</p>
-                            <p class="text-stone-500 mt-2">Dengan restu keluarga, kami melangkah ke jenjang berikutnya...</p>
+                    <!-- Story 3 -->
+                    <div class="flex items-center gap-4 sm:gap-8 slide-left">
+                        <div class="w-1/2 text-right pr-2">
+                            <h3 class="font-elegant text-lg sm:text-xl text-amber-700">Lamaran</h3>
+                            <p class="text-stone-600 text-xs sm:text-sm">Agustus 2024</p>
+                            <p class="text-stone-500 mt-2 text-xs sm:text-sm">Dengan restu keluarga, kami melangkah ke jenjang berikutnya...</p>
                         </div>
-                        <div class="relative z-10">
+                        <div class="relative z-10 shrink-0">
                             <div class="w-4 h-4 bg-amber-500 rounded-full timeline-dot" style="animation-delay: 1s;"></div>
                         </div>
                         <div class="w-1/2"></div>
@@ -451,44 +560,48 @@
         </div>
     </section>
 
+    <!-- Couple Section -->
     <section id="couple" class="py-16 md:py-24 px-4 bg-stone-50 relative">
         <div class="max-w-5xl mx-auto">
-            <h2 class="font-script text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Mempelai</h2>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Mempelai</h2>
             
-            <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div class="grid md:grid-cols-2 gap-8 sm:gap-12 items-center">
+                <!-- Groom -->
                 <div class="text-center slide-left">
                     <div class="relative inline-block">
-                        <div class="w-48 h-48 md:w-56 md:h-56 mx-auto mb-6 rounded-full overflow-hidden border-4 border-amber-300 shadow-xl img-hover-zoom glow">
+                        <div class="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 mx-auto mb-6 rounded-full overflow-hidden border-4 border-amber-300 shadow-xl img-hover-zoom glow">
                             <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80" 
                                  alt="Mempelai Pria" class="w-full h-full object-cover">
                         </div>
                         <div class="absolute inset-0 rounded-full border-2 border-dashed border-amber-300 animate-spin" style="animation-duration: 20s;"></div>
                     </div>
-                    <h3 class="font-elegant text-3xl md:text-4xl text-stone-800 mb-2">Ahmad Sidik Muttaqin</h3>
-                    <p class="text-stone-600 mb-2">Putra dari</p>
-                    <p class="text-stone-700 font-medium">Bapak ... & Ibu ...</p>
-                    <a href="#" class="inline-flex items-center gap-2 mt-4 text-amber-600 hover:text-amber-800 hover:scale-110 transition-all">
+                    <h3 class="font-elegant text-2xl sm:text-3xl md:text-4xl text-stone-800 mb-2">Ahmad Sidik Muttaqin</h3>
+                    <p class="text-stone-600 mb-2 text-sm sm:text-base">Putra dari</p>
+                    <p class="text-stone-700 font-medium text-sm sm:text-base">Bapak ... & Ibu ...</p>
+                    <a href="#" class="inline-flex items-center gap-2 mt-4 text-amber-600 hover:text-amber-800 hover:scale-110 transition-all text-sm sm:text-base">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/></svg>
                         @ahmadsidik
                     </a>
                 </div>
                 
+                <!-- Heart divider - mobile only -->
                 <div class="flex items-center justify-center md:hidden">
                     <span class="text-4xl heart-beat">💕</span>
                 </div>
                 
+                <!-- Bride -->
                 <div class="text-center slide-right">
                     <div class="relative inline-block">
-                        <div class="w-48 h-48 md:w-56 md:h-56 mx-auto mb-6 rounded-full overflow-hidden border-4 border-amber-300 shadow-xl img-hover-zoom glow">
+                        <div class="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 mx-auto mb-6 rounded-full overflow-hidden border-4 border-amber-300 shadow-xl img-hover-zoom glow">
                             <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80" 
                                  alt="Mempelai Wanita" class="w-full h-full object-cover">
                         </div>
                         <div class="absolute inset-0 rounded-full border-2 border-dashed border-amber-300 animate-spin" style="animation-duration: 20s; animation-direction: reverse;"></div>
                     </div>
-                    <h3 class="font-elegant text-3xl md:text-4xl text-stone-800 mb-2">Alisya Kartika</h3>
-                    <p class="text-stone-600 mb-2">Putri dari</p>
-                    <p class="text-stone-700 font-medium">Bapak ... & Ibu ...</p>
-                    <a href="#" class="inline-flex items-center gap-2 mt-4 text-amber-600 hover:text-amber-800 hover:scale-110 transition-all">
+                    <h3 class="font-elegant text-2xl sm:text-3xl md:text-4xl text-stone-800 mb-2">Alisya Kartika</h3>
+                    <p class="text-stone-600 mb-2 text-sm sm:text-base">Putri dari</p>
+                    <p class="text-stone-700 font-medium text-sm sm:text-base">Bapak ... & Ibu ...</p>
+                    <a href="#" class="inline-flex items-center gap-2 mt-4 text-amber-600 hover:text-amber-800 hover:scale-110 transition-all text-sm sm:text-base">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/></svg>
                         @alisyakartika
                     </a>
@@ -497,6 +610,7 @@
         </div>
     </section>
 
+    <!-- Countdown Section -->
     <section id="countdown" class="py-16 md:py-24 px-4 gold-gradient text-white relative overflow-hidden">
         <div class="absolute inset-0 overflow-hidden opacity-20">
             <div class="absolute w-64 h-64 rounded-full bg-white/20 -top-32 -left-32 float"></div>
@@ -505,103 +619,107 @@
         </div>
         
         <div class="max-w-4xl mx-auto text-center relative z-10">
-            <h2 class="font-script text-5xl md:text-6xl mb-4 scroll-animate">Menghitung Hari</h2>
-            <p class="mb-8 text-lg opacity-90 scroll-animate">Menuju hari bahagia kami</p>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl mb-4 scroll-animate">Menghitung Hari</h2>
+            <p class="mb-8 text-base sm:text-lg opacity-90 scroll-animate">Menuju hari bahagia kami</p>
             
-            <div id="countdown-timer" class="grid grid-cols-4 gap-3 md:gap-6 max-w-xl mx-auto stagger-children">
-                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-4 md:p-6 card-3d">
-                    <span id="days" class="countdown-number text-3xl md:text-5xl font-bold block">00</span>
-                    <span class="text-sm md:text-base">Hari</span>
+            <div id="countdown-timer" class="grid grid-cols-4 gap-2 sm:gap-3 md:gap-6 max-w-xl mx-auto stagger-children">
+                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-3 sm:p-4 md:p-6 card-3d">
+                    <span id="days" class="countdown-number text-2xl sm:text-3xl md:text-5xl font-bold block">00</span>
+                    <span class="text-xs sm:text-sm md:text-base">Hari</span>
                 </div>
-                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-4 md:p-6 card-3d">
-                    <span id="hours" class="countdown-number text-3xl md:text-5xl font-bold block">00</span>
-                    <span class="text-sm md:text-base">Jam</span>
+                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-3 sm:p-4 md:p-6 card-3d">
+                    <span id="hours" class="countdown-number text-2xl sm:text-3xl md:text-5xl font-bold block">00</span>
+                    <span class="text-xs sm:text-sm md:text-base">Jam</span>
                 </div>
-                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-4 md:p-6 card-3d">
-                    <span id="minutes" class="countdown-number text-3xl md:text-5xl font-bold block">00</span>
-                    <span class="text-sm md:text-base">Menit</span>
+                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-3 sm:p-4 md:p-6 card-3d">
+                    <span id="minutes" class="countdown-number text-2xl sm:text-3xl md:text-5xl font-bold block">00</span>
+                    <span class="text-xs sm:text-sm md:text-base">Menit</span>
                 </div>
-                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-4 md:p-6 card-3d">
-                    <span id="seconds" class="countdown-number text-3xl md:text-5xl font-bold block">00</span>
-                    <span class="text-sm md:text-base">Detik</span>
+                <div class="countdown-item bg-white/20 backdrop-blur rounded-lg p-3 sm:p-4 md:p-6 card-3d">
+                    <span id="seconds" class="countdown-number text-2xl sm:text-3xl md:text-5xl font-bold block">00</span>
+                    <span class="text-xs sm:text-sm md:text-base">Detik</span>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Event Section -->
     <section id="event" class="py-16 md:py-24 px-4 bg-pattern relative">
         <div class="max-w-5xl mx-auto">
-            <h2 class="font-script text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Acara</h2>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Acara</h2>
             
-            <div class="grid md:grid-cols-2 gap-8">
+            <div class="grid md:grid-cols-2 gap-6 sm:gap-8">
+                <!-- Akad Nikah -->
                 <div class="zoom-in">
-                    <div class="bg-white rounded-2xl shadow-lg p-8 text-center border border-amber-100 card-3d relative overflow-hidden">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center border border-amber-100 card-3d relative overflow-hidden">
                         <div class="absolute inset-0 shimmer opacity-30"></div>
                         
-                        <div class="w-20 h-20 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float">
-                            <span class="text-4xl">💒</span>
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float">
+                            <span class="text-3xl sm:text-4xl">💒</span>
                         </div>
-                        <h3 class="font-elegant text-2xl md:text-3xl text-stone-800 mb-4">Akad Nikah</h3>
-                        <div class="space-y-2 text-stone-600">
+                        <h3 class="font-elegant text-xl sm:text-2xl md:text-3xl text-stone-800 mb-4">Akad Nikah</h3>
+                        <div class="space-y-2 text-stone-600 text-sm sm:text-base">
                             <p class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                                 Jumat, 14 Februari 2025
                             </p>
                             <p class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 08:00 - 10:00 WIB
                             </p>
                             <p class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
-                                Masjid Al-Ikhlas, Jakarta Selatan
+                                <span>Masjid Al-Ikhlas, Jakarta Selatan</span>
                             </p>
                         </div>
                     </div>
                 </div>
                 
+                <!-- Resepsi -->
                 <div class="zoom-in" style="transition-delay: 0.2s;">
-                    <div class="bg-white rounded-2xl shadow-lg p-8 text-center border border-amber-100 card-3d relative overflow-hidden">
+                    <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 text-center border border-amber-100 card-3d relative overflow-hidden">
                         <div class="absolute inset-0 shimmer opacity-30"></div>
                         
-                        <div class="w-20 h-20 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float float-delay-1">
-                            <span class="text-4xl">🎉</span>
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float float-delay-1">
+                            <span class="text-3xl sm:text-4xl">🎉</span>
                         </div>
-                        <h3 class="font-elegant text-2xl md:text-3xl text-stone-800 mb-4">Resepsi</h3>
-                        <div class="space-y-2 text-stone-600">
+                        <h3 class="font-elegant text-xl sm:text-2xl md:text-3xl text-stone-800 mb-4">Resepsi</h3>
+                        <div class="space-y-2 text-stone-600 text-sm sm:text-base">
                             <p class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                                 Jumat, 14 Februari 2025
                             </p>
                             <p class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
                                 11:00 - 14:00 WIB
                             </p>
                             <p class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
-                                Gedung Serbaguna Harmoni, Jakarta Pusat
+                                <span>Gedung Serbaguna Harmoni, Jakarta Pusat</span>
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-12 scroll-animate">
-                <div class="bg-white rounded-2xl shadow-lg p-6 border border-amber-100 card-3d">
-                    <h3 class="font-elegant text-2xl text-center text-stone-800 mb-4">Lokasi Acara</h3>
+            <!-- Map -->
+            <div class="mt-8 sm:mt-12 scroll-animate">
+                <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-amber-100 card-3d">
+                    <h3 class="font-elegant text-xl sm:text-2xl text-center text-stone-800 mb-4">Lokasi Acara</h3>
                     <div class="aspect-video rounded-lg overflow-hidden">
                         <iframe 
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.521260322283!2d106.8195613!3d-6.194741299999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69f5d2e764b12d%3A0x3d2ad6e1e0e9bcc8!2sMonumen%20Nasional!5e0!3m2!1sen!2sid!4v1650000000000!5m2!1sen!2sid"
@@ -611,7 +729,7 @@
                         </iframe>
                     </div>
                     <a href="https://maps.google.com" target="_blank" 
-                       class="btn-animated mt-4 inline-flex items-center justify-center w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white py-3 px-6 rounded-lg transition-colors">
+                       class="btn-animated mt-4 inline-flex items-center justify-center w-full gap-2 bg-amber-600 hover:bg-amber-700 text-white py-3 px-6 rounded-lg transition-colors text-sm sm:text-base">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                         </svg>
@@ -622,11 +740,12 @@
         </div>
     </section>
 
+    <!-- Gallery Section -->
     <section id="gallery" class="py-16 md:py-24 px-4 bg-white relative overflow-hidden">
         <div class="max-w-5xl mx-auto">
-            <h2 class="font-script text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Galeri</h2>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl text-center text-amber-700 mb-12 scroll-animate">Galeri</h2>
             
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 stagger-children">
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 stagger-children">
                 <div class="aspect-square rounded-lg overflow-hidden shadow-md img-hover-zoom card-3d">
                     <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=400&q=80" alt="Gallery 1" class="w-full h-full object-cover">
                 </div>
@@ -649,20 +768,21 @@
         </div>
     </section>
 
+    <!-- RSVP Section -->
     <section id="rsvp" class="py-16 md:py-24 px-4 bg-stone-100 relative">
         <div class="max-w-2xl mx-auto">
-            <h2 class="font-script text-5xl md:text-6xl text-center text-amber-700 mb-4 scroll-animate">RSVP</h2>
-            <p class="text-center text-stone-600 mb-8 scroll-animate">Konfirmasi kehadiran Anda</p>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl text-center text-amber-700 mb-4 scroll-animate">RSVP</h2>
+            <p class="text-center text-stone-600 mb-8 scroll-animate text-sm sm:text-base">Konfirmasi kehadiran Anda</p>
             
-            <form class="bg-white rounded-2xl shadow-lg p-8 border border-amber-100 scroll-animate card-3d">
+            <form class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-amber-100 scroll-animate card-3d">
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-stone-700 mb-2">Nama Lengkap</label>
-                        <input type="text" class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all" placeholder="Masukkan nama Anda">
+                        <label class="block text-stone-700 mb-2 text-sm sm:text-base">Nama Lengkap</label>
+                        <input type="text" class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all text-sm sm:text-base" placeholder="Masukkan nama Anda">
                     </div>
                     <div>
-                        <label class="block text-stone-700 mb-2">Kehadiran</label>
-                        <select class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
+                        <label class="block text-stone-700 mb-2 text-sm sm:text-base">Kehadiran</label>
+                        <select class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all text-sm sm:text-base">
                             <option value="">Pilih kehadiran</option>
                             <option value="hadir">Akan Hadir</option>
                             <option value="tidak">Tidak Bisa Hadir</option>
@@ -670,14 +790,14 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-stone-700 mb-2">Jumlah Tamu</label>
-                        <input type="number" min="1" max="5" class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all" placeholder="1">
+                        <label class="block text-stone-700 mb-2 text-sm sm:text-base">Jumlah Tamu</label>
+                        <input type="number" min="1" max="5" class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all text-sm sm:text-base" placeholder="1">
                     </div>
                     <div>
-                        <label class="block text-stone-700 mb-2">Ucapan & Doa</label>
-                        <textarea rows="4" class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all" placeholder="Tulis ucapan dan doa Anda..."></textarea>
+                        <label class="block text-stone-700 mb-2 text-sm sm:text-base">Ucapan & Doa</label>
+                        <textarea rows="4" class="w-full px-4 py-3 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all text-sm sm:text-base" placeholder="Tulis ucapan dan doa Anda..."></textarea>
                     </div>
-                    <button type="submit" class="btn-animated w-full bg-amber-600 hover:bg-amber-700 text-white py-3 px-6 rounded-lg font-medium transition-all">
+                    <button type="submit" class="btn-animated w-full bg-amber-600 hover:bg-amber-700 text-white py-3 px-6 rounded-lg font-medium transition-all text-sm sm:text-base">
                         Kirim Konfirmasi
                     </button>
                 </div>
@@ -685,40 +805,41 @@
         </div>
     </section>
 
+    <!-- Wishes Section -->
     <section id="wishes" class="py-16 md:py-24 px-4 bg-white">
         <div class="max-w-3xl mx-auto">
-            <h2 class="font-script text-5xl md:text-6xl text-center text-amber-700 mb-8 scroll-animate">Ucapan & Doa</h2>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl text-center text-amber-700 mb-8 scroll-animate">Ucapan & Doa</h2>
             
             <div class="space-y-4 stagger-children">
-                <div class="bg-stone-50 rounded-xl p-6 border border-amber-100 card-3d">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-amber-200 rounded-full flex items-center justify-center text-amber-700 font-bold shrink-0">A</div>
-                        <div>
-                            <h4 class="font-medium text-stone-800">Ahmad Fauzi</h4>
-                            <p class="text-stone-600 mt-1">Selamat menempuh hidup baru! Semoga menjadi keluarga yang sakinah, mawaddah, warahmah. Barakallahu lakuma wa baraka 'alaikuma 💕</p>
-                            <p class="text-stone-400 text-sm mt-2">2 jam yang lalu</p>
+                <div class="bg-stone-50 rounded-xl p-4 sm:p-6 border border-amber-100 card-3d">
+                    <div class="flex items-start gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-amber-200 rounded-full flex items-center justify-center text-amber-700 font-bold shrink-0 text-sm sm:text-base">A</div>
+                        <div class="min-w-0">
+                            <h4 class="font-medium text-stone-800 text-sm sm:text-base">Ahmad Fauzi</h4>
+                            <p class="text-stone-600 mt-1 text-xs sm:text-sm">Selamat menempuh hidup baru! Semoga menjadi keluarga yang sakinah, mawaddah, warahmah. Barakallahu lakuma wa baraka 'alaikuma 💕</p>
+                            <p class="text-stone-400 text-xs mt-2">2 jam yang lalu</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-stone-50 rounded-xl p-6 border border-amber-100 card-3d">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center text-pink-700 font-bold shrink-0">S</div>
-                        <div>
-                            <h4 class="font-medium text-stone-800">Siti Nurhaliza</h4>
-                            <p class="text-stone-600 mt-1">MasyaAllah barakallah! Semoga pernikahan kalian penuh berkah dan selalu dilimpahi kebahagiaan. Aamiin 🤲✨</p>
-                            <p class="text-stone-400 text-sm mt-2">5 jam yang lalu</p>
+                <div class="bg-stone-50 rounded-xl p-4 sm:p-6 border border-amber-100 card-3d">
+                    <div class="flex items-start gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-pink-200 rounded-full flex items-center justify-center text-pink-700 font-bold shrink-0 text-sm sm:text-base">S</div>
+                        <div class="min-w-0">
+                            <h4 class="font-medium text-stone-800 text-sm sm:text-base">Siti Nurhaliza</h4>
+                            <p class="text-stone-600 mt-1 text-xs sm:text-sm">MasyaAllah barakallah! Semoga pernikahan kalian penuh berkah dan selalu dilimpahi kebahagiaan. Aamiin 🤲✨</p>
+                            <p class="text-stone-400 text-xs mt-2">5 jam yang lalu</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="bg-stone-50 rounded-xl p-6 border border-amber-100 card-3d">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold shrink-0">B</div>
-                        <div>
-                            <h4 class="font-medium text-stone-800">Budi Santoso</h4>
-                            <p class="text-stone-600 mt-1">Congratulations! Wishing you both a lifetime of love, laughter, and happiness. God bless your marriage! 💒💕</p>
-                            <p class="text-stone-400 text-sm mt-2">1 hari yang lalu</p>
+                <div class="bg-stone-50 rounded-xl p-4 sm:p-6 border border-amber-100 card-3d">
+                    <div class="flex items-start gap-3 sm:gap-4">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-200 rounded-full flex items-center justify-center text-blue-700 font-bold shrink-0 text-sm sm:text-base">B</div>
+                        <div class="min-w-0">
+                            <h4 class="font-medium text-stone-800 text-sm sm:text-base">Budi Santoso</h4>
+                            <p class="text-stone-600 mt-1 text-xs sm:text-sm">Congratulations! Wishing you both a lifetime of love, laughter, and happiness. God bless your marriage! 💒💕</p>
+                            <p class="text-stone-400 text-xs mt-2">1 hari yang lalu</p>
                         </div>
                     </div>
                 </div>
@@ -726,22 +847,23 @@
         </div>
     </section>
 
+    <!-- Gift Section -->
     <section id="gift" class="py-16 md:py-24 px-4 bg-stone-50">
         <div class="max-w-2xl mx-auto text-center">
-            <h2 class="font-script text-5xl md:text-6xl text-amber-700 mb-4 scroll-animate">Hadiah</h2>
-            <p class="text-stone-600 mb-8 scroll-animate">Doa restu Anda merupakan karunia yang sangat berarti bagi kami. Namun jika Anda ingin memberikan hadiah, kami menyediakan opsi berikut:</p>
+            <h2 class="font-script text-4xl sm:text-5xl md:text-6xl text-amber-700 mb-4 scroll-animate">Hadiah</h2>
+            <p class="text-stone-600 mb-8 scroll-animate text-sm sm:text-base px-2">Doa restu Anda merupakan karunia yang sangat berarti bagi kami. Namun jika Anda ingin memberikan hadiah, kami menyediakan opsi berikut:</p>
             
-            <div class="grid md:grid-cols-2 gap-6 stagger-children">
-                <div class="bg-white rounded-2xl p-6 border border-amber-100 card-3d relative overflow-hidden">
+            <div class="grid sm:grid-cols-2 gap-4 sm:gap-6 stagger-children">
+                <div class="bg-white rounded-2xl p-5 sm:p-6 border border-amber-100 card-3d relative overflow-hidden">
                     <div class="absolute inset-0 shimmer opacity-20"></div>
-                    <div class="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float">
-                        <span class="text-3xl">🏦</span>
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float">
+                        <span class="text-2xl sm:text-3xl">🏦</span>
                     </div>
-                    <h3 class="font-medium text-lg mb-2">Bank BCA</h3>
-                    <p class="text-stone-600 mb-3">a.n. Ahmad Sidik Muttaqin</p>
+                    <h3 class="font-medium text-base sm:text-lg mb-2">Bank BCA</h3>
+                    <p class="text-stone-600 mb-3 text-sm">a.n. Ahmad Sidik Muttaqin</p>
                     <div class="flex items-center justify-center gap-2 bg-stone-50 rounded-lg p-3">
-                        <span id="rekening1" class="font-mono text-lg">1234567890</span>
-                        <button onclick="copyToClipboard('1234567890')" class="text-amber-600 hover:text-amber-800 hover:scale-110 transition-all">
+                        <span id="rekening1" class="font-mono text-base sm:text-lg">1234567890</span>
+                        <button onclick="copyToClipboard('1234567890')" class="text-amber-600 hover:text-amber-800 hover:scale-110 transition-all p-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
@@ -749,16 +871,16 @@
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-2xl p-6 border border-amber-100 card-3d relative overflow-hidden">
+                <div class="bg-white rounded-2xl p-5 sm:p-6 border border-amber-100 card-3d relative overflow-hidden">
                     <div class="absolute inset-0 shimmer opacity-20"></div>
-                    <div class="w-16 h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float float-delay-1">
-                        <span class="text-3xl">🏦</span>
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 bg-amber-100 rounded-full flex items-center justify-center float float-delay-1">
+                        <span class="text-2xl sm:text-3xl">🏦</span>
                     </div>
-                    <h3 class="font-medium text-lg mb-2">Bank Mandiri</h3>
-                    <p class="text-stone-600 mb-3">a.n. Alisya Kartika</p>
+                    <h3 class="font-medium text-base sm:text-lg mb-2">Bank Mandiri</h3>
+                    <p class="text-stone-600 mb-3 text-sm">a.n. Alisya Kartika</p>
                     <div class="flex items-center justify-center gap-2 bg-stone-50 rounded-lg p-3">
-                        <span id="rekening2" class="font-mono text-lg">0987654321</span>
-                        <button onclick="copyToClipboard('0987654321')" class="text-amber-600 hover:text-amber-800 hover:scale-110 transition-all">
+                        <span id="rekening2" class="font-mono text-base sm:text-lg">0987654321</span>
+                        <button onclick="copyToClipboard('0987654321')" class="text-amber-600 hover:text-amber-800 hover:scale-110 transition-all p-1">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
@@ -769,6 +891,7 @@
         </div>
     </section>
 
+    <!-- Footer -->
     <footer class="py-12 px-4 gold-gradient text-white text-center relative overflow-hidden">
         <div class="absolute inset-0 overflow-hidden">
             <div class="absolute w-96 h-96 rounded-full bg-white/10 -top-48 -left-48 float"></div>
@@ -776,28 +899,30 @@
         </div>
         
         <div class="relative z-10">
-            <p class="font-script text-4xl md:text-5xl mb-4 scroll-animate">Terima Kasih</p>
-            <p class="mb-6 opacity-90 scroll-animate">Atas doa dan restu yang telah diberikan</p>
+            <p class="font-script text-3xl sm:text-4xl md:text-5xl mb-4 scroll-animate">Terima Kasih</p>
+            <p class="mb-6 opacity-90 scroll-animate text-sm sm:text-base">Atas doa dan restu yang telah diberikan</p>
             <div class="flex items-center justify-center gap-4 mb-6">
                 <div class="w-16 h-px bg-white/50"></div>
                 <span class="heart-beat text-2xl">❤️</span>
                 <div class="w-16 h-px bg-white/50"></div>
             </div>
-            <p class="font-script text-3xl scroll-animate">Sidik & Alisya</p>
-            <p class="mt-8 text-sm opacity-75">© 2025 Wedding Invitation</p>
+            <p class="font-script text-2xl sm:text-3xl scroll-animate">Sidik & Alisya</p>
+            <p class="mt-8 text-xs sm:text-sm opacity-75">© 2025 Wedding Invitation</p>
         </div>
     </footer>
 
+    <!-- Music Player -->
     <div id="music-player" class="fixed bottom-6 right-6 z-50">
         <button onclick="toggleMusic()" 
-                class="w-14 h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 glow">
-            <svg id="music-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="w-12 h-12 sm:w-14 sm:h-14 bg-amber-600 hover:bg-amber-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 glow">
+            <svg id="music-icon" class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
             </svg>
         </button>
     </div>
 
-    <div id="toast" class="fixed bottom-24 right-6 bg-stone-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full opacity-0 transition-all duration-300 z-50">
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-24 right-6 bg-stone-800 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg transform translate-x-full opacity-0 transition-all duration-300 z-50 text-sm">
         <span id="toast-message">Berhasil disalin!</span>
     </div>
 
@@ -836,7 +961,7 @@
         function createConfetti() {
             const colors = ['#d4af37', '#f4e5b2', '#ff6b6b', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd'];
             const shapes = ['square', 'circle'];
-            const confettiCount = 150;
+            const confettiCount = 100;
             
             for (let i = 0; i < confettiCount; i++) {
                 setTimeout(() => {
@@ -868,17 +993,19 @@
             const particles = ['✨', '💕', '🌸', '💫', '🌹', '💐'];
             
             setInterval(() => {
+                if (document.hidden) return;
+                
                 const particle = document.createElement('span');
                 particle.className = 'particle';
                 particle.textContent = particles[Math.floor(Math.random() * particles.length)];
                 particle.style.left = Math.random() * 100 + 'vw';
-                particle.style.fontSize = Math.random() * 20 + 15 + 'px';
+                particle.style.fontSize = Math.random() * 15 + 12 + 'px';
                 particle.style.animationDuration = Math.random() * 5 + 8 + 's';
-                particle.style.opacity = Math.random() * 0.5 + 0.3;
+                particle.style.opacity = Math.random() * 0.4 + 0.2;
                 container.appendChild(particle);
                 
                 setTimeout(() => particle.remove(), 13000);
-            }, 2000);
+            }, 3000);
         }
         
         createParticles();
