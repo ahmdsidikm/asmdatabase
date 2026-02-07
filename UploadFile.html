@@ -2,419 +2,290 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Gambar ke Supabase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Supabase Storage Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .drop-zone.dragover {
-            border-color: #6366f1 !important;
-            background-color: #eef2ff !important;
-            transform: scale(1.02);
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .drop-zone {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%23E2E8F0FF' stroke-width='3' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            transition: all 0.3s ease;
         }
-        .fade-in {
-            animation: fadeIn 0.4s ease-out;
+        .drop-zone:hover, .drop-zone.dragover {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='24' ry='24' stroke='%236366F1FF' stroke-width='3' stroke-dasharray='12%2c 12' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+            background-color: #F5F3FF;
+            transform: scale(1.01);
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .spinner {
-            border: 3px solid #e5e7eb;
-            border-top: 3px solid #6366f1;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        .progress-bar {
-            transition: width 0.3s ease;
-        }
-        .toast {
-            animation: slideIn 0.3s ease-out, slideOut 0.3s ease-in 2.7s;
-        }
-        .confirm-overlay {
-            animation: fadeInOverlay 0.2s ease-out;
-        }
-        @keyframes fadeInOverlay {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .confirm-dialog {
-            animation: scaleIn 0.2s ease-out;
-        }
-        @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.9) translateY(10px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .delete-btn:hover .delete-icon {
-            animation: shake 0.4s ease-in-out;
-        }
-        @keyframes shake {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-8deg); }
-            75% { transform: rotate(8deg); }
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        .gallery-img {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .gallery-img:hover {
-            transform: scale(1.03);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        .lightbox-overlay {
-            animation: fadeInOverlay 0.2s ease-out;
-        }
-        .lightbox-content {
-            animation: scaleIn 0.25s ease-out;
-        }
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-        .view-btn.active {
-            background-color: #6366f1;
-            color: white;
-        }
-        .gallery-item-enter {
-            animation: fadeIn 0.3s ease-out both;
-        }
+
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        
+        .gallery-img:hover { transform: scale(1.05); }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-800 pb-20">
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-3"></div>
+    <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-3 pointer-events-none"></div>
 
-    <div class="max-w-4xl mx-auto px-4 py-10 relative">
-        <!-- Settings Button -->
-        <button onclick="openSettings()" class="absolute right-4 top-10 p-2.5 bg-white hover:bg-gray-50 text-gray-600 rounded-xl shadow-sm border border-gray-200 transition-all group z-10" title="Pengaturan">
-            <svg class="w-6 h-6 group-hover:rotate-45 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-            </svg>
-        </button>
-
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        
         <!-- Header -->
-        <div class="text-center mb-8 fade-in">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-2xl mb-4">
-                <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                </svg>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8 fade-in">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 text-white shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Supabase Storage</h1>
+                    <p class="text-sm text-slate-500 font-medium">Image Manager</p>
+                </div>
             </div>
-            <h1 class="text-3xl font-bold text-gray-800">Upload Gambar</h1>
-            <p class="text-gray-500 mt-2">Upload gambar ke Supabase Storage dengan mudah</p>
+            
+            <button onclick="openSettings()" class="group flex items-center gap-2.5 px-5 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-sm hover:shadow transition-all w-full sm:w-auto justify-center sm:justify-start cursor-pointer">
+                <div class="w-2 h-2 rounded-full bg-slate-300" id="connectionStatusDot"></div>
+                <span class="text-sm font-semibold text-slate-600 group-hover:text-slate-900">Settings</span>
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
         </div>
 
-        <div class="max-w-2xl mx-auto">
-            <!-- Upload Section -->
-            <div class="bg-white rounded-2xl shadow-lg shadow-indigo-100/50 border border-gray-100 p-6 mb-6 fade-in">
-                <div class="flex items-center gap-2 mb-4">
-                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <h2 class="text-lg font-semibold text-gray-700">Upload Gambar</h2>
-                </div>
+        <div class="grid lg:grid-cols-12 gap-6 sm:gap-8">
+            <!-- Left Column: Upload -->
+            <div class="lg:col-span-4 space-y-6">
+                <!-- Upload Card -->
+                <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/60 border border-slate-100 fade-in">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            Upload
+                        </h2>
+                    </div>
 
-                <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/30 transition-all duration-300">
-                    <input type="file" id="fileInput" accept="image/*" multiple class="hidden">
-                    <div class="flex flex-col items-center">
-                        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-4">
-                            <svg class="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
+                    <div id="dropZone" class="drop-zone rounded-3xl p-8 text-center cursor-pointer mb-6 relative group overflow-hidden">
+                        <input type="file" id="fileInput" accept="image/*" multiple class="hidden">
+                        <div class="relative z-10 transition-transform duration-300 group-hover:-translate-y-1">
+                            <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300 group-hover:shadow-lg group-hover:shadow-indigo-100">
+                                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                            </div>
+                            <p class="text-slate-700 font-semibold text-sm">Tap or Drag images</p>
+                            <p class="text-slate-400 text-xs mt-1">Supports JPG, PNG, WEBP</p>
                         </div>
-                        <p class="text-gray-600 font-medium">Drag & drop gambar di sini</p>
-                        <p class="text-gray-400 text-sm mt-1">atau <span class="text-indigo-500 font-medium hover:underline">klik untuk memilih file</span></p>
-                        <p class="text-gray-400 text-xs mt-3">PNG, JPG, GIF, WEBP (Maks 10MB per file)</p>
                     </div>
+
+                    <div id="previewArea" class="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar mb-4 hidden"></div>
+
+                    <button onclick="uploadFiles()" id="btnUpload" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 hidden cursor-pointer">
+                        <span>Upload Now</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </button>
                 </div>
-
-                <div id="previewArea" class="mt-5 space-y-3 hidden"></div>
-
-                <button onclick="uploadFiles()" id="btnUpload"
-                    class="mt-5 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 hidden items-center justify-center gap-2 shadow-lg shadow-indigo-200 hover:shadow-indigo-300 active:scale-[0.98]">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                    </svg>
-                    <span id="btnUploadText">Upload Semua</span>
-                </button>
+                
+                <!-- Recent Uploads -->
+                <div id="uploadedSection" class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/60 border border-slate-100 hidden fade-in">
+                     <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Successfully Uploaded</h3>
+                     <div id="uploadedList" class="space-y-3"></div>
+                </div>
             </div>
 
-            <!-- Uploaded Files Section -->
-            <div id="uploadedSection" class="bg-white rounded-2xl shadow-lg shadow-indigo-100/50 border border-gray-100 p-6 mb-6 hidden fade-in">
-                <div class="flex items-center gap-2 mb-4">
-                    <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <h2 class="text-lg font-semibold text-gray-700">File Berhasil Diupload</h2>
-                </div>
-                <div id="uploadedList" class="space-y-3"></div>
-            </div>
-        </div>
-
-        <!-- Gallery Section -->
-        <div class="bg-white rounded-2xl shadow-lg shadow-indigo-100/50 border border-gray-100 p-6 mb-6 fade-in">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-                <div class="flex items-center gap-2">
-                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <h2 class="text-lg font-semibold text-gray-700">Galeri Supabase</h2>
-                    <span id="galleryCount" class="hidden px-2 py-0.5 bg-purple-100 text-purple-600 text-xs font-semibold rounded-full"></span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="flex bg-gray-100 rounded-lg p-0.5">
-                        <button onclick="setGalleryView('grid')" id="viewGridBtn" class="view-btn active p-1.5 rounded-md transition-all" title="Grid View">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-                            </svg>
-                        </button>
-                        <button onclick="setGalleryView('list')" id="viewListBtn" class="view-btn p-1.5 rounded-md transition-all" title="List View">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                            </svg>
-                        </button>
+            <!-- Right Column: Gallery -->
+            <div class="lg:col-span-8">
+                <div class="bg-white rounded-3xl p-6 shadow-xl shadow-slate-200/60 border border-slate-100 fade-in h-full flex flex-col min-h-[500px]">
+                    <!-- Gallery Header -->
+                    <div class="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center mb-6">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-lg font-bold text-slate-800">Gallery</h2>
+                            <span id="galleryCount" class="hidden px-2 py-0.5 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-md">0</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                            <div class="relative flex-1 md:w-48 min-w-[140px]">
+                                <input type="text" id="gallerySearch" placeholder="Search files..." oninput="filterGallery()" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                            <div class="flex bg-slate-100 p-1 rounded-xl shrink-0">
+                                <button onclick="setGalleryView('grid')" id="viewGridBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 transition-colors active bg-white shadow-sm cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg></button>
+                                <button onclick="setGalleryView('list')" id="viewListBtn" class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 transition-colors cursor-pointer"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button>
+                            </div>
+                             <button onclick="loadGallery()" id="btnRefreshGallery" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors shrink-0 cursor-pointer"><svg id="refreshIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></button>
+                        </div>
                     </div>
-                    <button onclick="loadGallery()" id="btnRefreshGallery"
-                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 text-sm font-medium rounded-xl transition-all">
-                        <svg class="w-4 h-4" id="refreshIcon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span id="btnRefreshText">Muat Galeri</span>
-                    </button>
-                </div>
-            </div>
 
-            <!-- Search Bar -->
-            <div id="gallerySearchBar" class="hidden mb-4">
-                <div class="relative">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input type="text" id="gallerySearch" placeholder="Cari nama file..." oninput="filterGallery()"
-                        class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all bg-gray-50 focus:bg-white text-sm">
-                </div>
-            </div>
+                    <!-- States -->
+                    <div id="gallerySkeleton" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4">
+                         <div class="aspect-square bg-slate-100 rounded-2xl animate-pulse"></div>
+                         <div class="aspect-square bg-slate-100 rounded-2xl animate-pulse"></div>
+                         <div class="aspect-square bg-slate-100 rounded-2xl animate-pulse"></div>
+                         <div class="aspect-square bg-slate-100 rounded-2xl animate-pulse"></div>
+                    </div>
 
-            <!-- Empty State -->
-            <div id="galleryEmpty" class="text-center py-12">
-                <div class="w-16 h-16 bg-purple-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <p class="text-gray-500 font-medium">Belum ada gambar</p>
-                <p class="text-gray-400 text-sm mt-1">Klik <strong>"Muat Galeri"</strong> untuk melihat gambar di bucket Supabase kamu</p>
-            </div>
-
-            <!-- Loading Skeleton -->
-            <div id="gallerySkeleton" class="hidden">
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    <div class="skeleton rounded-xl aspect-square"></div>
-                    <div class="skeleton rounded-xl aspect-square"></div>
-                    <div class="skeleton rounded-xl aspect-square"></div>
-                    <div class="skeleton rounded-xl aspect-square"></div>
-                </div>
-            </div>
-
-            <!-- Gallery Grid -->
-            <div id="galleryGrid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
-
-            <!-- Gallery List -->
-            <div id="galleryList" class="hidden space-y-2"></div>
-
-            <!-- No Results -->
-            <div id="galleryNoResults" class="hidden text-center py-8">
-                <p class="text-gray-400 text-sm">Tidak ada file yang cocok dengan pencarian.</p>
-            </div>
-
-            <!-- Load More / Pagination -->
-            <div id="galleryPagination" class="hidden mt-5 flex items-center justify-between">
-                <p class="text-xs text-gray-400" id="galleryInfo"></p>
-                <div class="flex gap-2">
-                    <button onclick="galleryPrevPage()" id="btnPrev" disabled
-                        class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 text-sm font-medium rounded-lg transition-colors">
-                        ← Sebelumnya
-                    </button>
-                    <button onclick="galleryNextPage()" id="btnNext" disabled
-                        class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600 text-sm font-medium rounded-lg transition-colors">
-                        Selanjutnya →
-                    </button>
+                    <div id="galleryEmpty" class="flex-1 flex flex-col items-center justify-center text-center p-8">
+                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        <p class="text-slate-500 font-medium">No images found</p>
+                        <button onclick="loadGallery()" class="text-indigo-600 text-sm font-semibold hover:underline mt-2 cursor-pointer">Refresh Gallery</button>
+                    </div>
+                    
+                    <div id="galleryGrid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 content-start"></div>
+                    <div id="galleryList" class="hidden space-y-2"></div>
+                    
+                    <!-- Pagination -->
+                    <div id="galleryPagination" class="hidden mt-auto pt-6 flex items-center justify-between border-t border-slate-100">
+                        <span id="galleryInfo" class="text-xs text-slate-400 font-medium"></span>
+                        <div class="flex gap-2">
+                            <button onclick="galleryPrevPage()" id="btnPrev" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">←</button>
+                            <button onclick="galleryNextPage()" id="btnNext" class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">→</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
-        <p class="text-center text-gray-400 text-xs mt-8">Dibuat dengan ❤️ menggunakan Supabase Storage</p>
     </div>
 
     <!-- SETTINGS MODAL -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 confirm-overlay hidden">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto confirm-dialog flex flex-col">
-            <div class="flex items-center justify-between p-6 border-b border-gray-100">
-                <h2 class="text-xl font-bold text-gray-800">Pengaturan</h2>
-                <button onclick="closeSettings()" class="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300" onclick="if(event.target===this) closeSettings()">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300" id="settingsContent">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h2 class="text-lg font-bold text-slate-800">Supabase Configuration</h2>
+                <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             
-            <div class="p-6 overflow-y-auto">
-                <!-- Panduan Section -->
-                <div class="bg-white rounded-2xl shadow-sm border border-amber-100 mb-6 overflow-hidden">
-                    <button onclick="toggleGuide()" id="guideToggle" class="w-full flex items-center justify-between p-4 text-left hover:bg-amber-50/50 transition-colors bg-amber-50/30">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 class="text-sm font-semibold text-gray-700">Panduan Supabase</h2>
-                            </div>
-                        </div>
-                        <svg id="guideArrow" class="w-5 h-5 text-gray-400 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-
-                    <div id="guideContent" class="hidden">
-                        <div class="px-6 pb-6 border-t border-amber-100 mt-2">
-                            <div class="mt-4 flex gap-4">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">1</div>
-                                    <div class="w-0.5 bg-indigo-200 flex-1 mt-1"></div>
-                                </div>
-                                <div class="pb-4">
-                                    <h3 class="text-sm font-semibold text-gray-700">Buat Akun & Project</h3>
-                                    <p class="text-xs text-gray-500 mt-1">Buka <a href="https://supabase.com" target="_blank" class="text-indigo-600 font-medium hover:underline">supabase.com</a> dan buat project baru.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">2</div>
-                                    <div class="w-0.5 bg-indigo-200 flex-1 mt-1"></div>
-                                </div>
-                                <div class="pb-4">
-                                    <h3 class="text-sm font-semibold text-gray-700">Buat Bucket "images"</h3>
-                                    <p class="text-xs text-gray-500 mt-1">Di menu <strong>Storage</strong>, buat bucket baru bernama <code class="bg-gray-100 px-1 py-0.5 rounded text-indigo-600 font-mono">images</code>. <strong>PENTING:</strong> Centang "Public bucket".</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">3</div>
-                                    <div class="w-0.5 bg-indigo-200 flex-1 mt-1"></div>
-                                </div>
-                                <div class="pb-4">
-                                    <h3 class="text-sm font-semibold text-gray-700">Atur Policies</h3>
-                                    <p class="text-xs text-gray-500 mt-1">Di tab <strong>Policies</strong>, buat policy baru (INSERT, SELECT, DELETE) untuk role 'anon' dan 'authenticated'.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-4">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-semibold text-gray-700">Copy URL & Key</h3>
-                                    <p class="text-xs text-gray-500 mt-1">Ambil URL dan Public Anon Key di <strong>Project Settings -> API</strong>.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="p-6 space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Project URL</label>
+                    <input type="url" id="supabaseUrl" placeholder="https://xxx.supabase.co" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-mono text-sm text-slate-700">
                 </div>
-
-                <!-- Config Form -->
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1.5">Supabase URL</label>
-                        <input type="url" id="supabaseUrl" placeholder="https://xxxxx.supabase.co"
-                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-gray-50 focus:bg-white text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1.5">Anon / Service Key</label>
-                        <input type="password" id="supabaseKey" placeholder="eyJhbGciOiJIUzI1NiIs..."
-                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-gray-50 focus:bg-white text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1.5">Nama Bucket</label>
-                        <input type="text" id="bucketName" placeholder="images" value="images"
-                            class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-gray-50 focus:bg-white text-sm">
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Anon / Service Key</label>
+                    <input type="password" id="supabaseKey" placeholder="eyJ..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-mono text-sm text-slate-700">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Bucket Name</label>
+                    <input type="text" id="bucketName" value="images" placeholder="images" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all text-sm text-slate-700">
                 </div>
             </div>
 
-            <div class="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-between items-center">
-                <button onclick="testConnection()" id="btnTest"
-                    class="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors shadow-sm inline-flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                    Test Koneksi
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+                <button onclick="testConnection()" id="btnTest" class="px-4 py-2 text-slate-600 hover:text-indigo-600 font-medium text-sm flex items-center gap-2 transition-colors cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Test Connection
                 </button>
-                <button onclick="closeSettings()" 
-                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-200">
-                    Simpan & Tutup
+                <button onclick="closeSettings()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-95 cursor-pointer">
+                    Save Config
                 </button>
             </div>
         </div>
     </div>
 
     <!-- QR MODAL -->
-    <div id="qrModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 confirm-overlay hidden">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full confirm-dialog flex flex-col items-center">
-            <h3 id="qrTitle" class="text-lg font-bold text-gray-800 mb-4 text-center truncate w-full px-2">QR Code</h3>
-            <div id="qrCodeContainer" class="p-4 bg-white rounded-xl shadow-inner border border-gray-100 mb-4"></div>
-            <p id="qrUrlText" class="text-xs text-gray-400 text-center break-all mb-4"></p>
-            <button onclick="closeQrModal()" class="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors">
-                Tutup
+    <div id="qrModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300" onclick="if(event.target===this) closeQrModal()">
+        <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full flex flex-col items-center transform scale-95 transition-transform duration-300" id="qrContent">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Scan QR Code</h3>
+            <div id="qrCodeContainer" class="p-4 bg-white rounded-2xl shadow-inner border border-slate-100 mb-6"></div>
+            <p id="qrUrlText" class="text-xs text-slate-400 text-center break-all mb-6 font-mono bg-slate-50 p-2 rounded-lg w-full"></p>
+            <button onclick="closeQrModal()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors cursor-pointer">
+                Close
             </button>
         </div>
     </div>
 
     <script>
+        // Constants & Config
+        const DEFAULT_SUPABASE_URL = "https://sdpkszleuubddfovgkfy.supabase.co/";
+        const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkcGtzemxldXViZGRmb3Zna2Z5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0MDU5OTMsImV4cCI6MjA4NTk4MTk5M30.Ir5ftpwkYLGI6r516cxhN0xac2cQNb38200jKOTDKv0";
+        const DEFAULT_BUCKET = "images";
+        
         let supabaseClient = null;
         let selectedFiles = [];
-        let guideOpen = false;
-
-        // Gallery state
         let galleryFiles = [];
         let galleryFiltered = [];
         let galleryView = 'grid';
         let galleryPage = 0;
         const GALLERY_PER_PAGE = 20;
-        let galleryLoaded = false;
 
-        // Settings Modal Functions
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            // Load saved or default config
+            const savedUrl = localStorage.getItem('supabaseUrl');
+            const savedKey = localStorage.getItem('supabaseKey');
+            const savedBucket = localStorage.getItem('bucketName');
+
+            if (!savedUrl && !savedKey) {
+                // Apply defaults if fresh
+                document.getElementById('supabaseUrl').value = DEFAULT_SUPABASE_URL;
+                document.getElementById('supabaseKey').value = DEFAULT_SUPABASE_KEY;
+                localStorage.setItem('supabaseUrl', DEFAULT_SUPABASE_URL);
+                localStorage.setItem('supabaseKey', DEFAULT_SUPABASE_KEY);
+            } else {
+                if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
+                if (savedKey) document.getElementById('supabaseKey').value = savedKey;
+            }
+            
+            if (savedBucket) document.getElementById('bucketName').value = savedBucket;
+            else document.getElementById('bucketName').value = DEFAULT_BUCKET;
+
+            initSupabase();
+        });
+
+        function initSupabase() {
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            
+            if (url && key) {
+                supabaseClient = window.supabase.createClient(url, key);
+                checkConnection(false); // Silent check
+                loadGallery();
+            } else {
+                updateConnectionStatus('error');
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            const dot = document.getElementById('connectionStatusDot');
+            if (status === 'success') {
+                dot.classList.remove('bg-slate-300', 'bg-red-500');
+                dot.classList.add('bg-green-500', 'animate-pulse');
+            } else if (status === 'error') {
+                dot.classList.remove('bg-slate-300', 'bg-green-500', 'animate-pulse');
+                dot.classList.add('bg-red-500');
+            } else {
+                dot.classList.remove('bg-green-500', 'bg-red-500', 'animate-pulse');
+                dot.classList.add('bg-slate-300');
+            }
+        }
+
+        // --- Settings Modal ---
         function openSettings() {
-            document.getElementById('settingsModal').classList.remove('hidden');
+            const modal = document.getElementById('settingsModal');
+            const content = document.getElementById('settingsContent');
+            modal.classList.remove('hidden');
+            // Allow display:none to unapply before animating opacity
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            });
         }
 
         function closeSettings() {
-            // Save config
+            const modal = document.getElementById('settingsModal');
+            const content = document.getElementById('settingsContent');
+            
+            // Save settings
             const url = document.getElementById('supabaseUrl').value.trim();
             const key = document.getElementById('supabaseKey').value.trim();
             const bucket = document.getElementById('bucketName').value.trim();
@@ -423,767 +294,432 @@
             localStorage.setItem('supabaseKey', key);
             localStorage.setItem('bucketName', bucket);
 
-            document.getElementById('settingsModal').classList.add('hidden');
-            
-            // Re-init client if needed
-            if (url && key) {
-                supabaseClient = window.supabase.createClient(url, key);
+            // Re-init if changed
+            if (supabaseClient?.supabaseUrl !== url || supabaseClient?.supabaseKey !== key) {
+                initSupabase();
             }
+
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        // QR Modal Functions
-        function showQr(url, name) {
-            document.getElementById('qrModal').classList.remove('hidden');
-            document.getElementById('qrTitle').textContent = name;
-            document.getElementById('qrUrlText').textContent = url;
-            
-            const container = document.getElementById('qrCodeContainer');
-            container.innerHTML = '';
-            
+        async function testConnection() {
+            const btn = document.getElementById('btnTest');
+            const url = document.getElementById('supabaseUrl').value.trim();
+            const key = document.getElementById('supabaseKey').value.trim();
+            const bucket = document.getElementById('bucketName').value.trim();
+
+            if (!url || !key) return showToast('URL and Key required', 'error');
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spin w-4 h-4 border-2 border-slate-400 border-t-indigo-600 rounded-full inline-block"></span> Testing...';
+            btn.disabled = true;
+
             try {
-                new QRCode(container, {
-                    text: url,
-                    width: 200,
-                    height: 200,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            } catch (e) {
-                container.innerHTML = '<p class="text-red-500 text-sm">Gagal membuat QR Code</p>';
-                console.error(e);
+                const tempClient = window.supabase.createClient(url, key);
+                const { data, error } = await tempClient.storage.getBucket(bucket);
+                
+                if (error && error.message && !error.message.includes('not found')) {
+                    throw error;
+                }
+                // Note: getBucket usually fails for anon unless specific policies, but list buckets might work
+                // Alternative: Try to list files in bucket
+                const { error: listError } = await tempClient.storage.from(bucket).list('', { limit: 1 });
+                
+                if (listError && listError.statusCode !== 404) {
+                     // If bucket doesn't exist, we might get an error, but connection is technically OK if not 401
+                     if(listError.message.includes('violates row-level security')) {
+                         showToast('Connected! (RLS restricted)', 'success');
+                     } else {
+                         throw listError;
+                     }
+                }
+                
+                showToast('Connection Successful!', 'success');
+                updateConnectionStatus('success');
+            } catch (err) {
+                console.error(err);
+                showToast('Connection Failed', 'error');
+                updateConnectionStatus('error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
-        function closeQrModal() {
-            document.getElementById('qrModal').classList.add('hidden');
+        async function checkConnection(notify = true) {
+            if (!supabaseClient) return;
+            const bucket = document.getElementById('bucketName').value.trim();
+            try {
+                const { error } = await supabaseClient.storage.from(bucket).list('', { limit: 1 });
+                if (!error) {
+                    updateConnectionStatus('success');
+                    if (notify) showToast('Connected to Supabase', 'success');
+                } else {
+                    updateConnectionStatus('error');
+                }
+            } catch(e) { updateConnectionStatus('error'); }
         }
 
-        function toggleGuide() {
-            guideOpen = !guideOpen;
-            const content = document.getElementById('guideContent');
-            const arrow = document.getElementById('guideArrow');
-            if (guideOpen) {
-                content.classList.remove('hidden');
-                arrow.style.transform = 'rotate(180deg)';
-            } else {
-                content.classList.add('hidden');
-                arrow.style.transform = 'rotate(0deg)';
-            }
-        }
-
-        // Initialize from localStorage
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedUrl = localStorage.getItem('supabaseUrl');
-            const savedKey = localStorage.getItem('supabaseKey');
-            const savedBucket = localStorage.getItem('bucketName');
-            if (savedUrl) document.getElementById('supabaseUrl').value = savedUrl;
-            if (savedKey) document.getElementById('supabaseKey').value = savedKey;
-            if (savedBucket) document.getElementById('bucketName').value = savedBucket;
-
-            // Close modals on outside click
-            document.getElementById('settingsModal').addEventListener('click', (e) => {
-                if(e.target === e.currentTarget) closeSettings();
-            });
-            document.getElementById('qrModal').addEventListener('click', (e) => {
-                if(e.target === e.currentTarget) closeQrModal();
-            });
-        });
-
-        // Drop Zone Events
+        // --- Upload Logic ---
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
 
         dropZone.addEventListener('click', () => fileInput.click());
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('dragover');
-        });
-
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-            if (files.length) addFiles(files);
+            handleFiles(e.dataTransfer.files);
         });
-
         fileInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length) addFiles(files);
+            handleFiles(e.target.files);
             fileInput.value = '';
         });
 
-        function addFiles(files) {
-            files.forEach(file => {
-                if (file.size > 10 * 1024 * 1024) {
-                    showToast(`${file.name} terlalu besar (maks 10MB)`, 'error');
-                    return;
-                }
-                if (!selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
-                    selectedFiles.push(file);
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    if (file.size > 10 * 1024 * 1024) showToast(`${file.name} too large (>10MB)`, 'error');
+                    else selectedFiles.push(file);
                 }
             });
             renderPreviews();
         }
 
         function renderPreviews() {
-            const previewArea = document.getElementById('previewArea');
-            const btnUpload = document.getElementById('btnUpload');
-
+            const area = document.getElementById('previewArea');
+            const btn = document.getElementById('btnUpload');
+            
             if (selectedFiles.length === 0) {
-                previewArea.classList.add('hidden');
-                btnUpload.classList.add('hidden');
-                btnUpload.classList.remove('flex');
+                area.classList.add('hidden');
+                btn.classList.add('hidden');
                 return;
             }
 
-            previewArea.classList.remove('hidden');
-            btnUpload.classList.remove('hidden');
-            btnUpload.classList.add('flex');
-            document.getElementById('btnUploadText').textContent = `Upload ${selectedFiles.length} File`;
+            area.classList.remove('hidden');
+            btn.classList.remove('hidden');
+            btn.querySelector('span').textContent = `Upload ${selectedFiles.length} File${selectedFiles.length>1?'s':''}`;
 
-            previewArea.innerHTML = selectedFiles.map((file, index) => {
-                const url = URL.createObjectURL(file);
-                const size = formatSize(file.size);
-                return `
-                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl fade-in" id="preview-${index}">
-                        <img src="${url}" class="w-14 h-14 object-cover rounded-lg border border-gray-200 flex-shrink-0" alt="">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-700 truncate">${file.name}</p>
-                            <p class="text-xs text-gray-400">${size}</p>
-                            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2 hidden" id="progress-${index}">
-                                <div class="bg-indigo-500 h-1.5 rounded-full progress-bar" style="width: 0%" id="progressBar-${index}"></div>
-                            </div>
+            area.innerHTML = selectedFiles.map((file, i) => `
+                <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 fade-in relative group" id="preview-${i}">
+                    <img src="${URL.createObjectURL(file)}" class="w-10 h-10 object-cover rounded-lg border border-slate-200">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-slate-700 truncate">${file.name}</p>
+                        <p class="text-xs text-slate-400">${(file.size/1024).toFixed(1)} KB</p>
+                        <div class="h-1 bg-slate-200 mt-2 rounded-full overflow-hidden hidden" id="progress-${i}">
+                            <div class="h-full bg-indigo-500 w-0 transition-all duration-300" id="bar-${i}"></div>
                         </div>
-                        <button onclick="removeFile(${index})" class="p-1.5 hover:bg-red-50 rounded-lg transition-colors group flex-shrink-0" id="removeBtn-${index}">
-                            <svg class="w-4 h-4 text-gray-400 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
                     </div>
-                `;
-            }).join('');
+                    <button onclick="removeFile(${i})" class="p-2 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            `).join('');
         }
 
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
+        function removeFile(i) {
+            selectedFiles.splice(i, 1);
             renderPreviews();
         }
 
-        function formatSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / 1048576).toFixed(1) + ' MB';
-        }
-
-        function getSupabaseClient() {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-
-            if (!url || !key) {
-                showToast('Isi konfigurasi Supabase terlebih dahulu di menu Pengaturan!', 'error');
-                openSettings(); // Open settings if missing
-                return null;
-            }
-
-            localStorage.setItem('supabaseUrl', url);
-            localStorage.setItem('supabaseKey', key);
-            localStorage.setItem('bucketName', document.getElementById('bucketName').value.trim());
-
-            if (!supabaseClient || supabaseClient.supabaseUrl !== url) {
-                supabaseClient = window.supabase.createClient(url, key);
-            }
-            return supabaseClient;
-        }
-
-        async function testConnection() {
-            const btn = document.getElementById('btnTest');
-            const client = getSupabaseClient(); // This might recurse if empty, but button is in settings, so fields should be there
-            
-            // Manually get values to avoid loop if triggered from settings
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const key = document.getElementById('supabaseKey').value.trim();
-            const bucket = document.getElementById('bucketName').value.trim() || 'images';
-
-            if(!url || !key) {
-                 showToast('URL dan Key tidak boleh kosong', 'error');
-                 return;
-            }
-
-            const tempClient = window.supabase.createClient(url, key);
-
-            btn.disabled = true;
-            btn.innerHTML = '<div class="spinner"></div> Testing...';
-
-            try {
-                const { data, error } = await tempClient.storage.getBucket(bucket);
-                if (error) {
-                    if (error.message.includes('not found') || error.statusCode === 404) {
-                        showToast(`Bucket "${bucket}" tidak ditemukan.`, 'error');
-                    } else {
-                        showToast('Error: ' + error.message, 'error');
-                    }
-                } else {
-                    showToast(`Koneksi berhasil! Bucket "${bucket}" ditemukan.`, 'success');
-                }
-            } catch (err) {
-                showToast('Gagal terhubung: ' + err.message, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                </svg> Test Koneksi`;
-            }
-        }
-
         async function uploadFiles() {
-            const client = getSupabaseClient();
-            if (!client) return;
-            if (selectedFiles.length === 0) {
-                showToast('Pilih file terlebih dahulu!', 'error');
+            if (!supabaseClient) {
+                showToast('Please configure Supabase first', 'error');
+                openSettings();
                 return;
             }
+            
+            const bucket = document.getElementById('bucketName').value.trim();
+            const btn = document.getElementById('btnUpload');
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Uploading...';
 
-            const bucket = document.getElementById('bucketName').value.trim() || 'images';
-            const btnUpload = document.getElementById('btnUpload');
-            btnUpload.disabled = true;
-            document.getElementById('btnUploadText').textContent = 'Mengupload...';
-
-            let successCount = 0;
+            let success = 0;
             const uploadedSection = document.getElementById('uploadedSection');
             const uploadedList = document.getElementById('uploadedList');
 
             for (let i = 0; i < selectedFiles.length; i++) {
                 const file = selectedFiles[i];
-                const progressContainer = document.getElementById(`progress-${i}`);
-                const progressBar = document.getElementById(`progressBar-${i}`);
-                const removeBtn = document.getElementById(`removeBtn-${i}`);
-
-                if (progressContainer) progressContainer.classList.remove('hidden');
-                if (removeBtn) removeBtn.classList.add('hidden');
-
-                let progress = 0;
-                const progressInterval = setInterval(() => {
-                    progress = Math.min(progress + Math.random() * 30, 90);
-                    if (progressBar) progressBar.style.width = progress + '%';
-                }, 200);
+                document.getElementById(`progress-${i}`).classList.remove('hidden');
+                const bar = document.getElementById(`bar-${i}`);
+                
+                // Mock progress
+                let p = 10;
+                bar.style.width = '10%';
+                const interval = setInterval(() => { p+=Math.random()*20; if(p>90) p=90; bar.style.width=p+'%'; }, 200);
 
                 try {
-                    const timestamp = Date.now();
-                    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-                    const filePath = `${timestamp}_${safeName}`;
-
-                    const { data, error } = await client.storage
-                        .from(bucket)
-                        .upload(filePath, file, {
-                            cacheControl: '3600',
-                            upsert: false
-                        });
-
-                    clearInterval(progressInterval);
-
-                    if (error) {
-                        if (progressBar) {
-                            progressBar.style.width = '100%';
-                            progressBar.classList.remove('bg-indigo-500');
-                            progressBar.classList.add('bg-red-500');
-                        }
-                        showToast(`Gagal upload ${file.name}: ${error.message}`, 'error');
-                        continue;
-                    }
-
-                    if (progressBar) progressBar.style.width = '100%';
-
-                    const { data: urlData } = client.storage.from(bucket).getPublicUrl(filePath);
-                    const publicUrl = urlData.publicUrl;
-
+                    const ext = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+                    
+                    const { error } = await supabaseClient.storage.from(bucket).upload(fileName, file);
+                    clearInterval(interval);
+                    
+                    if (error) throw error;
+                    
+                    bar.style.width = '100%';
+                    bar.classList.add('bg-green-500');
+                    
+                    // Add to success list
+                    const { data: { publicUrl } } = supabaseClient.storage.from(bucket).getPublicUrl(fileName);
                     uploadedSection.classList.remove('hidden');
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'flex items-start gap-3 p-3 bg-green-50 rounded-xl fade-in border border-green-100';
-                    itemDiv.setAttribute('data-filepath', filePath);
-                    itemDiv.innerHTML = `
-                        <img src="${URL.createObjectURL(file)}" class="w-14 h-14 object-cover rounded-lg border border-green-200 flex-shrink-0" alt="">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-medium text-gray-700 truncate">${file.name}</p>
-                            <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                <button onclick="copyUrl(this, '${publicUrl}')" class="px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs font-medium rounded-lg transition-colors flex-shrink-0">
-                                    Copy
-                                </button>
-                                <a href="${publicUrl}" target="_blank" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium rounded-lg transition-colors flex-shrink-0">
-                                    Buka
-                                </a>
-                                <button onclick="showQr('${publicUrl}', '${file.name}')" class="px-2.5 py-1 bg-purple-100 hover:bg-purple-200 text-purple-600 text-xs font-medium rounded-lg transition-colors flex-shrink-0 flex items-center gap-1">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zM6 18h2v4H6v-4zM4 6h4v4H4V6zm12 0h4v4h-4V6zM4 18h4v4H4v-4zM6 6h1v1H6V6zm13 0h1v1h-1V6zM6 18h1v1H6v-1z"/></svg>
-                                    QR
-                                </button>
-                            </div>
-                        </div>
-                        <button onclick="confirmDelete(this, '${filePath}', '${file.name}')" class="delete-btn p-2 hover:bg-red-100 rounded-lg transition-colors group flex-shrink-0" title="Hapus dari Supabase">
-                            <svg class="delete-icon w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
+                    
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-3 p-3 bg-green-50/50 border border-green-100 rounded-xl fade-in';
+                    div.innerHTML = `
+                         <img src="${publicUrl}" class="w-10 h-10 object-cover rounded-lg border border-green-200">
+                         <div class="flex-1 min-w-0">
+                             <p class="text-xs font-medium text-green-800 truncate">${file.name}</p>
+                             <div class="flex gap-2 mt-1">
+                                 <button onclick="copyToClipboard('${publicUrl}')" class="text-[10px] font-bold text-indigo-600 hover:underline uppercase cursor-pointer">Copy URL</button>
+                                 <button onclick="showQr('${publicUrl}', '${fileName}')" class="text-[10px] font-bold text-indigo-600 hover:underline uppercase cursor-pointer">QR</button>
+                             </div>
+                         </div>
                     `;
-                    uploadedList.prepend(itemDiv);
-                    successCount++;
+                    uploadedList.prepend(div);
+                    success++;
 
-                    const previewEl = document.getElementById(`preview-${i}`);
-                    if (previewEl) {
-                        previewEl.classList.remove('bg-gray-50');
-                        previewEl.classList.add('bg-green-50', 'border', 'border-green-200');
-                        if (progressBar) {
-                            progressBar.classList.remove('bg-indigo-500');
-                            progressBar.classList.add('bg-green-500');
-                        }
-                    }
                 } catch (err) {
-                    clearInterval(progressInterval);
-                    showToast(`Error upload ${file.name}: ${err.message}`, 'error');
+                    clearInterval(interval);
+                    bar.classList.add('bg-red-500');
+                    showToast(`Failed: ${file.name}`, 'error');
                 }
             }
 
-            if (successCount > 0) {
-                showToast(`${successCount} file berhasil diupload!`, 'success');
+            if (success > 0) {
+                showToast(`Uploaded ${success} files!`, 'success');
                 selectedFiles = [];
-                setTimeout(() => {
-                    renderPreviews();
-                }, 1500);
-                if (galleryLoaded) {
-                    setTimeout(() => loadGallery(), 2000);
-                }
+                setTimeout(renderPreviews, 1000);
+                setTimeout(loadGallery, 1500);
             }
-
-            btnUpload.disabled = false;
-            document.getElementById('btnUploadText').textContent = 'Upload Semua';
+            
+            btn.disabled = false;
+            btn.querySelector('span').textContent = 'Upload Now';
         }
 
-        function copyUrl(btn, url) {
-            navigator.clipboard.writeText(url).then(() => {
-                const originalText = btn.textContent;
-                btn.textContent = 'Copied!';
-                btn.classList.remove('bg-indigo-100', 'text-indigo-600');
-                btn.classList.add('bg-green-100', 'text-green-600');
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.classList.remove('bg-green-100', 'text-green-600');
-                    btn.classList.add('bg-indigo-100', 'text-indigo-600');
-                }, 1500);
-            });
-        }
-
-        function confirmDelete(btn, filePath, fileName) {
-            const overlay = document.createElement('div');
-            overlay.className = 'confirm-overlay fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4';
-            overlay.innerHTML = `
-                <div class="confirm-dialog bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
-                    <div class="flex items-center justify-center w-14 h-14 bg-red-100 rounded-2xl mx-auto mb-4">
-                        <svg class="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 text-center">Hapus Gambar?</h3>
-                    <p class="text-sm text-gray-500 text-center mt-2">File <strong class="text-gray-700">${fileName}</strong> akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.</p>
-                    <div class="flex gap-3 mt-6">
-                        <button onclick="this.closest('.confirm-overlay').remove()" class="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors text-sm">
-                            Batal
-                        </button>
-                        <button onclick="deleteFile(this, '${filePath}')" class="flex-1 py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors text-sm flex items-center justify-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                            Ya, Hapus
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.remove();
-            });
-
-            document.body.appendChild(overlay);
-        }
-
-        async function deleteFile(confirmBtn, filePath) {
-            const client = getSupabaseClient();
-            if (!client) return;
-
-            const bucket = document.getElementById('bucketName').value.trim() || 'images';
-            const overlay = confirmBtn.closest('.confirm-overlay');
-
-            confirmBtn.disabled = true;
-            confirmBtn.innerHTML = '<div class="spinner" style="width:18px;height:18px;border-width:2px;"></div> Menghapus...';
-
-            try {
-                const { data, error } = await client.storage
-                    .from(bucket)
-                    .remove([filePath]);
-
-                if (error) {
-                    showToast(`Gagal menghapus: ${error.message}`, 'error');
-                    overlay.remove();
-                    return;
-                }
-
-                // Remove from uploaded list
-                const uploadedList = document.getElementById('uploadedList');
-                const item = uploadedList.querySelector(`[data-filepath="${filePath}"]`);
-                if (item) {
-                    item.style.transition = 'all 0.3s ease';
-                    item.style.opacity = '0';
-                    item.style.transform = 'translateX(20px)';
-                    item.style.maxHeight = item.scrollHeight + 'px';
-                    setTimeout(() => {
-                        item.style.maxHeight = '0';
-                        item.style.padding = '0';
-                        item.style.margin = '0';
-                        item.style.border = 'none';
-                    }, 200);
-                    setTimeout(() => {
-                        item.remove();
-                        if (uploadedList.children.length === 0) {
-                            document.getElementById('uploadedSection').classList.add('hidden');
-                        }
-                    }, 500);
-                }
-
-                // Remove from gallery
-                const galleryItem = document.querySelector(`[data-gallery-path="${filePath}"]`);
-                if (galleryItem) {
-                    galleryItem.style.transition = 'all 0.3s ease';
-                    galleryItem.style.opacity = '0';
-                    galleryItem.style.transform = 'scale(0.8)';
-                    setTimeout(() => {
-                        galleryItem.remove();
-                    }, 300);
-                    // Update gallery data
-                    galleryFiles = galleryFiles.filter(f => f.name !== filePath);
-                    galleryFiltered = galleryFiltered.filter(f => f.name !== filePath);
-                    updateGalleryCount();
-                }
-
-                overlay.remove();
-                showToast('File berhasil dihapus dari Supabase!', 'success');
-            } catch (err) {
-                showToast(`Error menghapus: ${err.message}`, 'error');
-                overlay.remove();
-            }
-        }
-
-        // ===================== GALLERY FUNCTIONS =====================
-
+        // --- Gallery Logic ---
         async function loadGallery() {
-            const client = getSupabaseClient();
-            if (!client) return;
-
-            const bucket = document.getElementById('bucketName').value.trim() || 'images';
-            const btnRefresh = document.getElementById('btnRefreshGallery');
-            const refreshIcon = document.getElementById('refreshIcon');
-
-            btnRefresh.disabled = true;
-            document.getElementById('btnRefreshText').textContent = 'Memuat...';
-            refreshIcon.style.animation = 'spin 0.8s linear infinite';
-
-            // Show skeleton
+            if (!supabaseClient) return;
+            const bucket = document.getElementById('bucketName').value.trim();
+            const btn = document.getElementById('btnRefreshGallery');
+            const icon = document.getElementById('refreshIcon');
+            
+            icon.classList.add('spin');
+            btn.disabled = true;
+            
+            // UI States
             document.getElementById('galleryEmpty').classList.add('hidden');
             document.getElementById('galleryGrid').classList.add('hidden');
             document.getElementById('galleryList').classList.add('hidden');
-            document.getElementById('galleryNoResults').classList.add('hidden');
             document.getElementById('galleryPagination').classList.add('hidden');
             document.getElementById('gallerySkeleton').classList.remove('hidden');
 
             try {
-                // List all files in the bucket
-                const { data, error } = await client.storage
-                    .from(bucket)
-                    .list('', {
-                        limit: 1000,
-                        offset: 0,
-                        sortBy: { column: 'created_at', order: 'desc' }
-                    });
-
-                if (error) {
-                    showToast('Gagal memuat galeri: ' + error.message, 'error');
-                    document.getElementById('gallerySkeleton').classList.add('hidden');
-                    document.getElementById('galleryEmpty').classList.remove('hidden');
-                    return;
-                }
-
-                // Filter only image files (exclude folders / .emptyFolderPlaceholder)
-                const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff', 'avif'];
-                galleryFiles = (data || []).filter(file => {
-                    if (!file.name || file.name === '.emptyFolderPlaceholder') return false;
-                    const ext = file.name.split('.').pop().toLowerCase();
-                    return imageExts.includes(ext);
+                const { data, error } = await supabaseClient.storage.from(bucket).list('', {
+                    limit: 1000,
+                    sortBy: { column: 'created_at', order: 'desc' }
                 });
 
+                if (error) throw error;
+
+                galleryFiles = data.filter(f => f.name !== '.emptyFolderPlaceholder');
                 galleryFiltered = [...galleryFiles];
                 galleryPage = 0;
-                galleryLoaded = true;
-
-                document.getElementById('gallerySkeleton').classList.add('hidden');
+                
+                document.getElementById('galleryCount').textContent = galleryFiles.length;
+                document.getElementById('galleryCount').classList.remove('hidden');
 
                 if (galleryFiles.length === 0) {
                     document.getElementById('galleryEmpty').classList.remove('hidden');
-                    document.getElementById('gallerySearchBar').classList.add('hidden');
-                    document.getElementById('galleryPagination').classList.add('hidden');
-                    showToast('Bucket kosong. Belum ada gambar yang diupload.', 'info');
                 } else {
-                    document.getElementById('gallerySearchBar').classList.remove('hidden');
-                    document.getElementById('gallerySearch').value = '';
                     renderGallery();
-                    showToast(`${galleryFiles.length} gambar ditemukan!`, 'success');
                 }
             } catch (err) {
-                showToast('Error memuat galeri: ' + err.message, 'error');
-                document.getElementById('gallerySkeleton').classList.add('hidden');
+                showToast('Failed to load gallery', 'error');
                 document.getElementById('galleryEmpty').classList.remove('hidden');
             } finally {
-                btnRefresh.disabled = false;
-                document.getElementById('btnRefreshText').textContent = 'Muat Galeri';
-                refreshIcon.style.animation = '';
+                icon.classList.remove('spin');
+                btn.disabled = false;
+                document.getElementById('gallerySkeleton').classList.add('hidden');
             }
-        }
-
-        function getPublicUrl(filePath) {
-            const url = document.getElementById('supabaseUrl').value.trim();
-            const bucket = document.getElementById('bucketName').value.trim() || 'images';
-            return `${url}/storage/v1/object/public/${bucket}/${filePath}`;
         }
 
         function renderGallery() {
-            const gridContainer = document.getElementById('galleryGrid');
-            const listContainer = document.getElementById('galleryList');
-            const noResults = document.getElementById('galleryNoResults');
+            const grid = document.getElementById('galleryGrid');
+            const list = document.getElementById('galleryList');
             const pagination = document.getElementById('galleryPagination');
+            
+            // Filter logic
+            const start = galleryPage * GALLERY_PER_PAGE;
+            const end = start + GALLERY_PER_PAGE;
+            const pageFiles = galleryFiltered.slice(start, end);
+            const bucket = document.getElementById('bucketName').value.trim();
 
             if (galleryFiltered.length === 0) {
-                gridContainer.classList.add('hidden');
-                listContainer.classList.add('hidden');
-                noResults.classList.remove('hidden');
+                document.getElementById('galleryEmpty').classList.remove('hidden');
+                grid.classList.add('hidden');
+                list.classList.add('hidden');
                 pagination.classList.add('hidden');
                 return;
             }
+            
+            document.getElementById('galleryEmpty').classList.add('hidden');
 
-            noResults.classList.add('hidden');
-
-            // Pagination
-            const totalPages = Math.ceil(galleryFiltered.length / GALLERY_PER_PAGE);
-            const start = galleryPage * GALLERY_PER_PAGE;
-            const end = Math.min(start + GALLERY_PER_PAGE, galleryFiltered.length);
-            const pageFiles = galleryFiltered.slice(start, end);
-
-            // Pagination UI
             if (galleryFiltered.length > GALLERY_PER_PAGE) {
                 pagination.classList.remove('hidden');
-                document.getElementById('galleryInfo').textContent = `Menampilkan ${start + 1}-${end} dari ${galleryFiltered.length} file`;
+                document.getElementById('galleryInfo').textContent = `${start+1}-${Math.min(end, galleryFiltered.length)} of ${galleryFiltered.length}`;
                 document.getElementById('btnPrev').disabled = galleryPage === 0;
-                document.getElementById('btnNext').disabled = galleryPage >= totalPages - 1;
+                document.getElementById('btnNext').disabled = end >= galleryFiltered.length;
             } else {
                 pagination.classList.add('hidden');
             }
 
-            updateGalleryCount();
+            const getUrl = (name) => supabaseClient.storage.from(bucket).getPublicUrl(name).data.publicUrl;
 
             if (galleryView === 'grid') {
-                listContainer.classList.add('hidden');
-                gridContainer.classList.remove('hidden');
-                gridContainer.innerHTML = pageFiles.map((file, idx) => {
-                    const publicUrl = getPublicUrl(file.name);
-                    const displayName = file.name.length > 25 ? file.name.substring(0, 22) + '...' : file.name;
-                    const size = file.metadata ? formatSize(file.metadata.size || 0) : '';
-                    return `
-                        <div class="gallery-item-enter group relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50" data-gallery-path="${file.name}" style="animation-delay: ${idx * 30}ms">
-                            <div class="aspect-square overflow-hidden cursor-pointer" onclick="openLightbox('${publicUrl}', '${file.name.replace(/'/g, "\\'")}')">
-                                <img src="${publicUrl}" alt="${file.name}" loading="lazy"
-                                    class="w-full h-full object-cover gallery-img transition-transform duration-200"
-                                    onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f3f4f6%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%239ca3af%22 font-size=%2212%22>Error</text></svg>'">
+                list.classList.add('hidden');
+                grid.classList.remove('hidden');
+                grid.innerHTML = pageFiles.map((file, i) => `
+                    <div class="group relative rounded-xl overflow-hidden bg-slate-100 border border-slate-200 aspect-square fade-in" style="animation-delay: ${i*50}ms">
+                        <img src="${getUrl(file.name)}" loading="lazy" class="w-full h-full object-cover gallery-img transition-transform duration-500 cursor-pointer" onclick="openLightbox('${getUrl(file.name)}', '${file.name}')">
+                        <div class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between">
+                            <div class="min-w-0 flex-1 mr-2">
+                                <p class="text-white text-xs font-medium truncate">${file.name}</p>
                             </div>
-                            <!-- Overlay on hover -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
-                            <div class="absolute bottom-0 left-0 right-0 p-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <p class="text-white text-xs font-medium truncate mb-1.5">${displayName}</p>
-                                <div class="flex gap-1.5">
-                                    <button onclick="event.stopPropagation();copyUrl(this, '${publicUrl}')" class="px-2 py-1 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white text-xs rounded-md transition-colors flex-shrink-0">
-                                        Copy
-                                    </button>
-                                     <button onclick="event.stopPropagation();showQr('${publicUrl}', '${file.name.replace(/'/g, "\\'")}')" class="px-2 py-1 bg-purple-500/60 hover:bg-purple-500/90 backdrop-blur-sm text-white text-xs rounded-md transition-colors flex-shrink-0">
-                                        QR
-                                    </button>
-                                    <button onclick="event.stopPropagation();confirmDelete(this, '${file.name}', '${file.name.replace(/'/g, "\\'")}')" class="px-2 py-1 bg-red-500/60 hover:bg-red-500/90 backdrop-blur-sm text-white text-xs rounded-md transition-colors flex-shrink-0 ml-auto">
-                                        Hapus
-                                    </button>
-                                </div>
-                            </div>
-                            ${size ? `<div class="absolute top-2 right-2 px-1.5 py-0.5 bg-black/40 backdrop-blur-sm text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity">${size}</div>` : ''}
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                gridContainer.classList.add('hidden');
-                listContainer.classList.remove('hidden');
-                listContainer.innerHTML = pageFiles.map((file, idx) => {
-                    const publicUrl = getPublicUrl(file.name);
-                    const size = file.metadata ? formatSize(file.metadata.size || 0) : '';
-                    const date = file.created_at ? new Date(file.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
-                    return `
-                        <div class="gallery-item-enter flex items-center gap-3 p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors border border-gray-100" data-gallery-path="${file.name}" style="animation-delay: ${idx * 30}ms">
-                            <img src="${publicUrl}" alt="${file.name}" loading="lazy"
-                                class="w-12 h-12 object-cover rounded-lg border border-gray-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                                onclick="openLightbox('${publicUrl}', '${file.name.replace(/'/g, "\\'")}')"
-                                onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23f3f4f6%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%239ca3af%22 font-size=%2212%22>Error</text></svg>'">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-700 truncate">${file.name}</p>
-                                <div class="flex items-center gap-2 mt-0.5">
-                                    ${size ? `<span class="text-xs text-gray-400">${size}</span>` : ''}
-                                    ${size && date ? `<span class="text-gray-300">•</span>` : ''}
-                                    ${date ? `<span class="text-xs text-gray-400">${date}</span>` : ''}
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-1.5 flex-shrink-0">
-                                <button onclick="copyUrl(this, '${publicUrl}')" class="px-2.5 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 text-xs font-medium rounded-lg transition-colors">
-                                    Copy
-                                </button>
-                                <button onclick="showQr('${publicUrl}', '${file.name.replace(/'/g, "\\'")}')" class="px-2.5 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-600 text-xs font-medium rounded-lg transition-colors flex-shrink-0">
-                                    QR
-                                </button>
-                                <button onclick="confirmDelete(this, '${file.name}', '${file.name.replace(/'/g, "\\'")}')" class="delete-btn p-1.5 hover:bg-red-100 rounded-lg transition-colors group" title="Hapus">
-                                    <svg class="delete-icon w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
+                            <div class="flex gap-1">
+                                <button onclick="copyToClipboard('${getUrl(file.name)}')" class="p-1.5 bg-white/20 backdrop-blur-md hover:bg-white text-white hover:text-indigo-600 rounded-lg transition-colors cursor-pointer"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg></button>
+                                <button onclick="deleteFile('${file.name}')" class="p-1.5 bg-red-500/80 backdrop-blur-md hover:bg-red-500 text-white rounded-lg transition-colors cursor-pointer"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                             </div>
                         </div>
-                    `;
-                }).join('');
-            }
-        }
-
-        function updateGalleryCount() {
-            const countEl = document.getElementById('galleryCount');
-            if (galleryFiltered.length > 0) {
-                countEl.classList.remove('hidden');
-                countEl.textContent = `${galleryFiltered.length} file`;
+                    </div>
+                `).join('');
             } else {
-                countEl.classList.add('hidden');
-            }
-        }
-
-        function setGalleryView(view) {
-            galleryView = view;
-            document.getElementById('viewGridBtn').classList.toggle('active', view === 'grid');
-            document.getElementById('viewListBtn').classList.toggle('active', view === 'list');
-            if (galleryLoaded && galleryFiltered.length > 0) {
-                renderGallery();
+                grid.classList.add('hidden');
+                list.classList.remove('hidden');
+                list.innerHTML = pageFiles.map((file, i) => `
+                    <div class="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-white hover:shadow-md transition-all fade-in" style="animation-delay: ${i*50}ms">
+                         <img src="${getUrl(file.name)}" loading="lazy" class="w-12 h-12 object-cover rounded-lg bg-slate-200 shrink-0 cursor-pointer" onclick="openLightbox('${getUrl(file.name)}', '${file.name}')">
+                         <div class="flex-1 min-w-0">
+                             <p class="text-sm font-medium text-slate-700 truncate">${file.name}</p>
+                             <p class="text-xs text-slate-400 mt-0.5">${new Date(file.created_at).toLocaleDateString()} • ${(file.metadata?.size/1024).toFixed(1)} KB</p>
+                         </div>
+                         <div class="flex items-center gap-2">
+                             <button onclick="copyToClipboard('${getUrl(file.name)}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer" title="Copy URL"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg></button>
+                             <button onclick="showQr('${getUrl(file.name)}', '${file.name}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer" title="QR Code"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4h2v-4zM6 18h2v4H6v-4zM4 6h4v4H4V6zm12 0h4v4h-4V6zM4 18h4v4H4v-4zM6 6h1v1H6V6zm13 0h1v1h-1V6zM6 18h1v1H6v-1z"/></svg></button>
+                             <button onclick="deleteFile('${file.name}')" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Delete"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                         </div>
+                    </div>
+                `).join('');
             }
         }
 
         function filterGallery() {
-            const query = document.getElementById('gallerySearch').value.trim().toLowerCase();
-            if (!query) {
-                galleryFiltered = [...galleryFiles];
-            } else {
-                galleryFiltered = galleryFiles.filter(f => f.name.toLowerCase().includes(query));
-            }
+            const term = document.getElementById('gallerySearch').value.toLowerCase();
+            galleryFiltered = galleryFiles.filter(f => f.name.toLowerCase().includes(term));
             galleryPage = 0;
             renderGallery();
         }
 
-        function galleryPrevPage() {
-            if (galleryPage > 0) {
-                galleryPage--;
+        function galleryPrevPage() { if(galleryPage>0) { galleryPage--; renderGallery(); } }
+        function galleryNextPage() { 
+            if((galleryPage+1)*GALLERY_PER_PAGE < galleryFiltered.length) { galleryPage++; renderGallery(); } 
+        }
+
+        async function deleteFile(fileName) {
+            if(!confirm(`Are you sure you want to delete ${fileName}?`)) return;
+            
+            const bucket = document.getElementById('bucketName').value.trim();
+            const { error } = await supabaseClient.storage.from(bucket).remove([fileName]);
+            
+            if(error) showToast('Delete failed', 'error');
+            else {
+                showToast('Deleted successfully', 'success');
+                galleryFiles = galleryFiles.filter(f => f.name !== fileName);
+                galleryFiltered = galleryFiltered.filter(f => f.name !== fileName);
                 renderGallery();
+                document.getElementById('galleryCount').textContent = galleryFiles.length;
             }
         }
 
-        function galleryNextPage() {
-            const totalPages = Math.ceil(galleryFiltered.length / GALLERY_PER_PAGE);
-            if (galleryPage < totalPages - 1) {
-                galleryPage++;
-                renderGallery();
-            }
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showToast('Copied to clipboard!', 'success');
         }
 
-        function openLightbox(url, fileName) {
-            const overlay = document.createElement('div');
-            overlay.className = 'lightbox-overlay fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4';
-            overlay.innerHTML = `
-                <div class="lightbox-content max-w-4xl w-full max-h-[90vh] flex flex-col">
-                    <!-- Header -->
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-white text-sm font-medium truncate flex-1 mr-4">${fileName}</p>
-                        <div class="flex items-center gap-2 flex-shrink-0">
-                            <button onclick="copyUrl(this, '${url}')" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-xs font-medium rounded-lg transition-colors">
-                                Copy URL
-                            </button>
-                            <a href="${url}" target="_blank" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-xs font-medium rounded-lg transition-colors">
-                                Buka Tab Baru
-                            </a>
-                            <a href="${url}" download class="px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-xs font-medium rounded-lg transition-colors">
-                                Download
-                            </a>
-                            <button onclick="this.closest('.lightbox-overlay').remove()" class="p-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-lg transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <!-- Image -->
-                    <div class="flex-1 flex items-center justify-center overflow-hidden rounded-xl bg-black/30">
-                        <img src="${url}" alt="${fileName}" class="max-w-full max-h-[80vh] object-contain rounded-lg" 
-                            onerror="this.onerror=null;this.parentElement.innerHTML='<p class=\\'text-white/50 text-sm\\'>Gagal memuat gambar</p>'">
-                    </div>
+        function setGalleryView(view) {
+            galleryView = view;
+            document.getElementById('viewGridBtn').classList.toggle('bg-white', view==='grid');
+            document.getElementById('viewGridBtn').classList.toggle('shadow-sm', view==='grid');
+            document.getElementById('viewGridBtn').classList.toggle('text-indigo-600', view==='grid');
+            
+            document.getElementById('viewListBtn').classList.toggle('bg-white', view==='list');
+            document.getElementById('viewListBtn').classList.toggle('shadow-sm', view==='list');
+            document.getElementById('viewListBtn').classList.toggle('text-indigo-600', view==='list');
+            
+            renderGallery();
+        }
+
+        // --- Utils ---
+        function showToast(msg, type='info') {
+            const container = document.getElementById('toastContainer');
+            const div = document.createElement('div');
+            const color = type==='success'?'bg-green-500':type==='error'?'bg-red-500':'bg-indigo-600';
+            div.className = `${color} text-white px-4 py-3 rounded-xl shadow-lg shadow-gray-300/50 flex items-center gap-3 text-sm font-medium fade-in backdrop-blur-sm`;
+            div.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(div);
+            setTimeout(() => {
+                div.style.opacity = '0';
+                div.style.transform = 'translateY(-10px)';
+                setTimeout(() => div.remove(), 300);
+            }, 3000);
+        }
+
+        function showQr(url, name) {
+            const modal = document.getElementById('qrModal');
+            const content = document.getElementById('qrContent');
+            const container = document.getElementById('qrCodeContainer');
+            document.getElementById('qrUrlText').textContent = url;
+            
+            container.innerHTML = '';
+            new QRCode(container, { text: url, width: 200, height: 200 });
+            
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            });
+        }
+
+        function closeQrModal() {
+            const modal = document.getElementById('qrModal');
+            const content = document.getElementById('qrContent');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function openLightbox(url, name) {
+            const div = document.createElement('div');
+            div.className = 'fixed inset-0 bg-black/95 z-[60] flex flex-col p-4 fade-in';
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-4 text-white">
+                    <h3 class="font-medium truncate pr-4">${name}</h3>
+                    <button onclick="this.parentElement.parentElement.remove()" class="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="flex-1 flex items-center justify-center overflow-hidden">
+                    <img src="${url}" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
                 </div>
             `;
-
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.remove();
-            });
-
-            // Close on Escape key
-            const onKey = (e) => {
-                if (e.key === 'Escape') {
-                    overlay.remove();
-                    document.removeEventListener('keydown', onKey);
-                }
-            };
-            document.addEventListener('keydown', onKey);
-
-            document.body.appendChild(overlay);
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-
-            const colors = {
-                success: 'bg-green-500',
-                error: 'bg-red-500',
-                info: 'bg-indigo-500'
-            };
-
-            const icons = {
-                success: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>',
-                error: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>',
-                info: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
-            };
-
-            toast.className = `toast flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-white text-sm max-w-sm ${colors[type]}`;
-            toast.innerHTML = `
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icons[type]}</svg>
-                <span>${message}</span>
-            `;
-
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            document.body.appendChild(div);
         }
     </script>
 </body>
 </html>
-
