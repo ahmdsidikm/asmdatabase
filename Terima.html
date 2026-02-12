@@ -2,1365 +2,1362 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scan & Gesture App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MediaScan - Scan & Gesture</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
             color: #ffffff;
             min-height: 100vh;
             overflow-x: hidden;
+            user-select: none;
         }
 
-        /* ========== HOME SCREEN ========== */
-        .home-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .home-screen.hidden {
+        /* ============ HOME ============ */
+        .screen {
             display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .screen.active {
+            display: flex;
         }
 
-        .app-logo {
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 30px;
+        .home-screen {
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(102,126,234,0.08) 0%, transparent 60%);
+        }
+
+        .logo-wrap {
+            position: relative;
+            margin-bottom: 32px;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 30px;
-            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
-            animation: float 3s ease-in-out infinite;
+            animation: logoFloat 4s ease-in-out infinite;
+            box-shadow: 0 20px 60px rgba(102,126,234,0.25);
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        .logo-ring {
+            position: absolute;
+            inset: -8px;
+            border-radius: 34px;
+            border: 2px solid rgba(102,126,234,0.15);
+            animation: logoFloat 4s ease-in-out infinite reverse;
         }
 
-        .app-logo svg {
-            width: 60px;
-            height: 60px;
-            fill: white;
+        @keyframes logoFloat {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
-        .app-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        .logo svg { width: 48px; height: 48px; fill: #fff; }
+
+        .app-name {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea, #f093fb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            margin-bottom: 6px;
         }
 
-        .app-subtitle {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 50px;
+        .app-desc {
+            font-size: 13px;
+            color: #666;
             text-align: center;
+            line-height: 1.5;
+            margin-bottom: 48px;
         }
 
-        .btn-container {
+        .buttons {
+            width: 100%;
+            max-width: 380px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            width: 100%;
-            max-width: 350px;
+            gap: 14px;
         }
 
-        .btn-main {
+        .btn-action {
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 20px 24px;
+            padding: 18px 22px;
             border: none;
-            border-radius: 16px;
-            font-size: 16px;
+            border-radius: 18px;
+            font-size: 15px;
             font-weight: 600;
+            color: #fff;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             position: relative;
             overflow: hidden;
         }
 
-        .btn-main::before {
+        .btn-action::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: left 0.5s;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
         }
 
-        .btn-main:hover::before {
-            left: 100%;
+        .btn-action:hover::after { transform: translateX(100%); }
+        .btn-action:active { transform: scale(0.97); }
+
+        .btn-barcode {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 8px 32px rgba(102,126,234,0.25);
+        }
+        .btn-hand {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            box-shadow: 0 8px 32px rgba(245,87,108,0.25);
         }
 
-        .btn-main:active {
-            transform: scale(0.97);
-        }
+        .btn-action:hover { transform: translateY(-2px); }
 
-        .btn-scan {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-scan:hover {
-            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-gesture {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            box-shadow: 0 10px 40px rgba(245, 87, 108, 0.3);
-        }
-
-        .btn-gesture:hover {
-            box-shadow: 0 15px 50px rgba(245, 87, 108, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(255,255,255,0.2);
+        .btn-ico {
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.15);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
+        .btn-ico svg { width: 22px; height: 22px; fill: #fff; }
 
-        .btn-icon svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-        }
-
-        .btn-text {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .btn-text small {
+        .btn-label small {
+            display: block;
             font-size: 11px;
-            opacity: 0.8;
             font-weight: 400;
+            opacity: 0.75;
+            margin-top: 2px;
         }
 
-        /* ========== SCANNER SCREEN ========== */
-        .scanner-screen,
-        .gesture-screen {
-            display: none;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .scanner-screen.active,
-        .gesture-screen.active {
-            display: flex;
-        }
-
-        .top-bar {
+        /* ============ TOP BAR ============ */
+        .topbar {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
-            background: rgba(10, 10, 10, 0.95);
+            padding: 14px 18px;
+            background: rgba(10,10,15,0.96);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .btn-back {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            border: 1px solid #333;
-            background: rgba(255,255,255,0.05);
-            color: white;
+        .topbar-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid #2a2a35;
+            background: rgba(255,255,255,0.03);
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
+        .topbar-btn:hover { background: rgba(255,255,255,0.08); }
+        .topbar-btn svg { width: 18px; height: 18px; fill: #fff; }
 
-        .btn-back:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: #555;
-        }
-
-        .btn-back svg {
-            width: 20px;
-            height: 20px;
-            fill: white;
-        }
-
-        .top-bar-title {
-            font-size: 16px;
+        .topbar-title {
+            font-size: 15px;
             font-weight: 600;
         }
+        .topbar-spacer { width: 38px; }
 
-        .top-bar-spacer {
-            width: 40px;
-        }
-
-        /* ========== CAMERA AREA ========== */
-        .camera-container {
+        /* ============ CAMERA SECTION ============ */
+        .cam-wrap {
             flex: 1;
             position: relative;
+            background: #111118;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #111;
             overflow: hidden;
         }
 
-        .camera-container video {
+        .cam-wrap video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .camera-container canvas {
+        .cam-wrap canvas {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
         }
 
-        /* Scanner overlay */
+        /* Camera OFF overlay */
+        .cam-off-overlay {
+            position: absolute;
+            inset: 0;
+            background: #111118;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            transition: opacity 0.4s;
+        }
+
+        .cam-off-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .cam-off-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            border: 2px solid rgba(255,255,255,0.06);
+        }
+
+        .cam-off-icon svg { width: 36px; height: 36px; fill: #444; }
+
+        .cam-off-text {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 24px;
+        }
+
+        .btn-start-cam {
+            padding: 14px 36px;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-start-cam.purple {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            box-shadow: 0 8px 28px rgba(102,126,234,0.3);
+        }
+        .btn-start-cam.pink {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            box-shadow: 0 8px 28px rgba(245,87,108,0.3);
+        }
+        .btn-start-cam:hover { transform: translateY(-2px); }
+        .btn-start-cam:active { transform: scale(0.96); }
+
+        /* ============ SCAN FRAME ============ */
         .scan-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: none;
+            z-index: 10;
         }
 
         .scan-frame {
-            width: 260px;
-            height: 260px;
+            width: 250px; height: 250px;
             position: relative;
         }
 
-        .scan-frame::before,
-        .scan-frame::after {
-            content: '';
+        .scan-corner {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 36px; height: 36px;
             border-color: #667eea;
             border-style: solid;
         }
+        .sc-tl { top:0;left:0; border-width:3px 0 0 3px; border-radius:10px 0 0 0; }
+        .sc-tr { top:0;right:0; border-width:3px 3px 0 0; border-radius:0 10px 0 0; }
+        .sc-bl { bottom:0;left:0; border-width:0 0 3px 3px; border-radius:0 0 0 10px; }
+        .sc-br { bottom:0;right:0; border-width:0 3px 3px 0; border-radius:0 0 10px 0; }
 
-        .scan-frame::before {
-            top: 0;
-            left: 0;
-            border-width: 3px 0 0 3px;
-            border-radius: 8px 0 0 0;
-        }
-
-        .scan-frame::after {
-            top: 0;
-            right: 0;
-            border-width: 3px 3px 0 0;
-            border-radius: 0 8px 0 0;
-        }
-
-        .scan-frame-bottom {
+        .scan-laser {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 40px;
-        }
-
-        .scan-frame-bottom::before,
-        .scan-frame-bottom::after {
-            content: '';
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-color: #667eea;
-            border-style: solid;
-        }
-
-        .scan-frame-bottom::before {
-            bottom: 0;
-            left: 0;
-            border-width: 0 0 3px 3px;
-            border-radius: 0 0 0 8px;
-        }
-
-        .scan-frame-bottom::after {
-            bottom: 0;
-            right: 0;
-            border-width: 0 3px 3px 0;
-            border-radius: 0 0 8px 0;
-        }
-
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 10px;
-            right: 10px;
+            top: 8px; left: 8px; right: 8px;
             height: 2px;
             background: linear-gradient(90deg, transparent, #667eea, transparent);
-            animation: scanLine 2s ease-in-out infinite;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            animation: laser 2s ease-in-out infinite;
+            box-shadow: 0 0 12px rgba(102,126,234,0.5);
+        }
+        @keyframes laser {
+            0%,100% { top: 8px; }
+            50% { top: calc(100% - 8px); }
         }
 
-        @keyframes scanLine {
-            0%, 100% { top: 10px; }
-            50% { top: calc(100% - 10px); }
-        }
-
-        /* ========== GESTURE AREA ========== */
-        .gesture-info {
+        /* ============ GESTURE HUD ============ */
+        .finger-hud {
             position: absolute;
-            bottom: 40px;
-            left: 20px;
-            right: 20px;
-            text-align: center;
-            z-index: 50;
-        }
-
-        .gesture-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 24px;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
-            border-radius: 50px;
-            font-size: 14px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .gesture-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #f5576c;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-
-        .gesture-dot.active {
-            background: #4ade80;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .finger-count-display {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 50;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(10px);
+            top: 16px; right: 16px;
+            z-index: 30;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 16px;
-            padding: 16px 24px;
+            padding: 14px 20px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.06);
+            min-width: 80px;
         }
 
-        .finger-count-number {
-            font-size: 48px;
-            font-weight: 700;
+        .finger-num {
+            font-size: 44px;
+            font-weight: 800;
             line-height: 1;
             background: linear-gradient(135deg, #f093fb, #f5576c);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
-        .finger-count-label {
-            font-size: 11px;
-            color: #888;
+        .finger-label {
+            font-size: 10px;
+            color: #777;
             margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* ========== STATUS BAR BOTTOM ========== */
-        .bottom-status {
-            padding: 16px 20px;
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(20px);
-            text-align: center;
-            border-top: 1px solid #222;
-        }
-
-        .bottom-status p {
-            font-size: 13px;
-            color: #888;
-        }
-
-        /* ========== MODAL / TOAST ========== */
-        .toast {
-            position: fixed;
-            bottom: 30px;
+        /* Hold progress ring */
+        .hold-ring {
+            position: absolute;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            padding: 14px 28px;
-            background: rgba(30, 30, 30, 0.95);
+            transform: translate(-50%, -50%);
+            z-index: 25;
+            display: none;
+        }
+
+        .hold-ring.active { display: block; }
+
+        .hold-ring svg {
+            width: 120px;
+            height: 120px;
+            transform: rotate(-90deg);
+        }
+
+        .hold-ring-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.08);
+            stroke-width: 4;
+        }
+
+        .hold-ring-fg {
+            fill: none;
+            stroke: url(#holdGradient);
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 314;
+            stroke-dashoffset: 314;
+            transition: stroke-dashoffset 1.8s linear;
+        }
+
+        .hold-ring-fg.filling {
+            stroke-dashoffset: 0;
+        }
+
+        .hold-ring-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 13px;
+            font-weight: 600;
+            color: #f093fb;
+            white-space: nowrap;
+        }
+
+        /* ============ BOTTOM STATUS ============ */
+        .bottom-bar {
+            padding: 14px 18px;
+            background: rgba(10,10,15,0.96);
             backdrop-filter: blur(20px);
-            border-radius: 14px;
-            font-size: 14px;
-            z-index: 9999;
-            transition: transform 0.4s ease, opacity 0.4s ease;
-            opacity: 0;
-            border: 1px solid #333;
-            max-width: 90%;
-            text-align: center;
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
+        .status-text {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .toast.success {
-            border-color: #4ade80;
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #f5576c;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+        .status-dot.on { background: #4ade80; }
+
+        @keyframes blink {
+            0%,100% { opacity:1; }
+            50% { opacity:0.3; }
+        }
+
+        .btn-toggle-cam {
+            padding: 8px 18px;
+            border: 1px solid #2a2a35;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.04);
+            color: #aaa;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-toggle-cam:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .btn-toggle-cam svg { width: 14px; height: 14px; fill: currentColor; }
+
+        .btn-toggle-cam.cam-on {
+            border-color: rgba(74,222,128,0.3);
             color: #4ade80;
         }
 
-        .toast.error {
-            border-color: #f5576c;
+        .btn-toggle-cam.cam-off {
+            border-color: rgba(245,87,108,0.3);
             color: #f5576c;
         }
 
-        .toast.info {
-            border-color: #667eea;
-            color: #667eea;
-        }
-
-        /* ========== DOWNLOAD PROGRESS ========== */
-        .download-modal {
+        /* ============ TOAST ============ */
+        .toast {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            padding: 12px 24px;
+            background: rgba(20,20,28,0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 14px;
+            font-size: 13px;
+            z-index: 9999;
+            transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+            opacity: 0;
+            border: 1px solid #2a2a35;
+            max-width: 88%;
+            text-align: center;
+            pointer-events: none;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.ok { border-color: rgba(74,222,128,0.4); color: #4ade80; }
+        .toast.err { border-color: rgba(245,87,108,0.4); color: #f5576c; }
+        .toast.inf { border-color: rgba(102,126,234,0.4); color: #667eea; }
+
+        /* ============ DOWNLOAD MODAL ============ */
+        .dl-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
             display: none;
             align-items: center;
             justify-content: center;
             z-index: 9998;
             padding: 20px;
         }
+        .dl-modal.active { display: flex; }
 
-        .download-modal.active {
-            display: flex;
-        }
-
-        .download-card {
-            background: #1a1a1a;
-            border-radius: 20px;
-            padding: 32px;
+        .dl-card {
+            background: #16161e;
+            border-radius: 22px;
+            padding: 30px;
             width: 100%;
-            max-width: 380px;
+            max-width: 400px;
             text-align: center;
-            border: 1px solid #333;
+            border: 1px solid #2a2a35;
         }
 
-        .download-card h3 {
-            font-size: 18px;
-            margin-bottom: 8px;
-        }
-
-        .download-card p {
-            font-size: 13px;
-            color: #888;
-            margin-bottom: 24px;
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 3px;
-            transition: width 0.3s;
-            width: 0%;
-        }
-
-        .progress-text {
-            font-size: 12px;
-            color: #888;
-        }
-
-        .download-icon {
-            width: 64px;
-            height: 64px;
-            margin: 0 auto 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .dl-icon {
+            width: 60px; height: 60px;
+            margin: 0 auto 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
+        .dl-icon.downloading { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .dl-icon.done { background: linear-gradient(135deg, #4ade80, #22c55e); }
+        .dl-icon.fail { background: linear-gradient(135deg, #f5576c, #ef4444); }
+        .dl-icon svg { width: 26px; height: 26px; fill: #fff; }
 
-        .download-icon svg {
-            width: 28px;
-            height: 28px;
-            fill: white;
-        }
+        .dl-card h3 { font-size: 17px; margin-bottom: 6px; }
+        .dl-card .dl-sub { font-size: 12px; color: #666; margin-bottom: 20px; }
 
-        .download-icon.success-icon {
-            background: linear-gradient(135deg, #4ade80, #22c55e);
+        .prog-wrap {
+            width: 100%;
+            height: 5px;
+            background: #222;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 10px;
         }
+        .prog-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.4s;
+        }
+        .prog-text { font-size: 11px; color: #555; }
 
         .file-list {
-            margin-top: 20px;
-            max-height: 200px;
+            margin-top: 16px;
+            max-height: 220px;
             overflow-y: auto;
             text-align: left;
         }
 
-        .file-item {
+        .f-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.03);
+            gap: 10px;
+            padding: 9px 12px;
+            background: rgba(255,255,255,0.02);
             border-radius: 10px;
-            margin-bottom: 8px;
-            border: 1px solid #222;
+            margin-bottom: 6px;
+            border: 1px solid #1e1e28;
         }
 
-        .file-item-icon {
-            width: 36px;
-            height: 36px;
+        .f-ico {
+            width: 34px; height: 34px;
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
+        .f-ico.img { background: rgba(102,126,234,0.12); }
+        .f-ico.vid { background: rgba(245,87,108,0.12); }
+        .f-ico svg { width: 16px; height: 16px; }
 
-        .file-item-icon.image {
-            background: rgba(102, 126, 234, 0.15);
-        }
+        .f-info { flex: 1; min-width: 0; }
+        .f-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .f-size { font-size: 10px; color: #555; }
 
-        .file-item-icon.video {
-            background: rgba(245, 87, 108, 0.15);
-        }
+        .f-stat { font-size: 10px; font-weight: 700; flex-shrink: 0; }
+        .f-stat.wait { color: #555; }
+        .f-stat.dling { color: #667eea; }
+        .f-stat.ok { color: #4ade80; }
+        .f-stat.fail { color: #f5576c; }
 
-        .file-item-icon svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        .file-item-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .file-item-name {
+        .dl-close-btn {
+            margin-top: 18px;
+            padding: 10px 28px;
+            border: 1px solid #2a2a35;
+            border-radius: 12px;
+            background: transparent;
+            color: #888;
             font-size: 13px;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .file-item-size {
-            font-size: 11px;
-            color: #666;
-        }
-
-        .file-item-status {
-            font-size: 11px;
             font-weight: 600;
-            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.2s;
         }
+        .dl-close-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
 
-        .file-item-status.downloading {
-            color: #667eea;
-        }
-
-        .file-item-status.done {
-            color: #4ade80;
-        }
-
-        .file-item-status.error {
-            color: #f5576c;
-        }
-
-        /* ========== LOADING SPINNER ========== */
+        /* Spinner */
         .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #333;
+            width: 32px; height: 32px;
+            border: 3px solid #222;
             border-top-color: #667eea;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 16px;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* ========== RESPONSIVE ========== */
+        /* ============ RESPONSIVE ============ */
         @media (min-width: 768px) {
-            .btn-container {
-                flex-direction: row;
-            }
-
-            .btn-main {
-                flex: 1;
-            }
-
-            .scan-frame {
-                width: 300px;
-                height: 300px;
-            }
+            .buttons { flex-direction: row; }
+            .btn-action { flex: 1; }
+            .scan-frame { width: 280px; height: 280px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===================== HOME SCREEN ===================== -->
-    <div class="home-screen" id="homeScreen">
-        <div class="app-logo">
+<!-- =================== HOME =================== -->
+<div class="screen home-screen active" id="screenHome">
+    <div class="logo-wrap">
+        <div class="logo-ring"></div>
+        <div class="logo">
             <svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
         </div>
-        <h1 class="app-title">MediaScan</h1>
-        <p class="app-subtitle">Scan barcode atau gunakan gesture tangan<br>untuk mengunduh media</p>
+    </div>
+    <h1 class="app-name">MediaScan</h1>
+    <p class="app-desc">Scan barcode atau gunakan gesture tangan<br>untuk mengunduh media dari cloud</p>
 
-        <div class="btn-container">
-            <button class="btn-main btn-scan" onclick="openScanner()">
-                <div class="btn-icon">
-                    <svg viewBox="0 0 24 24"><path d="M4 6h2V4H2v4h2V6zm16-2h-4v2h2v2h2V4zM4 18H2v4h4v-2H4v-2zM18 18v2h-4v2h4a2 2 0 002-2v-2h-2zM12 6a6 6 0 100 12 6 6 0 000-12zm0 10a4 4 0 110-8 4 4 0 010 8zm0-6a2 2 0 100 4 2 2 0 000-4z"/></svg>
-                </div>
-                <div class="btn-text">
-                    Scan Barcode
-                    <small>Pindai QR / Barcode</small>
-                </div>
-            </button>
+    <div class="buttons">
+        <button class="btn-action btn-barcode" onclick="goTo('scanner')">
+            <div class="btn-ico">
+                <svg viewBox="0 0 24 24"><path d="M4 6h2V4H2v4h2V6zm16-2h-4v2h2v2h2V4zM4 18H2v4h4v-2H4v-2zM18 18v2h-4v2h4c1.1 0 2-.9 2-2v-2h-2zM12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </div>
+            <div class="btn-label">
+                Scan Barcode
+                <small>Pindai QR / Barcode</small>
+            </div>
+        </button>
 
-            <button class="btn-main btn-gesture" onclick="openGesture()">
-                <div class="btn-icon">
-                    <svg viewBox="0 0 24 24"><path d="M18 8c-.28 0-.55.04-.81.12L15 4.47A1.98 1.98 0 0013 3c-.69 0-1.28.35-1.64.88L9.54 2.06A1.98 1.98 0 007.5 1C6.12 1 5 2.12 5 3.5V15l-1.29-1.29a2 2 0 00-2.83 0 2 2 0 000 2.83l4.24 4.24A5.98 5.98 0 009.34 23h5.16A5.5 5.5 0 0020 17.5V10c0-1.1-.9-2-2-2zm0 9.5a3.5 3.5 0 01-3.5 3.5H9.34a3.98 3.98 0 01-2.83-1.17L3.17 16.5l.71-.71L7 18.91V3.5c0-.28.22-.5.5-.5s.5.22.5.5v8h2V3c0-.28.22-.5.5-.5s.5.22.5.5v9h2V4.47c0-.28.22-.5.5-.5s.5.22.5.5V13h2v-3c0-.28.22-.5.5-.5s.5.22.5.5v7.5z"/></svg>
-                </div>
-                <div class="btn-text">
-                    Gunakan Tangan
-                    <small>Gesture 5 jari untuk download</small>
-                </div>
+        <button class="btn-action btn-hand" onclick="goTo('gesture')">
+            <div class="btn-ico">
+                <svg viewBox="0 0 24 24"><path d="M18.5 8c-.27 0-.53.04-.78.12L16 4.47c-.25-.88-1.07-1.47-1.97-1.47-.15 0-.31.02-.46.05C13.16 3.14 12.78 3.35 12.5 3.65L10.82 2.24C10.45 2.08 10.06 2 9.66 2c-1.02 0-1.89.62-2.27 1.5L7 4.61V3.5C7 2.12 5.88 1 4.5 1S2 2.12 2 3.5v12c0 .23.02.46.05.68l.03.17c.37 2.13 1.58 4.01 3.35 5.18L6.56 22h8.94c2.6 0 4.86-1.81 5.42-4.34l.92-4.16c.05-.21.08-.43.08-.65L22 10c0-1.1-.9-2-2-2h-1.5zM20 12.85l-.92 4.16C18.72 18.77 17.12 20 15.5 20H7.56l-1.12-.57C5.15 18.65 4.28 17.2 4.05 15.6L4 15.38V3.5c0-.28.22-.5.5-.5s.5.22.5.5V11h2V4.61l.69-1.39C7.82 3.09 7.97 3 8.16 3L11 5v6h2V4.47l.41-.14c.09-.03.19-.05.29-.05.17 0 .33.08.43.22L16 9v4h2V10c0-.28.22-.5.5-.5s.5.22.5.5v2.85z"/></svg>
+            </div>
+            <div class="btn-label">
+                Gunakan Tangan
+                <small>Buka 5 jari untuk download</small>
+            </div>
+        </button>
+    </div>
+</div>
+
+<!-- =================== SCANNER =================== -->
+<div class="screen" id="screenScanner">
+    <div class="topbar">
+        <button class="topbar-btn" onclick="goTo('home')">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <span class="topbar-title">📷 Scan Barcode</span>
+        <div class="topbar-spacer"></div>
+    </div>
+
+    <div class="cam-wrap" id="scanCamWrap">
+        <video id="scanVideo" autoplay playsinline muted></video>
+        <canvas id="scanCanvas" style="display:none"></canvas>
+
+        <div class="scan-overlay" id="scanOverlay" style="display:none">
+            <div class="scan-frame">
+                <div class="scan-corner sc-tl"></div>
+                <div class="scan-corner sc-tr"></div>
+                <div class="scan-corner sc-bl"></div>
+                <div class="scan-corner sc-br"></div>
+                <div class="scan-laser"></div>
+            </div>
+        </div>
+
+        <div class="cam-off-overlay" id="scanCamOff">
+            <div class="cam-off-icon">
+                <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H6.83l2 2H16v7.17l2 2v-6.69zm-12-6L4.27 2.73 3 4l1.73 1.73C4.28 6.15 4 6.79 4 7.5v9c0 1.1.9 2 2 2h12c.34 0 .65-.09.93-.24l1.65 1.65 1.27-1.27L6 4.48zM6 16.5v-9c0-.05.01-.1.02-.15L15.85 17.18H6v-.68z"/></svg>
+            </div>
+            <p class="cam-off-text">Kamera tidak aktif</p>
+            <button class="btn-start-cam purple" onclick="startScanCamera()">
+                🎥 Nyalakan Kamera
             </button>
         </div>
     </div>
 
-    <!-- ===================== SCANNER SCREEN ===================== -->
-    <div class="scanner-screen" id="scannerScreen">
-        <div class="top-bar">
-            <button class="btn-back" onclick="goHome()">
-                <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    <div class="bottom-bar">
+        <div class="status-text">
+            <div class="status-dot" id="scanDot"></div>
+            <span id="scanStatusText">Kamera mati</span>
+        </div>
+        <button class="btn-toggle-cam cam-off" id="scanToggleBtn" onclick="toggleScanCamera()">
+            <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.98zm-2 5.02H4V6h12v9.5z"/></svg>
+            <span id="scanToggleLabel">Nyalakan</span>
+        </button>
+    </div>
+</div>
+
+<!-- =================== GESTURE =================== -->
+<div class="screen" id="screenGesture">
+    <div class="topbar">
+        <button class="topbar-btn" onclick="goTo('home')">
+            <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </button>
+        <span class="topbar-title">✋ Gesture Tangan</span>
+        <div class="topbar-spacer"></div>
+    </div>
+
+    <div class="cam-wrap" id="gestCamWrap">
+        <video id="gestVideo" autoplay playsinline muted></video>
+        <canvas id="gestCanvas"></canvas>
+
+        <div class="finger-hud" id="fingerHud" style="display:none">
+            <div class="finger-num" id="fingerNum">0</div>
+            <div class="finger-label">Jari</div>
+        </div>
+
+        <!-- Hold ring -->
+        <div class="hold-ring" id="holdRing">
+            <svg viewBox="0 0 120 120">
+                <defs>
+                    <linearGradient id="holdGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#f093fb"/>
+                        <stop offset="100%" stop-color="#f5576c"/>
+                    </linearGradient>
+                </defs>
+                <circle class="hold-ring-bg" cx="60" cy="60" r="50"/>
+                <circle class="hold-ring-fg" id="holdRingFg" cx="60" cy="60" r="50"/>
+            </svg>
+            <div class="hold-ring-text" id="holdRingText">✋ Tahan...</div>
+        </div>
+
+        <div class="cam-off-overlay" id="gestCamOff">
+            <div class="cam-off-icon">
+                <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H6.83l2 2H16v7.17l2 2v-6.69zm-12-6L4.27 2.73 3 4l1.73 1.73C4.28 6.15 4 6.79 4 7.5v9c0 1.1.9 2 2 2h12c.34 0 .65-.09.93-.24l1.65 1.65 1.27-1.27L6 4.48zM6 16.5v-9c0-.05.01-.1.02-.15L15.85 17.18H6v-.68z"/></svg>
+            </div>
+            <p class="cam-off-text">Kamera tidak aktif</p>
+            <button class="btn-start-cam pink" onclick="startGestCamera()">
+                🎥 Nyalakan Kamera
             </button>
-            <span class="top-bar-title">Scan Barcode</span>
-            <div class="top-bar-spacer"></div>
-        </div>
-
-        <div class="camera-container" id="scannerCameraContainer">
-            <video id="scannerVideo" autoplay playsinline muted></video>
-            <canvas id="scannerCanvas" style="display:none;"></canvas>
-            <div class="scan-overlay">
-                <div class="scan-frame">
-                    <div class="scan-line"></div>
-                    <div class="scan-frame-bottom"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bottom-status">
-            <p id="scannerStatus">Arahkan kamera ke barcode atau QR Code...</p>
         </div>
     </div>
 
-    <!-- ===================== GESTURE SCREEN ===================== -->
-    <div class="gesture-screen" id="gestureScreen">
-        <div class="top-bar">
-            <button class="btn-back" onclick="goHome()">
-                <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-            </button>
-            <span class="top-bar-title">Gesture Tangan</span>
-            <div class="top-bar-spacer"></div>
+    <div class="bottom-bar">
+        <div class="status-text">
+            <div class="status-dot" id="gestDot"></div>
+            <span id="gestStatusText">Kamera mati</span>
         </div>
-
-        <div class="camera-container" id="gestureCameraContainer">
-            <video id="gestureVideo" autoplay playsinline muted></video>
-            <canvas id="gestureCanvas"></canvas>
-
-            <div class="finger-count-display" id="fingerCountDisplay">
-                <div class="finger-count-number" id="fingerCountNumber">0</div>
-                <div class="finger-count-label">Jari Terbuka</div>
-            </div>
-
-            <div class="gesture-info">
-                <div class="gesture-status">
-                    <div class="gesture-dot" id="gestureDot"></div>
-                    <span id="gestureStatusText">Mendeteksi tangan...</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="bottom-status">
-            <p>Buka 5 jari untuk mengunduh media dari Supabase</p>
-        </div>
+        <button class="btn-toggle-cam cam-off" id="gestToggleBtn" onclick="toggleGestCamera()">
+            <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.98zm-2 5.02H4V6h12v9.5z"/></svg>
+            <span id="gestToggleLabel">Nyalakan</span>
+        </button>
     </div>
+</div>
 
-    <!-- ===================== DOWNLOAD MODAL ===================== -->
-    <div class="download-modal" id="downloadModal">
-        <div class="download-card" id="downloadCard">
-            <div class="download-icon" id="downloadIconContainer">
-                <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-            </div>
-            <h3 id="downloadTitle">Mengunduh Media...</h3>
-            <p id="downloadSubtitle">Mohon tunggu sebentar</p>
-            <div class="progress-bar-container">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
-            <span class="progress-text" id="progressText">0%</span>
-            <div class="file-list" id="fileList"></div>
+<!-- =================== DOWNLOAD MODAL =================== -->
+<div class="dl-modal" id="dlModal">
+    <div class="dl-card">
+        <div class="dl-icon downloading" id="dlIcon">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
         </div>
+        <h3 id="dlTitle">Mengunduh...</h3>
+        <p class="dl-sub" id="dlSub">Mohon tunggu</p>
+        <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+        <span class="prog-text" id="progText">0%</span>
+        <div class="file-list" id="fileList"></div>
+        <button class="dl-close-btn" id="dlCloseBtn" style="display:none" onclick="closeDownloadModal()">Tutup</button>
     </div>
+</div>
 
-    <!-- ===================== TOAST ===================== -->
-    <div class="toast" id="toast"></div>
+<!-- =================== TOAST =================== -->
+<div class="toast" id="toast"></div>
 
-    <!-- ===================== SCRIPTS ===================== -->
-    <!-- ZXing Library for Barcode Scanning -->
-    <script src="https://unpkg.com/@nicolo-ribaudo/chokidar-2@2.1.8-no-fsevents.3/upath/package.json"></script>
-    <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<!-- =================== LIBRARIES =================== -->
+<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
-    <!-- MediaPipe Hands -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script>
+// =============================================
+// CONFIG
+// =============================================
+const SB_URL = 'https://xgsxiednpuxqhcqerdzu.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
 
-    <script>
-        // ==========================================
-        // CONFIGURATION
-        // ==========================================
-        const SUPABASE_URL = 'https://xgsxiednpuxqhcqerdzu.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
+// =============================================
+// STATE
+// =============================================
+let scanStream = null;
+let scanCamActive = false;
+let scannerRunning = false;
+let codeReader = null;
 
-        let currentStream = null;
-        let scannerActive = false;
-        let gestureActive = false;
-        let isDownloading = false;
-        let fiveFingerHoldTimer = null;
-        let lastFingerCount = 0;
-        let codeReader = null;
+let gestStream = null;
+let gestCamActive = false;
+let gestRunning = false;
+let handsInstance = null;
+let gestAnimFrame = null;
 
-        // ==========================================
-        // UTILITY FUNCTIONS
-        // ==========================================
-        function showToast(message, type = 'info', duration = 3000) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = 'toast ' + type + ' show';
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, duration);
-        }
+let fingerHoldTimer = null;
+let prevFingerCount = 0;
+let downloading = false;
 
-        function formatFileSize(bytes) {
-            if (!bytes) return 'N/A';
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / 1048576).toFixed(1) + ' MB';
-        }
+// =============================================
+// NAVIGATION
+// =============================================
+function goTo(screen) {
+    // Stop everything first
+    stopScanCamera();
+    stopGestCamera();
 
-        function stopCamera() {
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                currentStream = null;
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+    switch(screen) {
+        case 'home':
+            document.getElementById('screenHome').classList.add('active');
+            break;
+        case 'scanner':
+            document.getElementById('screenScanner').classList.add('active');
+            break;
+        case 'gesture':
+            document.getElementById('screenGesture').classList.add('active');
+            break;
+    }
+}
+
+// =============================================
+// TOAST
+// =============================================
+function toast(msg, type='inf', ms=3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function fmtSize(b) {
+    if (!b) return '—';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+}
+
+// =============================================
+// BARCODE SCANNER
+// =============================================
+async function startScanCamera() {
+    if (scanCamActive) return;
+    const video = document.getElementById('scanVideo');
+    const offOverlay = document.getElementById('scanCamOff');
+    const scanOverlay = document.getElementById('scanOverlay');
+    const dot = document.getElementById('scanDot');
+    const statusText = document.getElementById('scanStatusText');
+    const toggleBtn = document.getElementById('scanToggleBtn');
+    const toggleLabel = document.getElementById('scanToggleLabel');
+
+    try {
+        statusText.textContent = 'Memulai kamera...';
+
+        scanStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+
+        video.srcObject = scanStream;
+        await video.play();
+
+        scanCamActive = true;
+        scannerRunning = true;
+        offOverlay.classList.add('hidden');
+        scanOverlay.style.display = 'flex';
+        dot.classList.add('on');
+        statusText.textContent = 'Arahkan ke barcode...';
+        toggleBtn.className = 'btn-toggle-cam cam-on';
+        toggleLabel.textContent = 'Matikan';
+
+        startBarcodeScan(video);
+        toast('Kamera barcode aktif', 'ok');
+
+    } catch(e) {
+        console.error(e);
+        statusText.textContent = 'Gagal: ' + e.message;
+        toast('Gagal akses kamera: ' + e.message, 'err');
+    }
+}
+
+function startBarcodeScan(video) {
+    // Try ZXing first
+    if (typeof ZXing !== 'undefined') {
+        codeReader = new ZXing.BrowserMultiFormatReader();
+        codeReader.decodeFromVideoElement(video, (result, err) => {
+            if (result && scannerRunning) {
+                onBarcodeFound(result.getText());
             }
-        }
-
-        // ==========================================
-        // NAVIGATION
-        // ==========================================
-        function goHome() {
-            stopCamera();
-            scannerActive = false;
-            gestureActive = false;
-
-            if (codeReader) {
-                codeReader.reset();
-                codeReader = null;
-            }
-
-            document.getElementById('homeScreen').classList.remove('hidden');
-            document.getElementById('scannerScreen').classList.remove('active');
-            document.getElementById('gestureScreen').classList.remove('active');
-        }
-
-        // ==========================================
-        // BARCODE SCANNER
-        // ==========================================
-        function openScanner() {
-            document.getElementById('homeScreen').classList.add('hidden');
-            document.getElementById('scannerScreen').classList.add('active');
-            scannerActive = true;
-            startBarcodeScanner();
-        }
-
-        async function startBarcodeScanner() {
-            const video = document.getElementById('scannerVideo');
-            const statusEl = document.getElementById('scannerStatus');
-
+        });
+    } else if ('BarcodeDetector' in window) {
+        // Fallback native
+        const detector = new BarcodeDetector({
+            formats: ['qr_code','ean_13','ean_8','code_128','code_39','upc_a','upc_e','data_matrix']
+        });
+        const loop = async () => {
+            if (!scannerRunning) return;
             try {
-                // Get rear camera
-                const constraints = {
-                    video: {
-                        facingMode: { ideal: 'environment' },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
-
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = currentStream;
-
-                statusEl.textContent = 'Arahkan kamera ke barcode atau QR Code...';
-
-                // Use ZXing for barcode detection
-                if (typeof ZXing !== 'undefined') {
-                    codeReader = new ZXing.BrowserMultiFormatReader();
-                    
-                    codeReader.decodeFromVideoDevice(undefined, 'scannerVideo', (result, err) => {
-                        if (result && scannerActive) {
-                            const text = result.getText();
-                            statusEl.textContent = 'Ditemukan: ' + text;
-                            scannerActive = false;
-
-                            if (codeReader) {
-                                codeReader.reset();
-                            }
-                            
-                            handleBarcodeResult(text);
-                        }
-                    });
-                } else {
-                    // Fallback: Use BarcodeDetector API
-                    if ('BarcodeDetector' in window) {
-                        const barcodeDetector = new BarcodeDetector({
-                            formats: ['qr_code', 'ean_13', 'ean_8', 'code_128', 'code_39', 'code_93', 'upc_a', 'upc_e', 'data_matrix', 'pdf417']
-                        });
-
-                        const scanLoop = async () => {
-                            if (!scannerActive) return;
-
-                            try {
-                                const barcodes = await barcodeDetector.detect(video);
-                                if (barcodes.length > 0) {
-                                    const rawValue = barcodes[0].rawValue;
-                                    statusEl.textContent = 'Ditemukan: ' + rawValue;
-                                    scannerActive = false;
-                                    handleBarcodeResult(rawValue);
-                                    return;
-                                }
-                            } catch (e) {
-                                console.error('Scan error:', e);
-                            }
-
-                            if (scannerActive) {
-                                requestAnimationFrame(scanLoop);
-                            }
-                        };
-
-                        scanLoop();
-                    } else {
-                        statusEl.textContent = 'Browser tidak mendukung scanner. Coba gunakan Chrome.';
-                        showToast('Browser tidak mendukung barcode scanner', 'error');
-                    }
-                }
-
-            } catch (err) {
-                console.error('Camera error:', err);
-                statusEl.textContent = 'Gagal mengakses kamera: ' + err.message;
-                showToast('Gagal mengakses kamera', 'error');
-            }
-        }
-
-        function handleBarcodeResult(text) {
-            showToast('Barcode terdeteksi: ' + text, 'success');
-
-            // Check if it's a URL
-            try {
-                const url = new URL(text);
-                setTimeout(() => {
-                    if (confirm('Buka URL ini?\n\n' + text)) {
-                        window.open(text, '_blank');
-                    }
-                    goHome();
-                }, 500);
-            } catch {
-                // Not a URL, just show result
-                setTimeout(() => {
-                    alert('Hasil scan:\n\n' + text);
-                    goHome();
-                }, 500);
-            }
-        }
-
-        // ==========================================
-        // GESTURE DETECTION (MediaPipe)
-        // ==========================================
-        function openGesture() {
-            document.getElementById('homeScreen').classList.add('hidden');
-            document.getElementById('gestureScreen').classList.add('active');
-            gestureActive = true;
-            startGestureDetection();
-        }
-
-        async function startGestureDetection() {
-            const videoElement = document.getElementById('gestureVideo');
-            const canvasElement = document.getElementById('gestureCanvas');
-            const canvasCtx = canvasElement.getContext('2d');
-
-            try {
-                // Initialize MediaPipe Hands
-                const hands = new Hands({
-                    locateFile: (file) => {
-                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-                    }
-                });
-
-                hands.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.7,
-                    minTrackingConfidence: 0.5
-                });
-
-                hands.onResults((results) => {
-                    if (!gestureActive) return;
-                    onGestureResults(results, canvasElement, canvasCtx);
-                });
-
-                // Setup camera with rear-facing
-                const constraints = {
-                    video: {
-                        facingMode: { ideal: 'environment' },
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
-
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                videoElement.srcObject = currentStream;
-
-                await videoElement.play();
-
-                // Set canvas size
-                canvasElement.width = videoElement.videoWidth || 1280;
-                canvasElement.height = videoElement.videoHeight || 720;
-
-                // Process frames
-                const processFrame = async () => {
-                    if (!gestureActive) return;
-
-                    if (videoElement.readyState >= 2) {
-                        canvasElement.width = videoElement.videoWidth;
-                        canvasElement.height = videoElement.videoHeight;
-                        await hands.send({ image: videoElement });
-                    }
-
-                    requestAnimationFrame(processFrame);
-                };
-
-                processFrame();
-
-                showToast('Kamera gesture siap', 'success');
-
-            } catch (err) {
-                console.error('Gesture camera error:', err);
-                showToast('Gagal mengakses kamera: ' + err.message, 'error');
-                document.getElementById('gestureStatusText').textContent = 'Error: ' + err.message;
-            }
-        }
-
-        function onGestureResults(results, canvasElement, canvasCtx) {
-            canvasCtx.save();
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-            // Don't draw camera feed on canvas (it's behind as video element)
-            
-            const fingerCountEl = document.getElementById('fingerCountNumber');
-            const gestureDot = document.getElementById('gestureDot');
-            const gestureText = document.getElementById('gestureStatusText');
-
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                const landmarks = results.multiHandLandmarks[0];
-
-                // Draw hand landmarks
-                drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
-                    color: 'rgba(102, 126, 234, 0.6)',
-                    lineWidth: 2
-                });
-                drawLandmarks(canvasCtx, landmarks, {
-                    color: '#f093fb',
-                    lineWidth: 1,
-                    radius: 4
-                });
-
-                // Count open fingers
-                const fingerCount = countFingers(landmarks);
-                fingerCountEl.textContent = fingerCount;
-                gestureDot.classList.add('active');
-
-                if (fingerCount === 5) {
-                    gestureText.textContent = '✋ 5 Jari terbuka! Menahan...';
-                    
-                    if (lastFingerCount !== 5) {
-                        // Start hold timer
-                        fiveFingerHoldTimer = setTimeout(() => {
-                            if (!isDownloading && gestureActive) {
-                                gestureText.textContent = '⬇️ Memulai download...';
-                                triggerDownloadFromSupabase();
-                            }
-                        }, 1500); // Hold 1.5 seconds
-                    }
-                } else {
-                    gestureText.textContent = `Terdeteksi: ${fingerCount} jari terbuka`;
-                    
-                    if (fiveFingerHoldTimer) {
-                        clearTimeout(fiveFingerHoldTimer);
-                        fiveFingerHoldTimer = null;
-                    }
-                }
-
-                lastFingerCount = fingerCount;
-
-            } else {
-                fingerCountEl.textContent = '0';
-                gestureDot.classList.remove('active');
-                gestureText.textContent = 'Mendeteksi tangan...';
-                lastFingerCount = 0;
-
-                if (fiveFingerHoldTimer) {
-                    clearTimeout(fiveFingerHoldTimer);
-                    fiveFingerHoldTimer = null;
-                }
-            }
-
-            canvasCtx.restore();
-        }
-
-        function countFingers(landmarks) {
-            let count = 0;
-
-            // Tip and PIP/MCP indices for each finger
-            // Thumb: compare tip (4) x with MCP (2) x (for right hand) or y-based
-            // We'll use a simplified approach
-
-            // Thumb (4 vs 2) - use x-distance from wrist
-            const thumbTip = landmarks[4];
-            const thumbIP = landmarks[3];
-            const thumbMCP = landmarks[2];
-            const wrist = landmarks[0];
-
-            // Calculate hand orientation
-            const indexMCP = landmarks[5];
-            const pinkyMCP = landmarks[17];
-            
-            // Simple thumb detection: check if thumb tip is far from palm center
-            const palmCenterX = (landmarks[0].x + landmarks[5].x + landmarks[17].x) / 3;
-            const thumbDist = Math.abs(thumbTip.x - palmCenterX);
-            const thumbMCPDist = Math.abs(thumbMCP.x - palmCenterX);
-            
-            if (thumbDist > thumbMCPDist * 1.2) {
-                count++;
-            }
-
-            // Index finger (8 vs 6)
-            if (landmarks[8].y < landmarks[6].y) count++;
-            
-            // Middle finger (12 vs 10)
-            if (landmarks[12].y < landmarks[10].y) count++;
-            
-            // Ring finger (16 vs 14)
-            if (landmarks[16].y < landmarks[14].y) count++;
-            
-            // Pinky (20 vs 18)
-            if (landmarks[20].y < landmarks[18].y) count++;
-
-            return count;
-        }
-
-        // ==========================================
-        // SUPABASE DOWNLOAD
-        // ==========================================
-        async function triggerDownloadFromSupabase() {
-            if (isDownloading) return;
-            isDownloading = true;
-
-            const modal = document.getElementById('downloadModal');
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
-            const downloadTitle = document.getElementById('downloadTitle');
-            const downloadSubtitle = document.getElementById('downloadSubtitle');
-            const fileListEl = document.getElementById('fileList');
-            const downloadIcon = document.getElementById('downloadIconContainer');
-
-            // Show modal
-            modal.classList.add('active');
-            downloadTitle.textContent = 'Mengambil Data...';
-            downloadSubtitle.textContent = 'Membaca media dari Supabase';
-            progressBar.style.width = '10%';
-            progressText.textContent = 'Menghubungi server...';
-            fileListEl.innerHTML = '';
-            downloadIcon.className = 'download-icon';
-            downloadIcon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
-
-            try {
-                // Fetch media files from Supabase
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/media_files?select=*&order=created_at.desc`, {
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-
-                const mediaFiles = await response.json();
-                
-                progressBar.style.width = '20%';
-                progressText.textContent = `Ditemukan ${mediaFiles.length} file`;
-
-                if (mediaFiles.length === 0) {
-                    downloadTitle.textContent = 'Tidak Ada Media';
-                    downloadSubtitle.textContent = 'Belum ada file media di database';
-                    progressBar.style.width = '100%';
-                    progressText.textContent = 'Selesai';
-                    
-                    setTimeout(() => {
-                        modal.classList.remove('active');
-                        isDownloading = false;
-                        showToast('Tidak ada media untuk diunduh', 'info');
-                    }, 2000);
+                const codes = await detector.detect(video);
+                if (codes.length > 0) {
+                    onBarcodeFound(codes[0].rawValue);
                     return;
                 }
+            } catch(e) {}
+            if (scannerRunning) requestAnimationFrame(loop);
+        };
+        loop();
+    } else {
+        document.getElementById('scanStatusText').textContent = 'Browser tidak support barcode';
+        toast('Browser tidak mendukung scan barcode', 'err');
+    }
+}
 
-                downloadTitle.textContent = `Mengunduh ${mediaFiles.length} File`;
-                downloadSubtitle.textContent = 'Mohon tunggu...';
+function onBarcodeFound(text) {
+    scannerRunning = false;
+    document.getElementById('scanStatusText').textContent = '✅ ' + text;
+    toast('Ditemukan: ' + text, 'ok');
 
-                // Display file list
-                mediaFiles.forEach(file => {
-                    const iconClass = file.file_type === 'video' ? 'video' : 'image';
-                    const iconSvg = file.file_type === 'video' 
-                        ? '<svg fill="#f5576c" viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>'
-                        : '<svg fill="#667eea" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+    // Stop camera after success
+    stopScanCamera();
 
-                    fileListEl.innerHTML += `
-                        <div class="file-item" id="file-${file.id}">
-                            <div class="file-item-icon ${iconClass}">${iconSvg}</div>
-                            <div class="file-item-info">
-                                <div class="file-item-name">${file.file_name}</div>
-                                <div class="file-item-size">${formatFileSize(file.file_size)}</div>
-                            </div>
-                            <span class="file-item-status downloading" id="status-${file.id}">Menunggu...</span>
-                        </div>
-                    `;
-                });
+    setTimeout(() => {
+        try {
+            new URL(text);
+            if (confirm('Buka URL ini?\n\n' + text)) {
+                window.open(text, '_blank');
+            }
+        } catch {
+            alert('Hasil scan:\n\n' + text);
+        }
+    }, 600);
+}
 
-                // Download each file
-                let completed = 0;
-                const total = mediaFiles.length;
+function stopScanCamera() {
+    scannerRunning = false;
+    scanCamActive = false;
 
-                for (const file of mediaFiles) {
-                    const statusEl = document.getElementById(`status-${file.id}`);
-                    statusEl.textContent = 'Mengunduh...';
-                    statusEl.className = 'file-item-status downloading';
+    if (codeReader) { try { codeReader.reset(); } catch(e){} codeReader = null; }
+    if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
 
-                    try {
-                        // Download the file
-                        await downloadFile(file.public_url, file.file_name);
+    const video = document.getElementById('scanVideo');
+    video.srcObject = null;
 
-                        statusEl.textContent = '✓ Selesai';
-                        statusEl.className = 'file-item-status done';
+    document.getElementById('scanCamOff').classList.remove('hidden');
+    document.getElementById('scanOverlay').style.display = 'none';
+    document.getElementById('scanDot').classList.remove('on');
+    document.getElementById('scanStatusText').textContent = 'Kamera mati';
+    document.getElementById('scanToggleBtn').className = 'btn-toggle-cam cam-off';
+    document.getElementById('scanToggleLabel').textContent = 'Nyalakan';
+}
 
-                        // Record to shared_media
-                        await recordSharedMedia(file);
+function toggleScanCamera() {
+    if (scanCamActive) {
+        stopScanCamera();
+        toast('Kamera dimatikan', 'inf');
+    } else {
+        startScanCamera();
+    }
+}
 
-                        // Delete from media_files
-                        await deleteMediaFile(file.id);
+// =============================================
+// GESTURE DETECTION
+// =============================================
+async function startGestCamera() {
+    if (gestCamActive) return;
+    const video = document.getElementById('gestVideo');
+    const canvas = document.getElementById('gestCanvas');
+    const offOverlay = document.getElementById('gestCamOff');
+    const dot = document.getElementById('gestDot');
+    const statusText = document.getElementById('gestStatusText');
+    const toggleBtn = document.getElementById('gestToggleBtn');
+    const toggleLabel = document.getElementById('gestToggleLabel');
+    const fingerHud = document.getElementById('fingerHud');
 
-                        completed++;
-                        const progress = 20 + (completed / total * 80);
-                        progressBar.style.width = progress + '%';
-                        progressText.textContent = `${completed}/${total} file selesai`;
+    try {
+        statusText.textContent = 'Memulai kamera...';
 
-                    } catch (dlError) {
-                        console.error('Download error for', file.file_name, dlError);
-                        statusEl.textContent = '✗ Gagal';
-                        statusEl.className = 'file-item-status error';
-                        completed++;
+        gestStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+
+        video.srcObject = gestStream;
+        await video.play();
+
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+
+        gestCamActive = true;
+        gestRunning = true;
+        offOverlay.classList.add('hidden');
+        fingerHud.style.display = 'block';
+        dot.classList.add('on');
+        statusText.textContent = 'Mendeteksi tangan...';
+        toggleBtn.className = 'btn-toggle-cam cam-on';
+        toggleLabel.textContent = 'Matikan';
+
+        // Init MediaPipe Hands
+        if (!handsInstance) {
+            handsInstance = new Hands({
+                locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+            });
+            handsInstance.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.5
+            });
+            handsInstance.onResults(onHandResults);
+        }
+
+        // Process loop
+        const processLoop = async () => {
+            if (!gestRunning) return;
+            if (video.readyState >= 2) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                try {
+                    await handsInstance.send({ image: video });
+                } catch(e) {}
+            }
+            gestAnimFrame = requestAnimationFrame(processLoop);
+        };
+        processLoop();
+
+        toast('Kamera gesture aktif', 'ok');
+
+    } catch(e) {
+        console.error(e);
+        statusText.textContent = 'Gagal: ' + e.message;
+        toast('Gagal akses kamera: ' + e.message, 'err');
+    }
+}
+
+function onHandResults(results) {
+    if (!gestRunning) return;
+
+    const canvas = document.getElementById('gestCanvas');
+    const ctx = canvas.getContext('2d');
+    const fingerNumEl = document.getElementById('fingerNum');
+    const gestDot = document.getElementById('gestDot');
+    const gestStatus = document.getElementById('gestStatusText');
+    const holdRing = document.getElementById('holdRing');
+    const holdRingFg = document.getElementById('holdRingFg');
+    const holdRingText = document.getElementById('holdRingText');
+
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const lm = results.multiHandLandmarks[0];
+
+        // Draw
+        drawConnectors(ctx, lm, HAND_CONNECTIONS, { color: 'rgba(240,147,251,0.4)', lineWidth: 2 });
+        drawLandmarks(ctx, lm, { color: '#667eea', lineWidth: 1, radius: 3 });
+
+        const count = countFingers(lm);
+        fingerNumEl.textContent = count;
+        gestDot.classList.add('on');
+
+        if (count === 5) {
+            gestStatus.textContent = '✋ 5 jari — tahan untuk download!';
+            holdRing.classList.add('active');
+            holdRingText.textContent = '✋ Tahan...';
+
+            if (prevFingerCount !== 5 && !downloading) {
+                // Start hold
+                holdRingFg.classList.remove('filling');
+                void holdRingFg.offsetWidth; // reflow
+                holdRingFg.classList.add('filling');
+
+                fingerHoldTimer = setTimeout(() => {
+                    if (gestRunning && !downloading) {
+                        holdRingText.textContent = '⬇️ Download!';
+                        onFiveFingerHold();
                     }
-                }
-
-                // Complete
-                downloadTitle.textContent = 'Download Selesai!';
-                downloadSubtitle.textContent = `${completed} file berhasil diunduh`;
-                progressBar.style.width = '100%';
-                progressText.textContent = '100% Selesai';
-                downloadIcon.className = 'download-icon success-icon';
-                downloadIcon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
-
-                showToast(`${completed} file berhasil diunduh!`, 'success', 4000);
-
-                setTimeout(() => {
-                    modal.classList.remove('active');
-                    isDownloading = false;
-                }, 3000);
-
-            } catch (error) {
-                console.error('Supabase fetch error:', error);
-                downloadTitle.textContent = 'Terjadi Kesalahan';
-                downloadSubtitle.textContent = error.message;
-                progressBar.style.width = '100%';
-                progressText.textContent = 'Error';
-                downloadIcon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
-
-                showToast('Gagal mengambil data: ' + error.message, 'error', 5000);
-
-                setTimeout(() => {
-                    modal.classList.remove('active');
-                    isDownloading = false;
-                }, 3000);
+                }, 1800);
             }
+        } else {
+            gestStatus.textContent = `${count} jari terdeteksi`;
+            cancelHold();
         }
 
-        async function downloadFile(url, fileName) {
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Download failed');
-                
-                const blob = await response.blob();
-                
-                // Create download link
-                const downloadUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(downloadUrl);
-                
-                // Small delay between downloads
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-            } catch (error) {
-                console.error('File download error:', error);
-                throw error;
-            }
-        }
+        prevFingerCount = count;
+    } else {
+        fingerNumEl.textContent = '0';
+        gestDot.classList.remove('on');
+        gestStatus.textContent = 'Mendeteksi tangan...';
+        prevFingerCount = 0;
+        cancelHold();
+    }
 
-        async function recordSharedMedia(file) {
-            try {
-                await fetch(`${SUPABASE_URL}/rest/v1/shared_media`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({
-                        media_file_id: file.id,
-                        file_name: file.file_name,
-                        file_type: file.file_type,
-                        public_url: file.public_url,
-                        shared_method: 'fist_gesture',
-                        notes: 'Downloaded via 5-finger gesture'
-                    })
-                });
-            } catch (err) {
-                console.warn('Failed to record shared media:', err);
-            }
-        }
+    ctx.restore();
+}
 
-        async function deleteMediaFile(fileId) {
-            try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/media_files?id=eq.${fileId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
+function cancelHold() {
+    if (fingerHoldTimer) { clearTimeout(fingerHoldTimer); fingerHoldTimer = null; }
+    document.getElementById('holdRing').classList.remove('active');
+    document.getElementById('holdRingFg').classList.remove('filling');
+}
 
-                if (!response.ok) {
-                    console.warn('Failed to delete media file:', fileId);
-                }
-            } catch (err) {
-                console.warn('Delete error:', err);
-            }
-        }
+function countFingers(lm) {
+    let n = 0;
 
-        // ==========================================
-        // CLEANUP ON PAGE UNLOAD
-        // ==========================================
-        window.addEventListener('beforeunload', () => {
-            stopCamera();
-            if (codeReader) {
-                codeReader.reset();
+    // Thumb: distance from palm center
+    const pcx = (lm[0].x + lm[5].x + lm[17].x) / 3;
+    if (Math.abs(lm[4].x - pcx) > Math.abs(lm[2].x - pcx) * 1.15) n++;
+
+    // Index (8 vs 6)
+    if (lm[8].y < lm[6].y) n++;
+    // Middle (12 vs 10)
+    if (lm[12].y < lm[10].y) n++;
+    // Ring (16 vs 14)
+    if (lm[16].y < lm[14].y) n++;
+    // Pinky (20 vs 18)
+    if (lm[20].y < lm[18].y) n++;
+
+    return n;
+}
+
+async function onFiveFingerHold() {
+    if (downloading) return;
+
+    // Stop camera
+    stopGestCamera();
+    toast('5 jari terdeteksi! Memulai download...', 'ok');
+
+    // Start download
+    await downloadFromSupabase();
+}
+
+function stopGestCamera() {
+    gestRunning = false;
+    gestCamActive = false;
+
+    cancelHold();
+
+    if (gestAnimFrame) { cancelAnimationFrame(gestAnimFrame); gestAnimFrame = null; }
+    if (gestStream) { gestStream.getTracks().forEach(t => t.stop()); gestStream = null; }
+
+    const video = document.getElementById('gestVideo');
+    video.srcObject = null;
+
+    const canvas = document.getElementById('gestCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    document.getElementById('gestCamOff').classList.remove('hidden');
+    document.getElementById('fingerHud').style.display = 'none';
+    document.getElementById('gestDot').classList.remove('on');
+    document.getElementById('gestStatusText').textContent = 'Kamera mati';
+    document.getElementById('gestToggleBtn').className = 'btn-toggle-cam cam-off';
+    document.getElementById('gestToggleLabel').textContent = 'Nyalakan';
+    document.getElementById('holdRing').classList.remove('active');
+}
+
+function toggleGestCamera() {
+    if (gestCamActive) {
+        stopGestCamera();
+        toast('Kamera dimatikan', 'inf');
+    } else {
+        startGestCamera();
+    }
+}
+
+// =============================================
+// SUPABASE DOWNLOAD
+// =============================================
+async function downloadFromSupabase() {
+    if (downloading) return;
+    downloading = true;
+
+    const modal = document.getElementById('dlModal');
+    const icon = document.getElementById('dlIcon');
+    const title = document.getElementById('dlTitle');
+    const sub = document.getElementById('dlSub');
+    const bar = document.getElementById('progBar');
+    const pText = document.getElementById('progText');
+    const fList = document.getElementById('fileList');
+    const closeBtn = document.getElementById('dlCloseBtn');
+
+    // Reset modal
+    modal.classList.add('active');
+    icon.className = 'dl-icon downloading';
+    icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
+    title.textContent = 'Mengambil Data...';
+    sub.textContent = 'Menghubungi Supabase';
+    bar.style.width = '5%';
+    pText.textContent = 'Connecting...';
+    fList.innerHTML = '';
+    closeBtn.style.display = 'none';
+
+    try {
+        // Fetch media_files
+        const res = await fetch(`${SB_URL}/rest/v1/media_files?select=*&order=created_at.desc`, {
+            headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`,
+                'Content-Type': 'application/json'
             }
         });
 
-        // Prevent back button issues
-        window.addEventListener('popstate', () => {
-            if (document.getElementById('scannerScreen').classList.contains('active') ||
-                document.getElementById('gestureScreen').classList.contains('active')) {
-                goHome();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const files = await res.json();
+        bar.style.width = '15%';
+        pText.textContent = `${files.length} file ditemukan`;
+
+        if (files.length === 0) {
+            title.textContent = 'Tidak Ada Media';
+            sub.textContent = 'Database kosong';
+            bar.style.width = '100%';
+            pText.textContent = 'Selesai';
+            icon.className = 'dl-icon done';
+            icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/></svg>';
+            closeBtn.style.display = 'inline-block';
+            downloading = false;
+            toast('Tidak ada file untuk diunduh', 'inf');
+            return;
+        }
+
+        title.textContent = `Mengunduh ${files.length} File`;
+        sub.textContent = 'Mohon tunggu...';
+
+        // Render file list
+        files.forEach(f => {
+            const isVid = f.file_type === 'video';
+            fList.innerHTML += `
+                <div class="f-item" id="fi-${f.id}">
+                    <div class="f-ico ${isVid ? 'vid' : 'img'}">
+                        ${isVid
+                            ? '<svg fill="#f5576c" viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
+                            : '<svg fill="#667eea" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
+                        }
+                    </div>
+                    <div class="f-info">
+                        <div class="f-name">${f.file_name}</div>
+                        <div class="f-size">${fmtSize(f.file_size)}</div>
+                    </div>
+                    <span class="f-stat wait" id="fs-${f.id}">⏳</span>
+                </div>`;
+        });
+
+        // Download each file
+        let done = 0;
+        for (const f of files) {
+            const stat = document.getElementById(`fs-${f.id}`);
+            stat.textContent = '⬇️';
+            stat.className = 'f-stat dling';
+
+            try {
+                await dlFile(f.public_url, f.file_name);
+                stat.textContent = '✅';
+                stat.className = 'f-stat ok';
+
+                // Log to shared_media
+                await logShared(f);
+
+                // Delete from media_files
+                await delMedia(f.id);
+
+            } catch(e) {
+                console.error('DL fail:', f.file_name, e);
+                stat.textContent = '❌';
+                stat.className = 'f-stat fail';
+            }
+
+            done++;
+            const pct = 15 + (done / files.length * 85);
+            bar.style.width = pct + '%';
+            pText.textContent = `${done}/${files.length} selesai`;
+        }
+
+        // Done
+        title.textContent = '✅ Selesai!';
+        sub.textContent = `${done} file berhasil diunduh`;
+        bar.style.width = '100%';
+        pText.textContent = '100%';
+        icon.className = 'dl-icon done';
+        icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
+        closeBtn.style.display = 'inline-block';
+        toast(`${done} file berhasil diunduh!`, 'ok', 4000);
+
+    } catch(e) {
+        console.error('Supabase error:', e);
+        title.textContent = '❌ Gagal';
+        sub.textContent = e.message;
+        bar.style.width = '100%';
+        icon.className = 'dl-icon fail';
+        icon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+        closeBtn.style.display = 'inline-block';
+        toast('Gagal: ' + e.message, 'err', 5000);
+    }
+
+    downloading = false;
+}
+
+async function dlFile(url, name) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Fetch failed');
+    const blob = await r.blob();
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+
+    await new Promise(r => setTimeout(r, 600));
+}
+
+async function logShared(f) {
+    try {
+        await fetch(`${SB_URL}/rest/v1/shared_media`, {
+            method: 'POST',
+            headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                media_file_id: f.id,
+                file_name: f.file_name,
+                file_type: f.file_type,
+                public_url: f.public_url,
+                shared_method: 'fist_gesture',
+                notes: 'Downloaded via 5-finger gesture'
+            })
+        });
+    } catch(e) { console.warn('Log shared fail:', e); }
+}
+
+async function delMedia(id) {
+    try {
+        await fetch(`${SB_URL}/rest/v1/media_files?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SB_KEY,
+                'Authorization': `Bearer ${SB_KEY}`
             }
         });
-    </script>
+    } catch(e) { console.warn('Delete fail:', e); }
+}
+
+function closeDownloadModal() {
+    document.getElementById('dlModal').classList.remove('active');
+}
+
+// =============================================
+// CLEANUP
+// =============================================
+window.addEventListener('beforeunload', () => {
+    stopScanCamera();
+    stopGestCamera();
+});
+</script>
+
 </body>
 </html>
