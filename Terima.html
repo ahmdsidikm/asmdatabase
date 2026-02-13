@@ -8,38 +8,28 @@
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#fff;height:100vh;overflow:hidden;user-select:none}
         .app{display:flex;flex-direction:column;height:100vh;align-items:center;justify-content:center}
-
-        /* Video tersembunyi tapi tetap aktif */
         #vid{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
-
         .main{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;flex:1}
-
         .icon-wrap{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;margin-bottom:28px;position:relative}
         .icon-wrap::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(240,147,251,.08);animation:pulse 3s ease-in-out infinite}
         @keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:1}}
         .hand-icon{font-size:52px;animation:wave 2.5s ease-in-out infinite}
         @keyframes wave{0%,100%{transform:rotate(0deg)}25%{transform:rotate(15deg)}75%{transform:rotate(-10deg)}}
-
         .title{font-size:22px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         .desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:32px;max-width:280px}
-
         .status-box{padding:12px 24px;border-radius:14px;border:1px solid #1a1a25;background:rgba(255,255,255,.02);display:flex;align-items:center;gap:10px;margin-bottom:16px}
         .dot{width:8px;height:8px;border-radius:50%;background:#f5576c;flex-shrink:0}
         .dot.on{background:#4ade80;animation:bl 1.5s infinite}
         @keyframes bl{50%{opacity:.3}}
         .status-txt{font-size:12px;color:#666}
-
-        .finger-display{font-size:11px;color:#444;margin-top:4px;height:16px}
-
+        .finger-display{font-size:11px;color:#444;height:16px}
         .btn-start{padding:14px 36px;border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f093fb,#f5576c);cursor:pointer;margin-top:20px;transition:transform .2s}
         .btn-start:active{transform:scale(.95)}
         .btn-start.hide{display:none}
-
         .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);padding:10px 20px;background:rgba(16,16,24,.95);border-radius:10px;font-size:12px;z-index:999;transition:all .3s;opacity:0;border:1px solid #222;pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
         .toast.ok{border-color:rgba(74,222,128,.3);color:#4ade80}
         .toast.err{border-color:rgba(245,87,108,.3);color:#f5576c}
-
         .dm{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:900;padding:20px}
         .dm.on{display:flex}
         .dc{background:#141420;border-radius:18px;padding:24px;width:100%;max-width:380px;text-align:center;border:1px solid #222}
@@ -59,24 +49,18 @@
 <body>
 <div class="app">
     <video id="vid" autoplay playsinline muted></video>
-
     <div class="main">
-        <div class="icon-wrap">
-            <div class="hand-icon">✋</div>
-        </div>
+        <div class="icon-wrap"><div class="hand-icon">✋</div></div>
         <div class="title">Buka Tangan untuk Kirim</div>
         <div class="desc">Arahkan tangan ke kamera dan buka 5 jari untuk memulai download file dari cloud</div>
-
         <div class="status-box">
             <div class="dot" id="dot"></div>
             <span class="status-txt" id="stTxt">Kamera mati</span>
         </div>
         <div class="finger-display" id="fDisp"></div>
-
         <button class="btn-start" id="startBtn" onclick="start()">🎥 Mulai</button>
     </div>
 </div>
-
 <div class="dm" id="dMod">
     <div class="dc">
         <h3 id="dTit">Mengunduh...</h3>
@@ -87,20 +71,14 @@
         <button class="d-cls" id="dCls" style="display:none" onclick="closeDl()">Tutup</button>
     </div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js"></script>
-
 <script>
 const SB='https://xgsxiednpuxqhcqerdzu.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
 const BK='media-files';
-
 let stream=null,active=false,running=false,hands=null,af=null,busy=false,prevF=0;
-
 const $=id=>document.getElementById(id);
-
 function toast(m,t='ok'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),2500)}
 
 async function start(){
@@ -113,57 +91,33 @@ async function start(){
         $('dot').classList.add('on');
         $('stTxt').textContent='Deteksi tangan...';
         $('startBtn').classList.add('hide');
-
         if(!hands){
             hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
             hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.6,minTrackingConfidence:.4});
             hands.onResults(onRes);
         }
-
         const v=$('vid');
-        const loop=async()=>{
-            if(!running)return;
-            if(v.readyState>=2){try{await hands.send({image:v})}catch(e){}}
-            af=requestAnimationFrame(loop);
-        };loop();
+        const loop=async()=>{if(!running)return;if(v.readyState>=2){try{await hands.send({image:v})}catch(e){}}af=requestAnimationFrame(loop)};loop();
         toast('Kamera aktif — buka 5 jari');
-    }catch(e){
-        $('stTxt').textContent='Gagal';
-        toast('Gagal: '+e.message,'err');
-    }
+    }catch(e){$('stTxt').textContent='Gagal';toast('Gagal: '+e.message,'err')}
 }
 
 function onRes(r){
     if(!running)return;
     if(r.multiHandLandmarks?.length){
-        const l=r.multiHandLandmarks[0];
-        const fc=countF(l);
+        const l=r.multiHandLandmarks[0],fc=countF(l);
         $('fDisp').textContent=fc>0?'🖐️ '+fc+' jari terdeteksi':'';
         $('stTxt').textContent=fc===5?'✋ 5 jari terdeteksi!':'Mendeteksi... ('+fc+' jari)';
-
-        if(fc===5&&prevF!==5&&!busy){
-            busy=true;
-            stop();
-            toast('5 jari! Download dimulai...');
-            dlAll();
-        }
+        if(fc===5&&prevF!==5&&!busy){busy=true;stop();toast('5 jari! Download dimulai...');dlAll()}
         prevF=fc;
-    }else{
-        $('fDisp').textContent='';
-        $('stTxt').textContent='Deteksi tangan...';
-        prevF=0;
-    }
+    }else{$('fDisp').textContent='';$('stTxt').textContent='Deteksi tangan...';prevF=0}
 }
 
 function countF(l){
-    let n=0;
-    const rx=l[5].x<l[17].x;
+    let n=0;const rx=l[5].x<l[17].x;
     if(rx?l[4].x<l[3].x:l[4].x>l[3].x)n++;
-    if(l[8].y<l[6].y)n++;
-    if(l[12].y<l[10].y)n++;
-    if(l[16].y<l[14].y)n++;
-    if(l[20].y<l[18].y)n++;
-    return n;
+    if(l[8].y<l[6].y)n++;if(l[12].y<l[10].y)n++;
+    if(l[16].y<l[14].y)n++;if(l[20].y<l[18].y)n++;return n;
 }
 
 function stop(){
@@ -177,85 +131,56 @@ function stop(){
     $('startBtn').classList.remove('hide');
 }
 
-function closeDl(){
-    $('dMod').classList.remove('on');
-    // Auto restart kamera setelah tutup modal
-    if(!active&&!busy)setTimeout(start,300);
-}
+function closeDl(){$('dMod').classList.remove('on')}
 
-// === DOWNLOAD ===
 const hd=()=>({'apikey':SK,'Authorization':`Bearer ${SK}`,'Content-Type':'application/json'});
 
 async function dlAll(){
     const bar=$('pBar'),pt=$('pTxt'),fl=$('fList'),cls=$('dCls');
     $('dMod').classList.add('on');
-    $('dTit').textContent='Mengambil...';
-    $('dSub').textContent='';
+    $('dTit').textContent='Mengambil...';$('dSub').textContent='';
     bar.style.width='5%';pt.textContent='...';fl.innerHTML='';cls.style.display='none';
-
     try{
         const r=await fetch(`${SB}/rest/v1/shared_files?select=*&order=shared_at.desc`,{headers:hd()});
         if(!r.ok)throw new Error('HTTP '+r.status);
-        const files=await r.json();
-        bar.style.width='15%';
-
+        const files=await r.json();bar.style.width='15%';
         if(!files.length){
-            $('dTit').textContent='Kosong';
-            $('dSub').textContent='Tidak ada file';
-            bar.style.width='100%';pt.textContent='—';
-            cls.style.display='inline-block';
-            busy=false;return;
+            $('dTit').textContent='Kosong';$('dSub').textContent='Tidak ada file';
+            bar.style.width='100%';pt.textContent='—';cls.style.display='inline-block';busy=false;return;
         }
-
         $('dTit').textContent=`Unduh ${files.length} file`;
-        files.forEach(f=>{
-            fl.innerHTML+=`<div class="fi"><span class="fi-n">${f.file_name}</span><span class="fi-s w" id="s${f.id}">⏳</span></div>`;
-        });
-
+        files.forEach(f=>{fl.innerHTML+=`<div class="fi"><span class="fi-n">${f.file_name}</span><span class="fi-s w" id="s${f.id}">⏳</span></div>`});
         let dn=0,err=0;
         for(const f of files){
             const s=$('s'+f.id);s.textContent='⬇️';s.className='fi-s dl';
             try{
-                await dl(f.file_url,f.file_name);
-                s.textContent='✅';s.className='fi-s ok';
+                await dl(f.file_url,f.file_name);s.textContent='✅';s.className='fi-s ok';
                 fetch(`${SB}/rest/v1/shared_files?id=eq.${f.id}`,{method:'DELETE',headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}}).catch(()=>{});
                 const p=exPath(f.file_url);if(p)fetch(`${SB}/storage/v1/object/${BK}/${p}`,{method:'DELETE',headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}}).catch(()=>{});
             }catch(e){s.textContent='❌';s.className='fi-s er';err++}
             dn++;bar.style.width=(15+dn/files.length*85)+'%';pt.textContent=`${dn}/${files.length}`;
         }
-
         $('dTit').textContent=err?'⚠️ Selesai':'✅ Selesai';
         $('dSub').textContent=`${dn-err} berhasil${err?', '+err+' gagal':''}`;
-        bar.style.width='100%';pt.textContent='100%';
-        cls.style.display='inline-block';
+        bar.style.width='100%';pt.textContent='100%';cls.style.display='inline-block';
         toast((dn-err)+' file diunduh!',err?'err':'ok');
     }catch(e){
         $('dTit').textContent='❌ Gagal';$('dSub').textContent=e.message;
-        bar.style.width='100%';cls.style.display='inline-block';
-        toast('Gagal','err');
+        bar.style.width='100%';cls.style.display='inline-block';toast('Gagal','err');
     }
     busy=false;
 }
 
 async function dl(url,name){
     try{const r=await fetch(url);if(r.ok){save(await r.blob(),name);return}}catch(e){}
-    try{
-        const p=exPath(url);if(p){
-            const s=await fetch(`${SB}/storage/v1/object/sign/${BK}/${p}`,{method:'POST',headers:hd(),body:JSON.stringify({expiresIn:3600})});
-            if(s.ok){const d=await s.json();const r=await fetch(`${SB}/storage/v1${d.signedURL}`);if(r.ok){save(await r.blob(),name);return}}
-        }
-    }catch(e){}
+    try{const p=exPath(url);if(p){const s=await fetch(`${SB}/storage/v1/object/sign/${BK}/${p}`,{method:'POST',headers:hd(),body:JSON.stringify({expiresIn:3600})});if(s.ok){const d=await s.json();const r=await fetch(`${SB}/storage/v1${d.signedURL}`);if(r.ok){save(await r.blob(),name);return}}}}catch(e){}
     const a=document.createElement('a');a.href=url;a.download=name;a.target='_blank';document.body.appendChild(a);a.click();a.remove();
     await new Promise(r=>setTimeout(r,500));
 }
 
 function save(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}
 
-function exPath(u){
-    const m=`/storage/v1/object/public/${BK}/`;
-    let i=u.indexOf(m);if(i!==-1)return decodeURIComponent(u.substring(i+m.length));
-    const p=u.split(`${BK}/`);return p.length>1?decodeURIComponent(p.slice(1).join(`${BK}/`)):null;
-}
+function exPath(u){const m=`/storage/v1/object/public/${BK}/`;let i=u.indexOf(m);if(i!==-1)return decodeURIComponent(u.substring(i+m.length));const p=u.split(`${BK}/`);return p.length>1?decodeURIComponent(p.slice(1).join(`${BK}/`)):null}
 
 window.addEventListener('beforeunload',stop);
 </script>
