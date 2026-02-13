@@ -10,26 +10,45 @@
         .app{display:flex;flex-direction:column;height:100vh;align-items:center;justify-content:center}
         #vid{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
         .main{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;flex:1}
-        .icon-wrap{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;margin-bottom:28px;position:relative}
+
+        .icon-wrap{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;margin-bottom:28px;position:relative;transition:border-color .3s}
         .icon-wrap::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(240,147,251,.08);animation:pulse 3s ease-in-out infinite}
+        .icon-wrap.step1{border-color:rgba(102,126,234,.3)}
+        .icon-wrap.step2{border-color:rgba(74,222,128,.3)}
         @keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:1}}
-        .hand-icon{font-size:52px;animation:wave 2.5s ease-in-out infinite}
-        @keyframes wave{0%,100%{transform:rotate(0deg)}25%{transform:rotate(15deg)}75%{transform:rotate(-10deg)}}
-        .title{font-size:22px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:32px;max-width:280px}
+        .hand-icon{font-size:52px;transition:transform .3s}
+
+        .title{font-size:22px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;transition:all .3s}
+        .desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:24px;max-width:280px;transition:all .3s}
+
+        .steps{display:flex;gap:12px;margin-bottom:24px}
+        .step{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1px solid #1a1a25;background:rgba(255,255,255,.02);transition:all .3s}
+        .step.active{border-color:rgba(102,126,234,.4);background:rgba(102,126,234,.06)}
+        .step.done{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.06)}
+        .step-num{width:24px;height:24px;border-radius:50%;background:#1a1a25;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#555;transition:all .3s}
+        .step.active .step-num{background:rgba(102,126,234,.2);color:#667eea}
+        .step.done .step-num{background:rgba(74,222,128,.2);color:#4ade80}
+        .step-label{font-size:11px;color:#555;transition:color .3s}
+        .step.active .step-label{color:#999}
+        .step.done .step-label{color:#4ade80}
+
         .status-box{padding:12px 24px;border-radius:14px;border:1px solid #1a1a25;background:rgba(255,255,255,.02);display:flex;align-items:center;gap:10px;margin-bottom:16px}
         .dot{width:8px;height:8px;border-radius:50%;background:#f5576c;flex-shrink:0}
         .dot.on{background:#4ade80;animation:bl 1.5s infinite}
         @keyframes bl{50%{opacity:.3}}
         .status-txt{font-size:12px;color:#666}
         .finger-display{font-size:11px;color:#444;height:16px}
+
         .btn-start{padding:14px 36px;border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f093fb,#f5576c);cursor:pointer;margin-top:20px;transition:transform .2s}
         .btn-start:active{transform:scale(.95)}
         .btn-start.hide{display:none}
+
         .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);padding:10px 20px;background:rgba(16,16,24,.95);border-radius:10px;font-size:12px;z-index:999;transition:all .3s;opacity:0;border:1px solid #222;pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
         .toast.ok{border-color:rgba(74,222,128,.3);color:#4ade80}
         .toast.err{border-color:rgba(245,87,108,.3);color:#f5576c}
+        .toast.inf{border-color:rgba(102,126,234,.3);color:#667eea}
+
         .dm{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:900;padding:20px}
         .dm.on{display:flex}
         .dc{background:#141420;border-radius:18px;padding:24px;width:100%;max-width:380px;text-align:center;border:1px solid #222}
@@ -50,9 +69,21 @@
 <div class="app">
     <video id="vid" autoplay playsinline muted></video>
     <div class="main">
-        <div class="icon-wrap"><div class="hand-icon">✋</div></div>
-        <div class="title">Buka Tangan untuk Kirim</div>
-        <div class="desc">Arahkan tangan ke kamera dan buka 5 jari untuk memulai download file dari cloud</div>
+        <div class="icon-wrap" id="iconWrap"><div class="hand-icon" id="handIcon">✋</div></div>
+        <div class="title" id="mainTitle">Terima File dengan Gesture</div>
+        <div class="desc" id="mainDesc">Kepalkan tangan lalu buka 5 jari untuk download file dari cloud</div>
+
+        <div class="steps">
+            <div class="step" id="s1">
+                <div class="step-num">1</div>
+                <span class="step-label">✊ Kepal</span>
+            </div>
+            <div class="step" id="s2">
+                <div class="step-num">2</div>
+                <span class="step-label">🖐️ Buka 5 jari</span>
+            </div>
+        </div>
+
         <div class="status-box">
             <div class="dot" id="dot"></div>
             <span class="status-txt" id="stTxt">Kamera mati</span>
@@ -61,6 +92,7 @@
         <button class="btn-start" id="startBtn" onclick="start()">🎥 Mulai</button>
     </div>
 </div>
+
 <div class="dm" id="dMod">
     <div class="dc">
         <h3 id="dTit">Mengunduh...</h3>
@@ -71,20 +103,53 @@
         <button class="d-cls" id="dCls" style="display:none" onclick="closeDl()">Tutup</button>
     </div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js"></script>
 <script>
 const SB='https://xgsxiednpuxqhcqerdzu.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
 const BK='media-files';
-let stream=null,active=false,running=false,hands=null,af=null,busy=false,prevF=0;
+let stream=null,active=false,running=false,hands=null,af=null,busy=false;
+let gestureStep=0; // 0=idle, 1=kepal detected, 2=ready for open
+
 const $=id=>document.getElementById(id);
 function toast(m,t='ok'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),2500)}
+
+function resetSteps(){
+    gestureStep=0;
+    $('s1').className='step';
+    $('s2').className='step';
+    $('iconWrap').className='icon-wrap';
+    $('handIcon').textContent='✋';
+    $('handIcon').style.transform='';
+}
+
+function setStep(n){
+    gestureStep=n;
+    if(n===1){
+        $('s1').className='step done';
+        $('s2').className='step active';
+        $('iconWrap').className='icon-wrap step1';
+        $('handIcon').textContent='✊';
+        $('stTxt').textContent='✊ Kepal! Sekarang buka 5 jari';
+        toast('✊ Tahap 1 — sekarang buka tangan!','inf');
+    }
+    if(n===2){
+        $('s1').className='step done';
+        $('s2').className='step done';
+        $('iconWrap').className='icon-wrap step2';
+        $('handIcon').textContent='🖐️';
+        $('stTxt').textContent='🖐️ Download!';
+    }
+}
 
 async function start(){
     if(active)return;
     try{
         $('stTxt').textContent='Memulai...';
+        resetSteps();
         stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});
         $('vid').srcObject=stream;await $('vid').play();
         active=running=true;
@@ -98,19 +163,46 @@ async function start(){
         }
         const v=$('vid');
         const loop=async()=>{if(!running)return;if(v.readyState>=2){try{await hands.send({image:v})}catch(e){}}af=requestAnimationFrame(loop)};loop();
-        toast('Kamera aktif — buka 5 jari');
+        toast('Kamera aktif — kepalkan tangan dulu');
     }catch(e){$('stTxt').textContent='Gagal';toast('Gagal: '+e.message,'err')}
 }
 
 function onRes(r){
     if(!running)return;
     if(r.multiHandLandmarks?.length){
-        const l=r.multiHandLandmarks[0],fc=countF(l);
-        $('fDisp').textContent=fc>0?'🖐️ '+fc+' jari terdeteksi':'';
-        $('stTxt').textContent=fc===5?'✋ 5 jari terdeteksi!':'Mendeteksi... ('+fc+' jari)';
-        if(fc===5&&prevF!==5&&!busy){busy=true;stop();toast('5 jari! Download dimulai...');dlAll()}
-        prevF=fc;
-    }else{$('fDisp').textContent='';$('stTxt').textContent='Deteksi tangan...';prevF=0}
+        const l=r.multiHandLandmarks[0];
+        const fc=countF(l);
+        $('fDisp').textContent=fc>0?'🖐️ '+fc+' jari':'✊ Kepal';
+
+        if(gestureStep===0){
+            // Tahap 1: menunggu kepal (0 jari)
+            $('s1').className='step active';
+            $('stTxt').textContent='Kepalkan tangan... ('+fc+' jari)';
+            if(fc===0){
+                setStep(1);
+            }
+        }else if(gestureStep===1){
+            // Tahap 2: menunggu buka 5 jari
+            if(fc===5&&!busy){
+                setStep(2);
+                busy=true;
+                stop();
+                toast('🖐️ Download dimulai!');
+                dlAll();
+            }else if(fc>0&&fc<5){
+                $('stTxt').textContent='Buka 5 jari! ('+fc+' jari)';
+            }else if(fc===0){
+                $('stTxt').textContent='✊ Kepal — sekarang buka 5 jari!';
+            }
+        }
+    }else{
+        $('fDisp').textContent='';
+        if(gestureStep===0){
+            $('stTxt').textContent='Tunjukkan tangan...';
+        }else if(gestureStep===1){
+            $('stTxt').textContent='Tangan hilang — tunjukkan lagi';
+        }
+    }
 }
 
 function countF(l){
@@ -129,6 +221,7 @@ function stop(){
     $('stTxt').textContent='Kamera mati';
     $('fDisp').textContent='';
     $('startBtn').classList.remove('hide');
+    resetSteps();
 }
 
 function closeDl(){$('dMod').classList.remove('on')}
