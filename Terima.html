@@ -7,40 +7,39 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#fff;height:100vh;overflow:hidden;user-select:none}
-        .app{display:flex;flex-direction:column;height:100vh}
-        .tb{padding:10px 16px;background:rgba(10,10,15,.95);border-bottom:1px solid #1a1a25;display:flex;align-items:center;justify-content:space-between;z-index:10}
-        .tb-t{font-size:14px;font-weight:600}
-        .cw{flex:1;position:relative;background:#000;overflow:hidden}
-        .cw video{width:100%;height:100%;object-fit:cover}
-        .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
-        .mirror{transform:scaleX(-1)}
+        .app{display:flex;flex-direction:column;height:100vh;align-items:center;justify-content:center}
 
-        .cam-off{position:absolute;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;transition:opacity .3s}
-        .cam-off.hide{opacity:0;pointer-events:none}
-        .cam-off p{color:#444;font-size:13px;margin-bottom:16px}
-        .btn-start{padding:12px 28px;border:none;border-radius:12px;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f093fb,#f5576c);cursor:pointer}
-        .btn-start:active{transform:scale(.96)}
+        /* Video tersembunyi tapi tetap aktif */
+        #vid{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
 
-        .hud{position:absolute;top:12px;right:12px;z-index:10;background:rgba(0,0,0,.55);border-radius:12px;padding:8px 14px;text-align:center;min-width:56px}
-        .hud-n{font-size:32px;font-weight:800;line-height:1;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .hud-l{font-size:8px;color:#666;margin-top:2px;text-transform:uppercase}
+        .main{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;flex:1}
 
-        .bb{padding:10px 16px;background:rgba(10,10,15,.95);border-top:1px solid #1a1a25;display:flex;align-items:center;justify-content:space-between}
-        .st{font-size:11px;color:#555;display:flex;align-items:center;gap:6px}
-        .dot{width:6px;height:6px;border-radius:50%;background:#f5576c;flex-shrink:0}
+        .icon-wrap{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;margin-bottom:28px;position:relative}
+        .icon-wrap::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(240,147,251,.08);animation:pulse 3s ease-in-out infinite}
+        @keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:1}}
+        .hand-icon{font-size:52px;animation:wave 2.5s ease-in-out infinite}
+        @keyframes wave{0%,100%{transform:rotate(0deg)}25%{transform:rotate(15deg)}75%{transform:rotate(-10deg)}}
+
+        .title{font-size:22px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:32px;max-width:280px}
+
+        .status-box{padding:12px 24px;border-radius:14px;border:1px solid #1a1a25;background:rgba(255,255,255,.02);display:flex;align-items:center;gap:10px;margin-bottom:16px}
+        .dot{width:8px;height:8px;border-radius:50%;background:#f5576c;flex-shrink:0}
         .dot.on{background:#4ade80;animation:bl 1.5s infinite}
         @keyframes bl{50%{opacity:.3}}
-        .bb-btns{display:flex;gap:6px}
-        .bb-btn{padding:6px 12px;border:1px solid #222;border-radius:8px;background:transparent;color:#777;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
-        .bb-btn:active{background:rgba(255,255,255,.05)}
-        .bb-btn svg{width:13px;height:13px;fill:currentColor}
+        .status-txt{font-size:12px;color:#666}
+
+        .finger-display{font-size:11px;color:#444;margin-top:4px;height:16px}
+
+        .btn-start{padding:14px 36px;border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f093fb,#f5576c);cursor:pointer;margin-top:20px;transition:transform .2s}
+        .btn-start:active{transform:scale(.95)}
+        .btn-start.hide{display:none}
 
         .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);padding:10px 20px;background:rgba(16,16,24,.95);border-radius:10px;font-size:12px;z-index:999;transition:all .3s;opacity:0;border:1px solid #222;pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
         .toast.ok{border-color:rgba(74,222,128,.3);color:#4ade80}
         .toast.err{border-color:rgba(245,87,108,.3);color:#f5576c}
 
-        /* Modal download */
         .dm{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:900;padding:20px}
         .dm.on{display:flex}
         .dc{background:#141420;border-radius:18px;padding:24px;width:100%;max-width:380px;text-align:center;border:1px solid #222}
@@ -59,28 +58,22 @@
 </head>
 <body>
 <div class="app">
-    <div class="tb">
-        <span class="tb-t">✋ MediaScan</span>
-        <span id="faceTxt" style="font-size:11px;color:#666">Depan</span>
-    </div>
-    <div class="cw">
-        <video id="vid" autoplay playsinline muted></video>
-        <canvas id="can"></canvas>
-        <div class="hud" id="hud" style="display:none">
-            <div class="hud-n" id="fNum">0</div>
-            <div class="hud-l">Jari</div>
+    <video id="vid" autoplay playsinline muted></video>
+
+    <div class="main">
+        <div class="icon-wrap">
+            <div class="hand-icon">✋</div>
         </div>
-        <div class="cam-off" id="off">
-            <p>Buka 5 jari untuk download</p>
-            <button class="btn-start" onclick="start()">Nyalakan Kamera</button>
+        <div class="title">Buka Tangan untuk Kirim</div>
+        <div class="desc">Arahkan tangan ke kamera dan buka 5 jari untuk memulai download file dari cloud</div>
+
+        <div class="status-box">
+            <div class="dot" id="dot"></div>
+            <span class="status-txt" id="stTxt">Kamera mati</span>
         </div>
-    </div>
-    <div class="bb">
-        <div class="st"><div class="dot" id="dot"></div><span id="stTxt">Mati</span></div>
-        <div class="bb-btns">
-            <button class="bb-btn" onclick="flip()"><svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/></svg>Flip</button>
-            <button class="bb-btn" id="togBtn" onclick="toggle()"><svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.98zm-2 5.52H4V6h12v10z"/></svg><span id="togTxt">Nyala</span></button>
-        </div>
+        <div class="finger-display" id="fDisp"></div>
+
+        <button class="btn-start" id="startBtn" onclick="start()">🎥 Mulai</button>
     </div>
 </div>
 
@@ -91,7 +84,7 @@
         <div class="pw"><div class="pb" id="pBar"></div></div>
         <span class="pt" id="pTxt">0%</span>
         <div class="fl" id="fList"></div>
-        <button class="d-cls" id="dCls" style="display:none" onclick="$('dMod').classList.remove('on')">Tutup</button>
+        <button class="d-cls" id="dCls" style="display:none" onclick="closeDl()">Tutup</button>
     </div>
 </div>
 
@@ -104,33 +97,22 @@ const SB='https://xgsxiednpuxqhcqerdzu.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
 const BK='media-files';
 
-let stream=null,active=false,running=false,hands=null,af=null;
-let facing='user',busy=false,prevF=0;
+let stream=null,active=false,running=false,hands=null,af=null,busy=false,prevF=0;
 
 const $=id=>document.getElementById(id);
 
 function toast(m,t='ok'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),2500)}
 
-function setMirror(){
-    const m=facing==='user';
-    $('vid').classList.toggle('mirror',m);
-    $('can').classList.toggle('mirror',m);
-}
-
 async function start(){
     if(active)return;
     try{
-        setMirror();
-        stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:640},height:{ideal:480}}});
-        const v=$('vid');v.srcObject=stream;await v.play();
-        const c=$('can');c.width=v.videoWidth||640;c.height=v.videoHeight||480;
+        $('stTxt').textContent='Memulai...';
+        stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});
+        $('vid').srcObject=stream;await $('vid').play();
         active=running=true;
-        $('off').classList.add('hide');
-        $('hud').style.display='block';
         $('dot').classList.add('on');
-        $('stTxt').textContent='Deteksi...';
-        $('togTxt').textContent='Mati';
-        $('faceTxt').textContent=facing==='user'?'Depan':'Belakang';
+        $('stTxt').textContent='Deteksi tangan...';
+        $('startBtn').classList.add('hide');
 
         if(!hands){
             hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
@@ -138,41 +120,37 @@ async function start(){
             hands.onResults(onRes);
         }
 
+        const v=$('vid');
         const loop=async()=>{
             if(!running)return;
             if(v.readyState>=2){try{await hands.send({image:v})}catch(e){}}
             af=requestAnimationFrame(loop);
         };loop();
-    }catch(e){toast('Gagal: '+e.message,'err')}
+        toast('Kamera aktif — buka 5 jari');
+    }catch(e){
+        $('stTxt').textContent='Gagal';
+        toast('Gagal: '+e.message,'err');
+    }
 }
 
 function onRes(r){
     if(!running)return;
-    const c=$('can'),cx=c.getContext('2d');
-    cx.clearRect(0,0,c.width,c.height);
-
     if(r.multiHandLandmarks?.length){
         const l=r.multiHandLandmarks[0];
-
-        // Draw simple dots
-        cx.fillStyle='rgba(240,147,251,.6)';
-        for(const p of l){cx.beginPath();cx.arc(p.x*c.width,p.y*c.height,3,0,Math.PI*2);cx.fill()}
-
         const fc=countF(l);
-        $('fNum').textContent=fc;
-        $('stTxt').textContent=fc===5?'✋ 5 jari!':fc+' jari';
+        $('fDisp').textContent=fc>0?'🖐️ '+fc+' jari terdeteksi':'';
+        $('stTxt').textContent=fc===5?'✋ 5 jari terdeteksi!':'Mendeteksi... ('+fc+' jari)';
 
-        // Langsung download saat 5 jari, tanpa tunggu
         if(fc===5&&prevF!==5&&!busy){
             busy=true;
             stop();
-            toast('Download dimulai!');
+            toast('5 jari! Download dimulai...');
             dlAll();
         }
         prevF=fc;
     }else{
-        $('fNum').textContent='0';
-        $('stTxt').textContent='Deteksi...';
+        $('fDisp').textContent='';
+        $('stTxt').textContent='Deteksi tangan...';
         prevF=0;
     }
 }
@@ -193,19 +171,16 @@ function stop(){
     if(af){cancelAnimationFrame(af);af=null}
     if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
     $('vid').srcObject=null;
-    $('can').getContext('2d').clearRect(0,0,$('can').width,$('can').height);
-    $('off').classList.remove('hide');
-    $('hud').style.display='none';
     $('dot').classList.remove('on');
-    $('stTxt').textContent='Mati';
-    $('togTxt').textContent='Nyala';
+    $('stTxt').textContent='Kamera mati';
+    $('fDisp').textContent='';
+    $('startBtn').classList.remove('hide');
 }
 
-function toggle(){active?stop():start()}
-function flip(){
-    facing=facing==='user'?'environment':'user';
-    $('faceTxt').textContent=facing==='user'?'Depan':'Belakang';
-    if(active){stop();setTimeout(start,200)}
+function closeDl(){
+    $('dMod').classList.remove('on');
+    // Auto restart kamera setelah tutup modal
+    if(!active&&!busy)setTimeout(start,300);
 }
 
 // === DOWNLOAD ===
@@ -225,8 +200,10 @@ async function dlAll(){
         bar.style.width='15%';
 
         if(!files.length){
-            $('dTit').textContent='Kosong';$('dSub').textContent='Tidak ada file';
-            bar.style.width='100%';pt.textContent='—';cls.style.display='inline-block';
+            $('dTit').textContent='Kosong';
+            $('dSub').textContent='Tidak ada file';
+            bar.style.width='100%';pt.textContent='—';
+            cls.style.display='inline-block';
             busy=false;return;
         }
 
@@ -261,16 +238,13 @@ async function dlAll(){
 }
 
 async function dl(url,name){
-    // Try direct
     try{const r=await fetch(url);if(r.ok){save(await r.blob(),name);return}}catch(e){}
-    // Try signed
     try{
         const p=exPath(url);if(p){
             const s=await fetch(`${SB}/storage/v1/object/sign/${BK}/${p}`,{method:'POST',headers:hd(),body:JSON.stringify({expiresIn:3600})});
             if(s.ok){const d=await s.json();const r=await fetch(`${SB}/storage/v1${d.signedURL}`);if(r.ok){save(await r.blob(),name);return}}
         }
     }catch(e){}
-    // Fallback
     const a=document.createElement('a');a.href=url;a.download=name;a.target='_blank';document.body.appendChild(a);a.click();a.remove();
     await new Promise(r=>setTimeout(r,500));
 }
