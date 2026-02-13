@@ -6,63 +6,65 @@
     <title>MediaScan</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#fff;height:100vh;overflow:hidden;user-select:none}
+        body{font-family:system-ui,sans-serif;background:#f5f5f7;color:#1a1a1a;height:100vh;overflow:hidden;user-select:none}
         .app{display:flex;flex-direction:column;height:100vh;align-items:center;justify-content:center}
         #vid{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none}
         .main{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;flex:1}
 
-        .icon-wrap{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.03);border:2px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;margin-bottom:28px;position:relative;transition:border-color .3s}
-        .icon-wrap::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(240,147,251,.08);animation:pulse 3s ease-in-out infinite}
-        .icon-wrap.step1{border-color:rgba(102,126,234,.3)}
-        .icon-wrap.step2{border-color:rgba(74,222,128,.3)}
+        .icon-wrap{width:120px;height:120px;border-radius:50%;background:#fff;border:2px solid #e8e8ed;display:flex;align-items:center;justify-content:center;margin-bottom:28px;position:relative;transition:border-color .3s;box-shadow:0 4px 20px rgba(0,0,0,.04)}
+        .icon-wrap::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(102,126,234,.1);animation:pulse 3s ease-in-out infinite}
+        .icon-wrap.step1{border-color:rgba(102,126,234,.4)}
+        .icon-wrap.step2{border-color:rgba(74,222,128,.4)}
         @keyframes pulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.08);opacity:1}}
         .hand-icon{font-size:52px;transition:transform .3s}
 
-        .title{font-size:22px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;transition:all .3s}
-        .desc{font-size:13px;color:#555;line-height:1.6;margin-bottom:24px;max-width:280px;transition:all .3s}
+        .title{font-size:22px;font-weight:700;margin-bottom:8px;color:#1a1a1a}
+        .desc{font-size:13px;color:#888;line-height:1.6;margin-bottom:24px;max-width:280px}
 
         .steps{display:flex;gap:12px;margin-bottom:24px}
-        .step{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1px solid #1a1a25;background:rgba(255,255,255,.02);transition:all .3s}
-        .step.active{border-color:rgba(102,126,234,.4);background:rgba(102,126,234,.06)}
-        .step.done{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.06)}
-        .step-num{width:24px;height:24px;border-radius:50%;background:#1a1a25;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#555;transition:all .3s}
-        .step.active .step-num{background:rgba(102,126,234,.2);color:#667eea}
-        .step.done .step-num{background:rgba(74,222,128,.2);color:#4ade80}
-        .step-label{font-size:11px;color:#555;transition:color .3s}
-        .step.active .step-label{color:#999}
-        .step.done .step-label{color:#4ade80}
+        .step{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;border:1px solid #e8e8ed;background:#fff;transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+        .step.active{border-color:rgba(102,126,234,.4);background:rgba(102,126,234,.05)}
+        .step.done{border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.05)}
+        .step-num{width:24px;height:24px;border-radius:50%;background:#f0f0f5;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#aaa;transition:all .3s}
+        .step.active .step-num{background:rgba(102,126,234,.15);color:#667eea}
+        .step.done .step-num{background:rgba(74,222,128,.15);color:#22c55e}
+        .step-label{font-size:11px;color:#aaa;transition:color .3s}
+        .step.active .step-label{color:#555}
+        .step.done .step-label{color:#22c55e}
 
-        .status-box{padding:12px 24px;border-radius:14px;border:1px solid #1a1a25;background:rgba(255,255,255,.02);display:flex;align-items:center;gap:10px;margin-bottom:16px}
-        .dot{width:8px;height:8px;border-radius:50%;background:#f5576c;flex-shrink:0}
-        .dot.on{background:#4ade80;animation:bl 1.5s infinite}
+        .status-box{padding:12px 24px;border-radius:14px;border:1px solid #e8e8ed;background:#fff;display:flex;align-items:center;gap:10px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+        .dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s}
+        .dot.on{background:#22c55e;animation:bl 1.5s infinite}
         @keyframes bl{50%{opacity:.3}}
-        .status-txt{font-size:12px;color:#666}
-        .finger-display{font-size:11px;color:#444;height:16px}
+        .status-txt{font-size:12px;color:#888}
+        .finger-display{font-size:11px;color:#aaa;height:16px}
 
-        .btn-start{padding:14px 36px;border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f093fb,#f5576c);cursor:pointer;margin-top:20px;transition:transform .2s}
-        .btn-start:active{transform:scale(.95)}
+        .btn-start{padding:14px 36px;border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#667eea,#764ba2);cursor:pointer;margin-top:20px;transition:all .2s;box-shadow:0 4px 16px rgba(102,126,234,.25)}
+        .btn-start:hover{box-shadow:0 6px 24px rgba(102,126,234,.35);transform:translateY(-1px)}
+        .btn-start:active{transform:scale(.96)}
         .btn-start.hide{display:none}
 
-        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);padding:10px 20px;background:rgba(16,16,24,.95);border-radius:10px;font-size:12px;z-index:999;transition:all .3s;opacity:0;border:1px solid #222;pointer-events:none}
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);padding:10px 20px;background:#fff;border-radius:10px;font-size:12px;z-index:999;transition:all .3s;opacity:0;border:1px solid #e8e8ed;pointer-events:none;box-shadow:0 4px 20px rgba(0,0,0,.08)}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-        .toast.ok{border-color:rgba(74,222,128,.3);color:#4ade80}
-        .toast.err{border-color:rgba(245,87,108,.3);color:#f5576c}
+        .toast.ok{border-color:rgba(34,197,94,.3);color:#16a34a}
+        .toast.err{border-color:rgba(239,68,68,.3);color:#dc2626}
         .toast.inf{border-color:rgba(102,126,234,.3);color:#667eea}
 
-        .dm{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:900;padding:20px}
+        .dm{position:fixed;inset:0;background:rgba(0,0,0,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:900;padding:20px}
         .dm.on{display:flex}
-        .dc{background:#141420;border-radius:18px;padding:24px;width:100%;max-width:380px;text-align:center;border:1px solid #222}
-        .dc h3{font-size:15px;margin-bottom:4px}
-        .dc .ds{font-size:11px;color:#555;margin-bottom:14px}
-        .pw{width:100%;height:3px;background:#1a1a25;border-radius:2px;overflow:hidden;margin-bottom:6px}
+        .dc{background:#fff;border-radius:20px;padding:28px;width:100%;max-width:380px;text-align:center;border:1px solid #e8e8ed;box-shadow:0 20px 60px rgba(0,0,0,.1)}
+        .dc h3{font-size:16px;margin-bottom:4px;color:#1a1a1a}
+        .dc .ds{font-size:12px;color:#888;margin-bottom:16px}
+        .pw{width:100%;height:4px;background:#f0f0f5;border-radius:2px;overflow:hidden;margin-bottom:8px}
         .pb{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:2px;width:0%;transition:width .3s}
-        .pt{font-size:10px;color:#444}
-        .fl{margin-top:12px;max-height:180px;overflow-y:auto;text-align:left}
-        .fi{display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(255,255,255,.02);border-radius:8px;margin-bottom:4px}
-        .fi-n{font-size:10px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .pt{font-size:11px;color:#aaa}
+        .fl{margin-top:14px;max-height:180px;overflow-y:auto;text-align:left}
+        .fi{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fafafc;border-radius:10px;margin-bottom:4px;border:1px solid #f0f0f5}
+        .fi-n{font-size:11px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#333}
         .fi-s{font-size:10px;font-weight:700;flex-shrink:0}
-        .fi-s.w{color:#444}.fi-s.dl{color:#667eea}.fi-s.ok{color:#4ade80}.fi-s.er{color:#f5576c}
-        .d-cls{margin-top:14px;padding:8px 22px;border:1px solid #222;border-radius:10px;background:transparent;color:#777;font-size:11px;font-weight:600;cursor:pointer}
+        .fi-s.w{color:#ccc}.fi-s.dl{color:#667eea}.fi-s.ok{color:#22c55e}.fi-s.er{color:#dc2626}
+        .d-cls{margin-top:16px;padding:10px 26px;border:1px solid #e8e8ed;border-radius:12px;background:#fff;color:#888;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+        .d-cls:hover{background:#f5f5f7;color:#333}
     </style>
 </head>
 <body>
@@ -70,8 +72,8 @@
     <video id="vid" autoplay playsinline muted></video>
     <div class="main">
         <div class="icon-wrap" id="iconWrap"><div class="hand-icon" id="handIcon">✋</div></div>
-        <div class="title" id="mainTitle">Terima File dengan Gesture</div>
-        <div class="desc" id="mainDesc">Kepalkan tangan lalu buka 5 jari untuk download file dari cloud</div>
+        <div class="title">Terima File dengan Gesture</div>
+        <div class="desc">Kepalkan tangan lalu buka 5 jari untuk download file dari cloud</div>
 
         <div class="steps">
             <div class="step" id="s1">
@@ -112,7 +114,7 @@ const SB='https://xgsxiednpuxqhcqerdzu.supabase.co';
 const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
 const BK='media-files';
 let stream=null,active=false,running=false,hands=null,af=null,busy=false;
-let gestureStep=0; // 0=idle, 1=kepal detected, 2=ready for open
+let gestureStep=0;
 
 const $=id=>document.getElementById(id);
 function toast(m,t='ok'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),2500)}
@@ -123,7 +125,6 @@ function resetSteps(){
     $('s2').className='step';
     $('iconWrap').className='icon-wrap';
     $('handIcon').textContent='✋';
-    $('handIcon').style.transform='';
 }
 
 function setStep(n){
@@ -154,7 +155,7 @@ async function start(){
         $('vid').srcObject=stream;await $('vid').play();
         active=running=true;
         $('dot').classList.add('on');
-        $('stTxt').textContent='Deteksi tangan...';
+        $('stTxt').textContent='Tunjukkan tangan...';
         $('startBtn').classList.add('hide');
         if(!hands){
             hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
@@ -163,45 +164,36 @@ async function start(){
         }
         const v=$('vid');
         const loop=async()=>{if(!running)return;if(v.readyState>=2){try{await hands.send({image:v})}catch(e){}}af=requestAnimationFrame(loop)};loop();
-        toast('Kamera aktif — kepalkan tangan dulu');
+        toast('Kepalkan tangan dulu ✊','inf');
     }catch(e){$('stTxt').textContent='Gagal';toast('Gagal: '+e.message,'err')}
 }
 
 function onRes(r){
     if(!running)return;
     if(r.multiHandLandmarks?.length){
-        const l=r.multiHandLandmarks[0];
-        const fc=countF(l);
+        const l=r.multiHandLandmarks[0],fc=countF(l);
         $('fDisp').textContent=fc>0?'🖐️ '+fc+' jari':'✊ Kepal';
 
         if(gestureStep===0){
-            // Tahap 1: menunggu kepal (0 jari)
             $('s1').className='step active';
             $('stTxt').textContent='Kepalkan tangan... ('+fc+' jari)';
-            if(fc===0){
-                setStep(1);
-            }
+            if(fc===0) setStep(1);
         }else if(gestureStep===1){
-            // Tahap 2: menunggu buka 5 jari
             if(fc===5&&!busy){
                 setStep(2);
-                busy=true;
-                stop();
+                busy=true;stop();
                 toast('🖐️ Download dimulai!');
                 dlAll();
             }else if(fc>0&&fc<5){
                 $('stTxt').textContent='Buka 5 jari! ('+fc+' jari)';
             }else if(fc===0){
-                $('stTxt').textContent='✊ Kepal — sekarang buka 5 jari!';
+                $('stTxt').textContent='✊ Bagus! Sekarang buka 5 jari';
             }
         }
     }else{
         $('fDisp').textContent='';
-        if(gestureStep===0){
-            $('stTxt').textContent='Tunjukkan tangan...';
-        }else if(gestureStep===1){
-            $('stTxt').textContent='Tangan hilang — tunjukkan lagi';
-        }
+        if(gestureStep===0) $('stTxt').textContent='Tunjukkan tangan...';
+        else if(gestureStep===1) $('stTxt').textContent='Tangan hilang — tunjukkan lagi';
     }
 }
 
