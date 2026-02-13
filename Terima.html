@@ -11,7 +11,6 @@
         .screen{display:none;flex-direction:column;min-height:100vh}
         .screen.active{display:flex}
 
-        /* HOME */
         .home{align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(102,126,234,.07) 0%,transparent 60%)}
         .logo-w{position:relative;margin-bottom:32px}
         .logo{width:96px;height:96px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:26px;display:flex;align-items:center;justify-content:center;animation:fl 4s ease-in-out infinite;box-shadow:0 20px 50px rgba(102,126,234,.22)}
@@ -33,7 +32,6 @@
         .btn-i svg{width:22px;height:22px;fill:#fff}
         .btn-l small{display:block;font-size:11px;font-weight:400;opacity:.7;margin-top:2px}
 
-        /* TOPBAR */
         .tb{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(8,8,13,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.04);position:sticky;top:0;z-index:100}
         .tb-b{width:36px;height:36px;border-radius:10px;border:1px solid #252530;background:rgba(255,255,255,.03);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
         .tb-b:hover{background:rgba(255,255,255,.07)}
@@ -41,12 +39,13 @@
         .tb-t{font-size:15px;font-weight:600}
         .tb-s{width:36px}
 
-        /* CAMERA */
         .cw{flex:1;position:relative;background:#0c0c14;display:flex;align-items:center;justify-content:center;overflow:hidden}
         .cw video{width:100%;height:100%;object-fit:cover}
         .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
 
-        /* Camera OFF */
+        /* NO MIRROR — kamera depan tidak di-mirror */
+        .cw video.no-mirror{transform:none !important}
+
         .cam-off{position:absolute;inset:0;background:#0c0c14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;transition:opacity .4s}
         .cam-off.hidden{opacity:0;pointer-events:none}
         .co-ico{width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;margin-bottom:18px;border:2px solid rgba(255,255,255,.05)}
@@ -58,7 +57,6 @@
         .btn-sc:hover{transform:translateY(-2px)}
         .btn-sc:active{transform:scale(.96)}
 
-        /* SCAN FRAME */
         .s-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10}
         .s-fr{width:240px;height:240px;position:relative}
         .sc{position:absolute;width:32px;height:32px;border-color:#667eea;border-style:solid}
@@ -69,12 +67,10 @@
         .s-las{position:absolute;top:6px;left:6px;right:6px;height:2px;background:linear-gradient(90deg,transparent,#667eea,transparent);animation:las 2s ease-in-out infinite;box-shadow:0 0 10px rgba(102,126,234,.4)}
         @keyframes las{0%,100%{top:6px}50%{top:calc(100% - 6px)}}
 
-        /* GESTURE HUD */
         .f-hud{position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;padding:12px 18px;text-align:center;border:1px solid rgba(255,255,255,.05);min-width:72px}
         .f-num{font-size:40px;font-weight:800;line-height:1;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
         .f-lab{font-size:9px;color:#666;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
 
-        /* Hold ring */
         .h-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;display:none}
         .h-ring.on{display:block}
         .h-ring svg{width:110px;height:110px;transform:rotate(-90deg)}
@@ -83,42 +79,35 @@
         .hr-fg.go{stroke-dashoffset:0}
         .hr-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:600;color:#f093fb;white-space:nowrap}
 
-        /* BOTTOM BAR */
         .bb{padding:12px 16px;background:rgba(8,8,13,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;gap:8px}
         .st{font-size:11px;color:#555;display:flex;align-items:center;gap:7px;flex:1;min-width:0}
         .sd{width:7px;height:7px;border-radius:50%;background:#f5576c;animation:bl 1.5s ease-in-out infinite;flex-shrink:0}
         .sd.on{background:#4ade80}
         @keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
         .st-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
         .bb-btns{display:flex;gap:6px;flex-shrink:0}
-
         .bb-btn{padding:7px 14px;border:1px solid #252530;border-radius:9px;background:rgba(255,255,255,.03);color:#888;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
         .bb-btn:hover{background:rgba(255,255,255,.07);color:#fff}
         .bb-btn svg{width:13px;height:13px;fill:currentColor}
         .bb-btn.c-on{border-color:rgba(74,222,128,.25);color:#4ade80}
         .bb-btn.c-off{border-color:rgba(245,87,108,.25);color:#f5576c}
 
-        /* Camera switch button */
         .btn-flip{padding:7px 12px;border:1px solid #252530;border-radius:9px;background:rgba(255,255,255,.03);color:#888;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px}
         .btn-flip:hover{background:rgba(255,255,255,.07);color:#fff}
         .btn-flip svg{width:14px;height:14px;fill:currentColor}
         .btn-flip.active{border-color:rgba(102,126,234,.3);color:#667eea}
 
-        /* Facing indicator */
         .facing-badge{position:absolute;top:14px;left:14px;z-index:30;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.06)}
         .facing-badge svg{width:14px;height:14px;fill:currentColor}
         .facing-badge.front{color:#f093fb}
         .facing-badge.back{color:#667eea}
 
-        /* TOAST */
         .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);padding:11px 22px;background:rgba(16,16,24,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:12px;font-size:13px;z-index:9999;transition:all .35s cubic-bezier(.22,1,.36,1);opacity:0;border:1px solid #252530;max-width:88%;text-align:center;pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
         .toast.ok{border-color:rgba(74,222,128,.35);color:#4ade80}
         .toast.err{border-color:rgba(245,87,108,.35);color:#f5576c}
         .toast.inf{border-color:rgba(102,126,234,.35);color:#667eea}
 
-        /* DOWNLOAD MODAL */
         .dm{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:20px}
         .dm.on{display:flex}
         .dc{background:#141420;border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center;border:1px solid #252530}
@@ -137,6 +126,8 @@
         .fi-i{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
         .fi-i.img{background:rgba(102,126,234,.1)}
         .fi-i.vid{background:rgba(245,87,108,.1)}
+        .fi-i.aud{background:rgba(251,191,36,.1)}
+        .fi-i.doc{background:rgba(96,165,250,.1)}
         .fi-i svg{width:15px;height:15px}
         .fi-d{flex:1;min-width:0}
         .fi-n{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -148,6 +139,12 @@
         .fi-st.er{color:#f5576c}
         .d-cls{margin-top:16px;padding:9px 26px;border:1px solid #252530;border-radius:11px;background:transparent;color:#777;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
         .d-cls:hover{background:rgba(255,255,255,.04);color:#fff}
+
+        /* DEBUG LOG */
+        .debug-log{position:fixed;top:60px;right:10px;width:320px;max-height:200px;overflow-y:auto;background:rgba(0,0,0,.9);border:1px solid #333;border-radius:10px;padding:10px;font-size:10px;font-family:monospace;color:#4ade80;z-index:99999;display:none;word-break:break-all}
+        .debug-log.show{display:block}
+        .debug-log .derr{color:#f5576c}
+        .debug-log .dwarn{color:#fbbf24}
 
         @media(min-width:768px){.btns{flex-direction:row}.btn-a{flex:1}.s-fr{width:270px;height:270px}}
     </style>
@@ -182,15 +179,12 @@
         <div class="tb-s"></div>
     </div>
     <div class="cw" id="scWrap">
-        <video id="scVid" autoplay playsinline muted></video>
+        <video id="scVid" class="no-mirror" autoplay playsinline muted></video>
         <canvas id="scCan" style="display:none"></canvas>
-
-        <!-- Facing badge -->
         <div class="facing-badge back" id="scFacing">
             <svg viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H4V7h4.05l1.83-2h4.24l1.83 2H20v12zM12 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
             <span id="scFacingTxt">Belakang</span>
         </div>
-
         <div class="s-ov" id="scOv" style="display:none">
             <div class="s-fr">
                 <div class="sc sc-tl"></div><div class="sc sc-tr"></div>
@@ -211,7 +205,7 @@
         </div>
         <div class="bb-btns">
             <button class="btn-flip" id="scFlip" onclick="flipScan()" title="Ganti Kamera">
-                <svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/><path d="M12 8l-4 4h3v2h2v-2h3l-4-4z" transform="rotate(180 12 12)"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/></svg>
                 <span id="scFlipTxt">Flip</span>
             </button>
             <button class="bb-btn c-off" id="scTog" onclick="toggleScan()">
@@ -230,15 +224,12 @@
         <div class="tb-s"></div>
     </div>
     <div class="cw" id="gsWrap">
-        <video id="gsVid" autoplay playsinline muted></video>
-        <canvas id="gsCan"></canvas>
-
-        <!-- Facing badge -->
+        <video id="gsVid" class="no-mirror" autoplay playsinline muted></video>
+        <canvas id="gsCan" class="no-mirror"></canvas>
         <div class="facing-badge front" id="gsFacing">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
             <span id="gsFacingTxt">Depan</span>
         </div>
-
         <div class="f-hud" id="fHud" style="display:none">
             <div class="f-num" id="fNum">0</div>
             <div class="f-lab">Jari</div>
@@ -264,7 +255,7 @@
         </div>
         <div class="bb-btns">
             <button class="btn-flip" id="gsFlip" onclick="flipGest()" title="Ganti Kamera">
-                <svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/><path d="M12 8l-4 4h3v2h2v-2h3l-4-4z" transform="rotate(180 12 12)"/></svg>
+                <svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/></svg>
                 <span id="gsFlipTxt">Flip</span>
             </button>
             <button class="bb-btn c-off" id="gsTog" onclick="toggleGest()">
@@ -288,6 +279,9 @@
     </div>
 </div>
 
+<!-- DEBUG LOG -->
+<div class="debug-log" id="dbgLog"></div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -299,21 +293,45 @@
 
 <script>
 // ===== CONFIG =====
-const SB='https://xgsxiednpuxqhcqerdzu.supabase.co';
-const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
+const SB = 'https://xgsxiednpuxqhcqerdzu.supabase.co';
+const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
+const BUCKET = 'media-files';
 
 // ===== STATE =====
-// Scanner
 let scStream=null, scActive=false, scRunning=false, codeReader=null;
-let scFacing='environment'; // default: belakang
-
-// Gesture
+let scFacing='environment';
 let gsStream=null, gsActive=false, gsRunning=false, handsInst=null, gsAF=null;
-let gsFacing='user'; // default: depan
-
+let gsFacing='user';
 let holdTimer=null, prevFC=0, dlBusy=false;
+let showDebug=false;
 
-// ===== NAV =====
+// ===== HELPERS =====
+function $(id){return document.getElementById(id)}
+
+// ===== DEBUG =====
+function dbg(msg, type='info'){
+    console.log(`[${type}]`, msg);
+    const el=$('dbgLog');
+    if(!el) return;
+    const cls = type==='error'?'derr':type==='warn'?'dwarn':'';
+    el.innerHTML += `<div class="${cls}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+}
+
+// Triple-tap to toggle debug
+let tapCount=0, tapTimer=null;
+document.addEventListener('click', ()=>{
+    tapCount++;
+    if(tapTimer) clearTimeout(tapTimer);
+    tapTimer = setTimeout(()=>{
+        if(tapCount>=5){
+            showDebug=!showDebug;
+            $('dbgLog').classList.toggle('show', showDebug);
+        }
+        tapCount=0;
+    }, 500);
+});
+
 function goTo(s){
     stopScan(); stopGest();
     document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
@@ -323,22 +341,47 @@ function goTo(s){
         case 'gest': $('sGest').classList.add('active'); break;
     }
 }
-function $(id){return document.getElementById(id)}
 
-// ===== TOAST =====
 function toast(m,t='inf',d=3000){
     const e=$('toast'); e.textContent=m; e.className='toast '+t+' show';
     setTimeout(()=>e.classList.remove('show'),d);
 }
-function fmtSz(b){if(!b)return'—';if(b<1024)return b+' B';if(b<1048576)return(b/1024).toFixed(1)+' KB';return(b/1048576).toFixed(1)+' MB'}
 
-// ===== SCANNER CAMERA =====
+function fmtSz(b){
+    if(!b)return'—';
+    if(b<1024)return b+' B';
+    if(b<1048576)return(b/1024).toFixed(1)+' KB';
+    return(b/1048576).toFixed(1)+' MB';
+}
+
+function fileCat(mime){
+    if(!mime) return 'doc';
+    if(mime.startsWith('image/')) return 'img';
+    if(mime.startsWith('video/')) return 'vid';
+    if(mime.startsWith('audio/')) return 'aud';
+    return 'doc';
+}
+
+function fileIco(cat){
+    switch(cat){
+        case 'img': return '<svg fill="#667eea" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
+        case 'vid': return '<svg fill="#f5576c" viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>';
+        case 'aud': return '<svg fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
+        default: return '<svg fill="#60a5fa" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+    }
+}
+
+function sbH(){
+    return {'apikey':SK,'Authorization':`Bearer ${SK}`,'Content-Type':'application/json'};
+}
+
+// ===== SCANNER =====
 async function startScan(){
     if(scActive) return;
     const vid=$('scVid');
     try{
         $('scSt').textContent='Memulai kamera...';
-        scStream=await navigator.mediaDevices.getUserMedia({
+        scStream = await navigator.mediaDevices.getUserMedia({
             video:{facingMode:{ideal:scFacing},width:{ideal:1280},height:{ideal:720}}
         });
         vid.srcObject=scStream; await vid.play();
@@ -349,7 +392,7 @@ async function startScan(){
         $('scSt').textContent='Arahkan ke barcode...';
         $('scTog').className='bb-btn c-on';
         $('scTogTxt').textContent='Matikan';
-        updateFacingBadge('sc',scFacing);
+        updateFacing('sc',scFacing);
         beginBarcodeScan(vid);
         toast('Kamera scanner aktif','ok');
     }catch(e){
@@ -385,14 +428,14 @@ function onBarcode(txt){
     toast('Ditemukan: '+txt,'ok');
     stopScan();
     setTimeout(()=>{
-        try{ new URL(txt); if(confirm('Buka URL?\n\n'+txt)) window.open(txt,'_blank'); }
-        catch{ alert('Hasil scan:\n\n'+txt); }
+        try{new URL(txt);if(confirm('Buka URL?\n\n'+txt))window.open(txt,'_blank')}
+        catch{alert('Hasil scan:\n\n'+txt)}
     },500);
 }
 
 function stopScan(){
     scRunning=false; scActive=false;
-    if(codeReader){try{codeReader.reset()}catch(e){} codeReader=null}
+    if(codeReader){try{codeReader.reset()}catch(e){}codeReader=null}
     if(scStream){scStream.getTracks().forEach(t=>t.stop());scStream=null}
     $('scVid').srcObject=null;
     $('scOff').classList.remove('hidden');
@@ -409,13 +452,13 @@ function toggleScan(){
 }
 
 function flipScan(){
-    scFacing = scFacing==='environment' ? 'user' : 'environment';
-    updateFacingBadge('sc',scFacing);
+    scFacing=scFacing==='environment'?'user':'environment';
+    updateFacing('sc',scFacing);
     toast(scFacing==='user'?'📸 Kamera Depan':'📷 Kamera Belakang','inf');
     if(scActive){stopScan();setTimeout(()=>startScan(),300)}
 }
 
-// ===== GESTURE CAMERA =====
+// ===== GESTURE =====
 async function startGest(){
     if(gsActive) return;
     const vid=$('gsVid'), can=$('gsCan');
@@ -433,7 +476,7 @@ async function startGest(){
         $('gsSt').textContent='Mendeteksi tangan...';
         $('gsTog').className='bb-btn c-on';
         $('gsTogTxt').textContent='Matikan';
-        updateFacingBadge('gs',gsFacing);
+        updateFacing('gs',gsFacing);
 
         if(!handsInst){
             handsInst=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
@@ -507,16 +550,16 @@ function cancelHold(){
 function countF(l){
     let n=0;
     const px=(l[0].x+l[5].x+l[17].x)/3;
-    if(Math.abs(l[4].x-px)>Math.abs(l[2].x-px)*1.15)n++;
-    if(l[8].y<l[6].y)n++;
-    if(l[12].y<l[10].y)n++;
-    if(l[16].y<l[14].y)n++;
-    if(l[20].y<l[18].y)n++;
+    if(Math.abs(l[4].x-px)>Math.abs(l[2].x-px)*1.15) n++;
+    if(l[8].y<l[6].y) n++;
+    if(l[12].y<l[10].y) n++;
+    if(l[16].y<l[14].y) n++;
+    if(l[20].y<l[18].y) n++;
     return n;
 }
 
 async function onFiveHold(){
-    if(dlBusy)return;
+    if(dlBusy) return;
     stopGest();
     toast('5 jari terdeteksi! Download...','ok');
     await dlFromSB();
@@ -543,17 +586,18 @@ function toggleGest(){
 }
 
 function flipGest(){
-    gsFacing = gsFacing==='user' ? 'environment' : 'user';
-    updateFacingBadge('gs',gsFacing);
+    gsFacing=gsFacing==='user'?'environment':'user';
+    updateFacing('gs',gsFacing);
     toast(gsFacing==='user'?'📸 Kamera Depan':'📷 Kamera Belakang','inf');
     if(gsActive){stopGest();setTimeout(()=>startGest(),300)}
 }
 
-// ===== FACING BADGE =====
-function updateFacingBadge(prefix, facing){
+// ===== FACING (NO MIRROR for front camera) =====
+function updateFacing(prefix, facing){
     const badge=$(prefix+'Facing');
     const txt=$(prefix+'FacingTxt');
     const flip=$(prefix+'Flip');
+
     if(facing==='user'){
         badge.className='facing-badge front';
         badge.querySelector('svg').innerHTML='<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>';
@@ -569,66 +613,107 @@ function updateFacingBadge(prefix, facing){
 
 // ===== SUPABASE DOWNLOAD =====
 async function dlFromSB(){
-    if(dlBusy)return; dlBusy=true;
-    const mod=$('dMod'),ico=$('dIco'),tit=$('dTit'),sub=$('dSub'),bar=$('pBar'),ptx=$('pTxt'),fl=$('fList'),cls=$('dCls');
+    if(dlBusy) return;
+    dlBusy=true;
+
+    const mod=$('dMod'),ico=$('dIco'),tit=$('dTit'),sub=$('dSub');
+    const bar=$('pBar'),ptx=$('pTxt'),fl=$('fList'),cls=$('dCls');
+
     mod.classList.add('on');
     ico.className='di dling';
     ico.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
-    tit.textContent='Mengambil Data...';sub.textContent='Menghubungi Supabase';
-    bar.style.width='5%';ptx.textContent='Connecting...';fl.innerHTML='';cls.style.display='none';
+    tit.textContent='Mengambil Data...';
+    sub.textContent='Menghubungi Supabase';
+    bar.style.width='5%'; ptx.textContent='Connecting...';
+    fl.innerHTML=''; cls.style.display='none';
 
     try{
-        const r=await fetch(`${SB}/rest/v1/media_files?select=*&order=created_at.desc`,{
-            headers:{'apikey':SK,'Authorization':`Bearer ${SK}`,'Content-Type':'application/json'}
+        dbg('Fetching shared_files...');
+
+        // 1. Fetch from shared_files table
+        const r = await fetch(`${SB}/rest/v1/shared_files?select=*&order=shared_at.desc`,{
+            headers: sbH()
         });
-        if(!r.ok) throw new Error(`HTTP ${r.status}`);
-        const files=await r.json();
-        bar.style.width='15%'; ptx.textContent=files.length+' file';
+
+        dbg(`Response status: ${r.status}`);
+
+        if(!r.ok){
+            const errText = await r.text();
+            dbg(`Error body: ${errText}`, 'error');
+            throw new Error(`HTTP ${r.status}: ${errText}`);
+        }
+
+        const files = await r.json();
+        dbg(`Found ${files.length} files`);
+        bar.style.width='15%';
+        ptx.textContent=files.length+' file';
 
         if(files.length===0){
-            tit.textContent='Tidak Ada Media'; sub.textContent='Database kosong';
+            tit.textContent='Tidak Ada Media';
+            sub.textContent='Tidak ada file yang dibagikan';
             bar.style.width='100%'; ptx.textContent='Selesai';
             ico.className='di done';
             ico.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/></svg>';
-            cls.style.display='inline-block'; dlBusy=false;
-            toast('Tidak ada file','inf'); return;
+            cls.style.display='inline-block';
+            dlBusy=false;
+            toast('Tidak ada file','inf');
+            return;
         }
 
-        tit.textContent=`Mengunduh ${files.length} File`; sub.textContent='Mohon tunggu...';
+        tit.textContent=`Mengunduh ${files.length} File`;
+        sub.textContent='Mohon tunggu...';
 
+        // 2. Build file list
         files.forEach(f=>{
-            const iv=f.file_type==='video';
+            const cat=fileCat(f.file_type);
+            dbg(`File: ${f.file_name} | URL: ${f.file_url} | Type: ${f.file_type}`);
             fl.innerHTML+=`<div class="fi" id="fi-${f.id}">
-                <div class="fi-i ${iv?'vid':'img'}">${iv
-                    ?'<svg fill="#f5576c" viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>'
-                    :'<svg fill="#667eea" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
-                }</div>
-                <div class="fi-d"><div class="fi-n">${f.file_name}</div><div class="fi-s">${fmtSz(f.file_size)}</div></div>
+                <div class="fi-i ${cat}">${fileIco(cat)}</div>
+                <div class="fi-d"><div class="fi-n">${f.file_name}</div><div class="fi-s">${f.file_type||'—'}</div></div>
                 <span class="fi-st w" id="fs-${f.id}">⏳</span>
             </div>`;
         });
 
-        let dn=0;
+        // 3. Download each
+        let dn=0, errC=0;
         for(const f of files){
-            const st=$(`fs-${f.id}`); st.textContent='⬇️'; st.className='fi-st dl';
+            const st=$(`fs-${f.id}`);
+            st.textContent='⬇️'; st.className='fi-st dl';
+
             try{
-                await dlFile(f.public_url,f.file_name);
+                dbg(`Downloading: ${f.file_name}...`);
+                await dlFile(f.file_url, f.file_name, f.file_type);
                 st.textContent='✅'; st.className='fi-st ok';
-                await logSh(f); await delMF(f.id);
+                dbg(`✅ Downloaded: ${f.file_name}`);
+
+                // Cleanup: delete storage file & DB record
+                await delStorage(f.file_url);
+                await delRecord(f.id);
+                dbg(`🗑️ Cleaned: ${f.file_name}`);
             }catch(e){
-                console.error(e); st.textContent='❌'; st.className='fi-st er';
+                dbg(`❌ Failed ${f.file_name}: ${e.message}`, 'error');
+                st.textContent='❌'; st.className='fi-st er';
+                errC++;
             }
-            dn++; bar.style.width=(15+dn/files.length*85)+'%'; ptx.textContent=`${dn}/${files.length}`;
+
+            dn++;
+            bar.style.width=(15+dn/files.length*85)+'%';
+            ptx.textContent=`${dn}/${files.length}`;
         }
 
-        tit.textContent='✅ Selesai!'; sub.textContent=dn+' file diunduh';
+        const ok=dn-errC;
+        tit.textContent=errC===0?'✅ Selesai!':'⚠️ Selesai';
+        sub.textContent=`${ok} berhasil${errC>0?', '+errC+' gagal':''}`;
         bar.style.width='100%'; ptx.textContent='100%';
-        ico.className='di done';
-        ico.innerHTML='<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>';
+        ico.className=errC===0?'di done':'di fail';
+        ico.innerHTML=errC===0
+            ?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
+            :'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
         cls.style.display='inline-block';
-        toast(dn+' file berhasil diunduh!','ok',4000);
+        toast(ok+' file diunduh!',errC===0?'ok':'err',4000);
+
     }catch(e){
-        console.error(e);
+        dbg(`FATAL: ${e.message}`, 'error');
         tit.textContent='❌ Gagal'; sub.textContent=e.message;
         bar.style.width='100%';
         ico.className='di fail';
@@ -639,29 +724,176 @@ async function dlFromSB(){
     dlBusy=false;
 }
 
-async function dlFile(url,name){
-    const r=await fetch(url);if(!r.ok)throw new Error('Fetch fail');
-    const b=await r.blob(),a=document.createElement('a');
-    a.href=URL.createObjectURL(b);a.download=name;
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-    await new Promise(r=>setTimeout(r,500));
+// ===== DOWNLOAD FILE — with multiple fallback methods =====
+async function dlFile(url, name, mimeType){
+    dbg(`Method 1: Direct fetch ${url}`);
+
+    // Method 1: Direct fetch with no-cors fallback
+    try{
+        const r = await fetch(url, {mode:'cors'});
+        if(r.ok){
+            const b = await r.blob();
+            triggerDownload(b, name);
+            dbg(`Method 1 success, size: ${b.size}`);
+            return;
+        }
+        dbg(`Method 1 status: ${r.status}`, 'warn');
+    }catch(e){
+        dbg(`Method 1 failed: ${e.message}`, 'warn');
+    }
+
+    // Method 2: Via Supabase Storage API authenticated download
+    try{
+        dbg('Method 2: Supabase Storage API');
+        const storagePath = extractStoragePath(url);
+        if(storagePath){
+            const apiUrl = `${SB}/storage/v1/object/authenticated/${BUCKET}/${storagePath}`;
+            dbg(`API URL: ${apiUrl}`);
+            const r = await fetch(apiUrl, {
+                headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}
+            });
+            if(r.ok){
+                const b = await r.blob();
+                triggerDownload(b, name);
+                dbg(`Method 2 success, size: ${b.size}`);
+                return;
+            }
+            dbg(`Method 2 status: ${r.status}`, 'warn');
+        }
+    }catch(e){
+        dbg(`Method 2 failed: ${e.message}`, 'warn');
+    }
+
+    // Method 3: Create signed URL then download
+    try{
+        dbg('Method 3: Signed URL');
+        const storagePath = extractStoragePath(url);
+        if(storagePath){
+            const signRes = await fetch(`${SB}/storage/v1/object/sign/${BUCKET}/${storagePath}`,{
+                method:'POST',
+                headers:{...sbH()},
+                body: JSON.stringify({expiresIn: 3600})
+            });
+            if(signRes.ok){
+                const signData = await signRes.json();
+                const signedUrl = `${SB}/storage/v1${signData.signedURL}`;
+                dbg(`Signed URL: ${signedUrl}`);
+                const r = await fetch(signedUrl);
+                if(r.ok){
+                    const b = await r.blob();
+                    triggerDownload(b, name);
+                    dbg(`Method 3 success, size: ${b.size}`);
+                    return;
+                }
+            }
+            dbg(`Method 3 sign status: ${signRes.status}`, 'warn');
+        }
+    }catch(e){
+        dbg(`Method 3 failed: ${e.message}`, 'warn');
+    }
+
+    // Method 4: Direct link open (last resort)
+    dbg('Method 4: window.open fallback');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    await new Promise(r=>setTimeout(r,1000));
+    dbg('Method 4 triggered');
 }
 
-async function logSh(f){
-    try{await fetch(`${SB}/rest/v1/shared_media`,{method:'POST',headers:{'apikey':SK,'Authorization':`Bearer ${SK}`,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify({media_file_id:f.id,file_name:f.file_name,file_type:f.file_type,public_url:f.public_url,shared_method:'fist_gesture',notes:'5-finger gesture download'})
-    })}catch(e){console.warn(e)}
+function triggerDownload(blob, name){
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
 }
 
-async function delMF(id){
-    try{await fetch(`${SB}/rest/v1/media_files?id=eq.${id}`,{method:'DELETE',headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}})}catch(e){console.warn(e)}
+// Extract storage path from public URL
+// URL: https://xxx.supabase.co/storage/v1/object/public/media-files/folder/file.ext
+// Returns: folder/file.ext
+function extractStoragePath(url){
+    try{
+        const marker = `/storage/v1/object/public/${BUCKET}/`;
+        let idx = url.indexOf(marker);
+        if(idx !== -1){
+            return decodeURIComponent(url.substring(idx + marker.length));
+        }
+        // Try without /public/
+        const marker2 = `/${BUCKET}/`;
+        idx = url.lastIndexOf(marker2);
+        if(idx !== -1){
+            return decodeURIComponent(url.substring(idx + marker2.length));
+        }
+        // Just get everything after last /media-files/
+        const parts = url.split(`${BUCKET}/`);
+        if(parts.length > 1) return decodeURIComponent(parts.slice(1).join(`${BUCKET}/`));
+    }catch(e){
+        dbg(`extractStoragePath error: ${e.message}`, 'error');
+    }
+    return null;
+}
+
+// Delete file from storage
+async function delStorage(fileUrl){
+    try{
+        const path = extractStoragePath(fileUrl);
+        if(!path){
+            dbg('Cannot extract path for deletion', 'warn');
+            return;
+        }
+        dbg(`Deleting storage: ${BUCKET}/${path}`);
+
+        const r = await fetch(`${SB}/storage/v1/object/${BUCKET}`,{
+            method:'DELETE',
+            headers:{...sbH()},
+            body: JSON.stringify({prefixes:[path]})
+        });
+
+        // Supabase uses DELETE with body for batch delete
+        if(!r.ok){
+            // Try single file delete
+            const r2 = await fetch(`${SB}/storage/v1/object/${BUCKET}/${path}`,{
+                method:'DELETE',
+                headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}
+            });
+            dbg(`Storage delete alt: ${r2.status}`);
+        }else{
+            dbg(`Storage delete: ${r.status}`);
+        }
+    }catch(e){
+        dbg(`Storage delete error: ${e.message}`, 'warn');
+    }
+}
+
+// Delete record from shared_files
+async function delRecord(id){
+    try{
+        const r = await fetch(`${SB}/rest/v1/shared_files?id=eq.${id}`,{
+            method:'DELETE',
+            headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}
+        });
+        dbg(`Record delete ${id}: ${r.status}`);
+    }catch(e){
+        dbg(`Record delete error: ${e.message}`, 'warn');
+    }
 }
 
 function closeDl(){$('dMod').classList.remove('on')}
 
 // ===== CLEANUP =====
 window.addEventListener('beforeunload',()=>{stopScan();stopGest()});
+
+dbg('MediaScan initialized');
+dbg(`Supabase: ${SB}`);
+dbg(`Bucket: ${BUCKET}`);
 </script>
 </body>
 </html>
