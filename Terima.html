@@ -5,895 +5,285 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MediaScan</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#08080d;color:#fff;min-height:100vh;overflow-x:hidden;user-select:none}
-
-        .screen{display:none;flex-direction:column;min-height:100vh}
-        .screen.active{display:flex}
-
-        .home{align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(102,126,234,.07) 0%,transparent 60%)}
-        .logo-w{position:relative;margin-bottom:32px}
-        .logo{width:96px;height:96px;background:linear-gradient(135deg,#667eea,#764ba2);border-radius:26px;display:flex;align-items:center;justify-content:center;animation:fl 4s ease-in-out infinite;box-shadow:0 20px 50px rgba(102,126,234,.22)}
-        .logo-r{position:absolute;inset:-8px;border-radius:32px;border:2px solid rgba(102,126,234,.12);animation:fl 4s ease-in-out infinite reverse}
-        @keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-        .logo svg{width:44px;height:44px;fill:#fff}
-        .app-n{font-size:30px;font-weight:800;background:linear-gradient(135deg,#667eea,#f093fb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
-        .app-d{font-size:13px;color:#555;text-align:center;line-height:1.5;margin-bottom:44px}
-
-        .btns{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px}
-        .btn-a{display:flex;align-items:center;gap:16px;padding:18px 22px;border:none;border-radius:18px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
-        .btn-a::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);transform:translateX(-100%);transition:transform .6s}
-        .btn-a:hover::after{transform:translateX(100%)}
-        .btn-a:active{transform:scale(.97)}
-        .btn-a:hover{transform:translateY(-2px)}
-        .btn-bc{background:linear-gradient(135deg,#667eea,#764ba2);box-shadow:0 8px 30px rgba(102,126,234,.22)}
-        .btn-hd{background:linear-gradient(135deg,#f093fb,#f5576c);box-shadow:0 8px 30px rgba(245,87,108,.22)}
-        .btn-i{width:44px;height:44px;background:rgba(255,255,255,.14);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-        .btn-i svg{width:22px;height:22px;fill:#fff}
-        .btn-l small{display:block;font-size:11px;font-weight:400;opacity:.7;margin-top:2px}
-
-        .tb{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(8,8,13,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.04);position:sticky;top:0;z-index:100}
-        .tb-b{width:36px;height:36px;border-radius:10px;border:1px solid #252530;background:rgba(255,255,255,.03);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
-        .tb-b:hover{background:rgba(255,255,255,.07)}
-        .tb-b svg{width:18px;height:18px;fill:#fff}
-        .tb-t{font-size:15px;font-weight:600}
-        .tb-s{width:36px}
-
-        .cw{flex:1;position:relative;background:#0c0c14;display:flex;align-items:center;justify-content:center;overflow:hidden}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:system-ui,sans-serif;background:#0a0a0f;color:#fff;height:100vh;overflow:hidden;user-select:none}
+        .app{display:flex;flex-direction:column;height:100vh}
+        .tb{padding:10px 16px;background:rgba(10,10,15,.95);border-bottom:1px solid #1a1a25;display:flex;align-items:center;justify-content:space-between;z-index:10}
+        .tb-t{font-size:14px;font-weight:600}
+        .cw{flex:1;position:relative;background:#000;overflow:hidden}
         .cw video{width:100%;height:100%;object-fit:cover}
         .cw canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+        .mirror{transform:scaleX(-1)}
 
-        /* NO MIRROR — kamera depan tidak di-mirror */
-        .cw video.no-mirror{transform:none !important}
+        .cam-off{position:absolute;inset:0;background:#0a0a0f;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;transition:opacity .3s}
+        .cam-off.hide{opacity:0;pointer-events:none}
+        .cam-off p{color:#444;font-size:13px;margin-bottom:16px}
+        .btn-start{padding:12px 28px;border:none;border-radius:12px;font-size:14px;font-weight:600;color:#fff;background:linear-gradient(135deg,#f093fb,#f5576c);cursor:pointer}
+        .btn-start:active{transform:scale(.96)}
 
-        .cam-off{position:absolute;inset:0;background:#0c0c14;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;transition:opacity .4s}
-        .cam-off.hidden{opacity:0;pointer-events:none}
-        .co-ico{width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;margin-bottom:18px;border:2px solid rgba(255,255,255,.05)}
-        .co-ico svg{width:34px;height:34px;fill:#3a3a4a}
-        .co-txt{font-size:14px;color:#4a4a5a;margin-bottom:22px}
-        .btn-sc{padding:14px 34px;border:none;border-radius:14px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:all .3s}
-        .btn-sc.pur{background:linear-gradient(135deg,#667eea,#764ba2);box-shadow:0 8px 24px rgba(102,126,234,.28)}
-        .btn-sc.pnk{background:linear-gradient(135deg,#f093fb,#f5576c);box-shadow:0 8px 24px rgba(245,87,108,.28)}
-        .btn-sc:hover{transform:translateY(-2px)}
-        .btn-sc:active{transform:scale(.96)}
+        .hud{position:absolute;top:12px;right:12px;z-index:10;background:rgba(0,0,0,.55);border-radius:12px;padding:8px 14px;text-align:center;min-width:56px}
+        .hud-n{font-size:32px;font-weight:800;line-height:1;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hud-l{font-size:8px;color:#666;margin-top:2px;text-transform:uppercase}
 
-        .s-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10}
-        .s-fr{width:240px;height:240px;position:relative}
-        .sc{position:absolute;width:32px;height:32px;border-color:#667eea;border-style:solid}
-        .sc-tl{top:0;left:0;border-width:3px 0 0 3px;border-radius:8px 0 0 0}
-        .sc-tr{top:0;right:0;border-width:3px 3px 0 0;border-radius:0 8px 0 0}
-        .sc-bl{bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 8px}
-        .sc-br{bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 8px 0}
-        .s-las{position:absolute;top:6px;left:6px;right:6px;height:2px;background:linear-gradient(90deg,transparent,#667eea,transparent);animation:las 2s ease-in-out infinite;box-shadow:0 0 10px rgba(102,126,234,.4)}
-        @keyframes las{0%,100%{top:6px}50%{top:calc(100% - 6px)}}
-
-        .f-hud{position:absolute;top:14px;right:14px;z-index:30;background:rgba(0,0,0,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;padding:12px 18px;text-align:center;border:1px solid rgba(255,255,255,.05);min-width:72px}
-        .f-num{font-size:40px;font-weight:800;line-height:1;background:linear-gradient(135deg,#f093fb,#f5576c);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-        .f-lab{font-size:9px;color:#666;margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
-
-        .h-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:25;display:none}
-        .h-ring.on{display:block}
-        .h-ring svg{width:110px;height:110px;transform:rotate(-90deg)}
-        .hr-bg{fill:none;stroke:rgba(255,255,255,.06);stroke-width:4}
-        .hr-fg{fill:none;stroke:url(#hg);stroke-width:4;stroke-linecap:round;stroke-dasharray:314;stroke-dashoffset:314;transition:stroke-dashoffset 1.8s linear}
-        .hr-fg.go{stroke-dashoffset:0}
-        .hr-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:600;color:#f093fb;white-space:nowrap}
-
-        .bb{padding:12px 16px;background:rgba(8,8,13,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;gap:8px}
-        .st{font-size:11px;color:#555;display:flex;align-items:center;gap:7px;flex:1;min-width:0}
-        .sd{width:7px;height:7px;border-radius:50%;background:#f5576c;animation:bl 1.5s ease-in-out infinite;flex-shrink:0}
-        .sd.on{background:#4ade80}
-        @keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
-        .st-t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .bb-btns{display:flex;gap:6px;flex-shrink:0}
-        .bb-btn{padding:7px 14px;border:1px solid #252530;border-radius:9px;background:rgba(255,255,255,.03);color:#888;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;white-space:nowrap}
-        .bb-btn:hover{background:rgba(255,255,255,.07);color:#fff}
+        .bb{padding:10px 16px;background:rgba(10,10,15,.95);border-top:1px solid #1a1a25;display:flex;align-items:center;justify-content:space-between}
+        .st{font-size:11px;color:#555;display:flex;align-items:center;gap:6px}
+        .dot{width:6px;height:6px;border-radius:50%;background:#f5576c;flex-shrink:0}
+        .dot.on{background:#4ade80;animation:bl 1.5s infinite}
+        @keyframes bl{50%{opacity:.3}}
+        .bb-btns{display:flex;gap:6px}
+        .bb-btn{padding:6px 12px;border:1px solid #222;border-radius:8px;background:transparent;color:#777;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px}
+        .bb-btn:active{background:rgba(255,255,255,.05)}
         .bb-btn svg{width:13px;height:13px;fill:currentColor}
-        .bb-btn.c-on{border-color:rgba(74,222,128,.25);color:#4ade80}
-        .bb-btn.c-off{border-color:rgba(245,87,108,.25);color:#f5576c}
 
-        .btn-flip{padding:7px 12px;border:1px solid #252530;border-radius:9px;background:rgba(255,255,255,.03);color:#888;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px}
-        .btn-flip:hover{background:rgba(255,255,255,.07);color:#fff}
-        .btn-flip svg{width:14px;height:14px;fill:currentColor}
-        .btn-flip.active{border-color:rgba(102,126,234,.3);color:#667eea}
-
-        .facing-badge{position:absolute;top:14px;left:14px;z-index:30;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.06)}
-        .facing-badge svg{width:14px;height:14px;fill:currentColor}
-        .facing-badge.front{color:#f093fb}
-        .facing-badge.back{color:#667eea}
-
-        .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);padding:11px 22px;background:rgba(16,16,24,.95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:12px;font-size:13px;z-index:9999;transition:all .35s cubic-bezier(.22,1,.36,1);opacity:0;border:1px solid #252530;max-width:88%;text-align:center;pointer-events:none}
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);padding:10px 20px;background:rgba(16,16,24,.95);border-radius:10px;font-size:12px;z-index:999;transition:all .3s;opacity:0;border:1px solid #222;pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-        .toast.ok{border-color:rgba(74,222,128,.35);color:#4ade80}
-        .toast.err{border-color:rgba(245,87,108,.35);color:#f5576c}
-        .toast.inf{border-color:rgba(102,126,234,.35);color:#667eea}
+        .toast.ok{border-color:rgba(74,222,128,.3);color:#4ade80}
+        .toast.err{border-color:rgba(245,87,108,.3);color:#f5576c}
 
-        .dm{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:9998;padding:20px}
+        /* Modal download */
+        .dm{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:900;padding:20px}
         .dm.on{display:flex}
-        .dc{background:#141420;border-radius:20px;padding:28px;width:100%;max-width:400px;text-align:center;border:1px solid #252530}
-        .di{width:56px;height:56px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
-        .di.dling{background:linear-gradient(135deg,#667eea,#764ba2)}
-        .di.done{background:linear-gradient(135deg,#4ade80,#22c55e)}
-        .di.fail{background:linear-gradient(135deg,#f5576c,#ef4444)}
-        .di svg{width:24px;height:24px;fill:#fff}
-        .dc h3{font-size:16px;margin-bottom:5px}
-        .dc .ds{font-size:12px;color:#555;margin-bottom:18px}
-        .pw{width:100%;height:4px;background:#1e1e2a;border-radius:2px;overflow:hidden;margin-bottom:8px}
-        .pb{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:2px;width:0%;transition:width .4s}
-        .pt{font-size:11px;color:#444}
-        .fl{margin-top:14px;max-height:200px;overflow-y:auto;text-align:left}
-        .fi{display:flex;align-items:center;gap:9px;padding:8px 11px;background:rgba(255,255,255,.02);border-radius:9px;margin-bottom:5px;border:1px solid #1a1a26}
-        .fi-i{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-        .fi-i.img{background:rgba(102,126,234,.1)}
-        .fi-i.vid{background:rgba(245,87,108,.1)}
-        .fi-i.aud{background:rgba(251,191,36,.1)}
-        .fi-i.doc{background:rgba(96,165,250,.1)}
-        .fi-i svg{width:15px;height:15px}
-        .fi-d{flex:1;min-width:0}
-        .fi-n{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .fi-s{font-size:10px;color:#444}
-        .fi-st{font-size:10px;font-weight:700;flex-shrink:0}
-        .fi-st.w{color:#444}
-        .fi-st.dl{color:#667eea}
-        .fi-st.ok{color:#4ade80}
-        .fi-st.er{color:#f5576c}
-        .d-cls{margin-top:16px;padding:9px 26px;border:1px solid #252530;border-radius:11px;background:transparent;color:#777;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
-        .d-cls:hover{background:rgba(255,255,255,.04);color:#fff}
-
-        /* DEBUG LOG */
-        .debug-log{position:fixed;top:60px;right:10px;width:320px;max-height:200px;overflow-y:auto;background:rgba(0,0,0,.9);border:1px solid #333;border-radius:10px;padding:10px;font-size:10px;font-family:monospace;color:#4ade80;z-index:99999;display:none;word-break:break-all}
-        .debug-log.show{display:block}
-        .debug-log .derr{color:#f5576c}
-        .debug-log .dwarn{color:#fbbf24}
-
-        @media(min-width:768px){.btns{flex-direction:row}.btn-a{flex:1}.s-fr{width:270px;height:270px}}
+        .dc{background:#141420;border-radius:18px;padding:24px;width:100%;max-width:380px;text-align:center;border:1px solid #222}
+        .dc h3{font-size:15px;margin-bottom:4px}
+        .dc .ds{font-size:11px;color:#555;margin-bottom:14px}
+        .pw{width:100%;height:3px;background:#1a1a25;border-radius:2px;overflow:hidden;margin-bottom:6px}
+        .pb{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:2px;width:0%;transition:width .3s}
+        .pt{font-size:10px;color:#444}
+        .fl{margin-top:12px;max-height:180px;overflow-y:auto;text-align:left}
+        .fi{display:flex;align-items:center;gap:8px;padding:6px 8px;background:rgba(255,255,255,.02);border-radius:8px;margin-bottom:4px}
+        .fi-n{font-size:10px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .fi-s{font-size:10px;font-weight:700;flex-shrink:0}
+        .fi-s.w{color:#444}.fi-s.dl{color:#667eea}.fi-s.ok{color:#4ade80}.fi-s.er{color:#f5576c}
+        .d-cls{margin-top:14px;padding:8px 22px;border:1px solid #222;border-radius:10px;background:transparent;color:#777;font-size:11px;font-weight:600;cursor:pointer}
     </style>
 </head>
 <body>
-
-<!-- HOME -->
-<div class="screen home active" id="sHome">
-    <div class="logo-w">
-        <div class="logo-r"></div>
-        <div class="logo"><svg viewBox="0 0 24 24"><path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg></div>
-    </div>
-    <h1 class="app-n">MediaScan</h1>
-    <p class="app-d">Scan barcode atau gunakan gesture tangan<br>untuk mengunduh media dari cloud</p>
-    <div class="btns">
-        <button class="btn-a btn-bc" onclick="goTo('scan')">
-            <div class="btn-i"><svg viewBox="0 0 24 24"><path d="M4 6h2V4H2v4h2V6zm16-2h-4v2h2v2h2V4zM4 18H2v4h4v-2H4v-2zM18 18v2h-4v2h4c1.1 0 2-.9 2-2v-2h-2zM12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
-            <div class="btn-l">Scan Barcode<small>Pindai QR / Barcode</small></div>
-        </button>
-        <button class="btn-a btn-hd" onclick="goTo('gest')">
-            <div class="btn-i"><svg viewBox="0 0 24 24"><path d="M18.5 8c-.27 0-.53.04-.78.12L16 4.47c-.25-.88-1.07-1.47-1.97-1.47-.15 0-.31.02-.46.05-.42.09-.8.3-1.08.6L10.82 2.24C10.45 2.08 10.06 2 9.66 2c-1.02 0-1.89.62-2.27 1.5L7 4.61V3.5C7 2.12 5.88 1 4.5 1S2 2.12 2 3.5v12c0 .23.02.46.05.68l.03.17c.37 2.13 1.58 4.01 3.35 5.18L6.56 22h8.94c2.6 0 4.86-1.81 5.42-4.34l.92-4.16c.05-.21.08-.43.08-.65L22 10c0-1.1-.9-2-2-2h-1.5zM20 12.85l-.92 4.16C18.72 18.77 17.12 20 15.5 20H7.56l-1.12-.57C5.15 18.65 4.28 17.2 4.05 15.6L4 15.38V3.5c0-.28.22-.5.5-.5s.5.22.5.5V11h2V4.61l.69-1.39c.13-.13.28-.22.47-.22L11 5v6h2V4.47l.41-.14c.09-.03.19-.05.29-.05.17 0 .33.08.43.22L16 9v4h2V10c0-.28.22-.5.5-.5s.5.22.5.5v2.85z"/></svg></div>
-            <div class="btn-l">Gunakan Tangan<small>Buka 5 jari untuk download</small></div>
-        </button>
-    </div>
-</div>
-
-<!-- SCANNER -->
-<div class="screen" id="sScan">
+<div class="app">
     <div class="tb">
-        <button class="tb-b" onclick="goTo('home')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-        <span class="tb-t">📷 Scan Barcode</span>
-        <div class="tb-s"></div>
+        <span class="tb-t">✋ MediaScan</span>
+        <span id="faceTxt" style="font-size:11px;color:#666">Depan</span>
     </div>
-    <div class="cw" id="scWrap">
-        <video id="scVid" class="no-mirror" autoplay playsinline muted></video>
-        <canvas id="scCan" style="display:none"></canvas>
-        <div class="facing-badge back" id="scFacing">
-            <svg viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H4V7h4.05l1.83-2h4.24l1.83 2H20v12zM12 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
-            <span id="scFacingTxt">Belakang</span>
+    <div class="cw">
+        <video id="vid" autoplay playsinline muted></video>
+        <canvas id="can"></canvas>
+        <div class="hud" id="hud" style="display:none">
+            <div class="hud-n" id="fNum">0</div>
+            <div class="hud-l">Jari</div>
         </div>
-        <div class="s-ov" id="scOv" style="display:none">
-            <div class="s-fr">
-                <div class="sc sc-tl"></div><div class="sc sc-tr"></div>
-                <div class="sc sc-bl"></div><div class="sc sc-br"></div>
-                <div class="s-las"></div>
-            </div>
-        </div>
-        <div class="cam-off" id="scOff">
-            <div class="co-ico"><svg viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H4V7h4.05l1.83-2h4.24l1.83 2H20v12zM12 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg></div>
-            <p class="co-txt">Kamera tidak aktif</p>
-            <button class="btn-sc pur" onclick="startScan()">🎥 Nyalakan Kamera</button>
+        <div class="cam-off" id="off">
+            <p>Buka 5 jari untuk download</p>
+            <button class="btn-start" onclick="start()">Nyalakan Kamera</button>
         </div>
     </div>
     <div class="bb">
-        <div class="st">
-            <div class="sd" id="scDot"></div>
-            <span class="st-t" id="scSt">Kamera mati</span>
-        </div>
+        <div class="st"><div class="dot" id="dot"></div><span id="stTxt">Mati</span></div>
         <div class="bb-btns">
-            <button class="btn-flip" id="scFlip" onclick="flipScan()" title="Ganti Kamera">
-                <svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/></svg>
-                <span id="scFlipTxt">Flip</span>
-            </button>
-            <button class="bb-btn c-off" id="scTog" onclick="toggleScan()">
-                <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.98zm-2 5.52H4V6h12v10z"/></svg>
-                <span id="scTogTxt">Nyalakan</span>
-            </button>
+            <button class="bb-btn" onclick="flip()"><svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/></svg>Flip</button>
+            <button class="bb-btn" id="togBtn" onclick="toggle()"><svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.98zm-2 5.52H4V6h12v10z"/></svg><span id="togTxt">Nyala</span></button>
         </div>
     </div>
 </div>
 
-<!-- GESTURE -->
-<div class="screen" id="sGest">
-    <div class="tb">
-        <button class="tb-b" onclick="goTo('home')"><svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg></button>
-        <span class="tb-t">✋ Gesture Tangan</span>
-        <div class="tb-s"></div>
-    </div>
-    <div class="cw" id="gsWrap">
-        <video id="gsVid" class="no-mirror" autoplay playsinline muted></video>
-        <canvas id="gsCan" class="no-mirror"></canvas>
-        <div class="facing-badge front" id="gsFacing">
-            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
-            <span id="gsFacingTxt">Depan</span>
-        </div>
-        <div class="f-hud" id="fHud" style="display:none">
-            <div class="f-num" id="fNum">0</div>
-            <div class="f-lab">Jari</div>
-        </div>
-        <div class="h-ring" id="hRing">
-            <svg viewBox="0 0 120 120">
-                <defs><linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f093fb"/><stop offset="100%" stop-color="#f5576c"/></linearGradient></defs>
-                <circle class="hr-bg" cx="60" cy="60" r="50"/>
-                <circle class="hr-fg" id="hFg" cx="60" cy="60" r="50"/>
-            </svg>
-            <div class="hr-txt" id="hTxt">✋ Tahan...</div>
-        </div>
-        <div class="cam-off" id="gsOff">
-            <div class="co-ico"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
-            <p class="co-txt">Kamera tidak aktif</p>
-            <button class="btn-sc pnk" onclick="startGest()">🎥 Nyalakan Kamera</button>
-        </div>
-    </div>
-    <div class="bb">
-        <div class="st">
-            <div class="sd" id="gsDot"></div>
-            <span class="st-t" id="gsSt">Kamera mati</span>
-        </div>
-        <div class="bb-btns">
-            <button class="btn-flip" id="gsFlip" onclick="flipGest()" title="Ganti Kamera">
-                <svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 3c1.63 0 3.06.79 3.98 2H12V7zm0 10c-1.63 0-3.06-.79-3.98-2H12v2zM4 18V6h4.05l1.83-2h4.24l1.83 2H20v12H4z"/></svg>
-                <span id="gsFlipTxt">Flip</span>
-            </button>
-            <button class="bb-btn c-off" id="gsTog" onclick="toggleGest()">
-                <svg viewBox="0 0 24 24"><path d="M18 10.48V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-4.48l4 3.98v-11l-4 3.98zm-2 5.52H4V6h12v10z"/></svg>
-                <span id="gsTogTxt">Nyalakan</span>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- DOWNLOAD MODAL -->
 <div class="dm" id="dMod">
     <div class="dc">
-        <div class="di dling" id="dIco"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></div>
         <h3 id="dTit">Mengunduh...</h3>
         <p class="ds" id="dSub">Mohon tunggu</p>
         <div class="pw"><div class="pb" id="pBar"></div></div>
         <span class="pt" id="pTxt">0%</span>
         <div class="fl" id="fList"></div>
-        <button class="d-cls" id="dCls" style="display:none" onclick="closeDl()">Tutup</button>
+        <button class="d-cls" id="dCls" style="display:none" onclick="$('dMod').classList.remove('on')">Tutup</button>
     </div>
 </div>
 
-<!-- DEBUG LOG -->
-<div class="debug-log" id="dbgLog"></div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- LIBS -->
-<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js"></script>
 
 <script>
-// ===== CONFIG =====
-const SB = 'https://xgsxiednpuxqhcqerdzu.supabase.co';
-const SK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
-const BUCKET = 'media-files';
+const SB='https://xgsxiednpuxqhcqerdzu.supabase.co';
+const SK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3hpZWRucHV4cWhjcWVyZHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5MjE3MTcsImV4cCI6MjA4NjQ5NzcxN30.3TF2asecsxafYmscgEz60ty1iBsosjSjOiVBoTrZjVU';
+const BK='media-files';
 
-// ===== STATE =====
-let scStream=null, scActive=false, scRunning=false, codeReader=null;
-let scFacing='environment';
-let gsStream=null, gsActive=false, gsRunning=false, handsInst=null, gsAF=null;
-let gsFacing='user';
-let holdTimer=null, prevFC=0, dlBusy=false;
-let showDebug=false;
+let stream=null,active=false,running=false,hands=null,af=null;
+let facing='user',busy=false,prevF=0;
 
-// ===== HELPERS =====
-function $(id){return document.getElementById(id)}
+const $=id=>document.getElementById(id);
 
-// ===== DEBUG =====
-function dbg(msg, type='info'){
-    console.log(`[${type}]`, msg);
-    const el=$('dbgLog');
-    if(!el) return;
-    const cls = type==='error'?'derr':type==='warn'?'dwarn':'';
-    el.innerHTML += `<div class="${cls}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-    el.scrollTop = el.scrollHeight;
+function toast(m,t='ok'){const e=$('toast');e.textContent=m;e.className='toast '+t+' show';setTimeout(()=>e.classList.remove('show'),2500)}
+
+function setMirror(){
+    const m=facing==='user';
+    $('vid').classList.toggle('mirror',m);
+    $('can').classList.toggle('mirror',m);
 }
 
-// Triple-tap to toggle debug
-let tapCount=0, tapTimer=null;
-document.addEventListener('click', ()=>{
-    tapCount++;
-    if(tapTimer) clearTimeout(tapTimer);
-    tapTimer = setTimeout(()=>{
-        if(tapCount>=5){
-            showDebug=!showDebug;
-            $('dbgLog').classList.toggle('show', showDebug);
-        }
-        tapCount=0;
-    }, 500);
-});
-
-function goTo(s){
-    stopScan(); stopGest();
-    document.querySelectorAll('.screen').forEach(e=>e.classList.remove('active'));
-    switch(s){
-        case 'home': $('sHome').classList.add('active'); break;
-        case 'scan': $('sScan').classList.add('active'); break;
-        case 'gest': $('sGest').classList.add('active'); break;
-    }
-}
-
-function toast(m,t='inf',d=3000){
-    const e=$('toast'); e.textContent=m; e.className='toast '+t+' show';
-    setTimeout(()=>e.classList.remove('show'),d);
-}
-
-function fmtSz(b){
-    if(!b)return'—';
-    if(b<1024)return b+' B';
-    if(b<1048576)return(b/1024).toFixed(1)+' KB';
-    return(b/1048576).toFixed(1)+' MB';
-}
-
-function fileCat(mime){
-    if(!mime) return 'doc';
-    if(mime.startsWith('image/')) return 'img';
-    if(mime.startsWith('video/')) return 'vid';
-    if(mime.startsWith('audio/')) return 'aud';
-    return 'doc';
-}
-
-function fileIco(cat){
-    switch(cat){
-        case 'img': return '<svg fill="#667eea" viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>';
-        case 'vid': return '<svg fill="#f5576c" viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/></svg>';
-        case 'aud': return '<svg fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
-        default: return '<svg fill="#60a5fa" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
-    }
-}
-
-function sbH(){
-    return {'apikey':SK,'Authorization':`Bearer ${SK}`,'Content-Type':'application/json'};
-}
-
-// ===== SCANNER =====
-async function startScan(){
-    if(scActive) return;
-    const vid=$('scVid');
+async function start(){
+    if(active)return;
     try{
-        $('scSt').textContent='Memulai kamera...';
-        scStream = await navigator.mediaDevices.getUserMedia({
-            video:{facingMode:{ideal:scFacing},width:{ideal:1280},height:{ideal:720}}
-        });
-        vid.srcObject=scStream; await vid.play();
-        scActive=true; scRunning=true;
-        $('scOff').classList.add('hidden');
-        $('scOv').style.display='flex';
-        $('scDot').classList.add('on');
-        $('scSt').textContent='Arahkan ke barcode...';
-        $('scTog').className='bb-btn c-on';
-        $('scTogTxt').textContent='Matikan';
-        updateFacing('sc',scFacing);
-        beginBarcodeScan(vid);
-        toast('Kamera scanner aktif','ok');
-    }catch(e){
-        console.error(e);
-        $('scSt').textContent='Gagal: '+e.message;
-        toast('Gagal akses kamera','err');
-    }
-}
+        setMirror();
+        stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:640},height:{ideal:480}}});
+        const v=$('vid');v.srcObject=stream;await v.play();
+        const c=$('can');c.width=v.videoWidth||640;c.height=v.videoHeight||480;
+        active=running=true;
+        $('off').classList.add('hide');
+        $('hud').style.display='block';
+        $('dot').classList.add('on');
+        $('stTxt').textContent='Deteksi...';
+        $('togTxt').textContent='Mati';
+        $('faceTxt').textContent=facing==='user'?'Depan':'Belakang';
 
-function beginBarcodeScan(vid){
-    if(typeof ZXing!=='undefined'){
-        codeReader=new ZXing.BrowserMultiFormatReader();
-        codeReader.decodeFromVideoElement(vid,(r,e)=>{
-            if(r&&scRunning) onBarcode(r.getText());
-        });
-    }else if('BarcodeDetector' in window){
-        const det=new BarcodeDetector({formats:['qr_code','ean_13','ean_8','code_128','code_39','upc_a','upc_e','data_matrix']});
-        const lp=async()=>{
-            if(!scRunning) return;
-            try{const c=await det.detect(vid);if(c.length>0){onBarcode(c[0].rawValue);return;}}catch(e){}
-            if(scRunning) requestAnimationFrame(lp);
-        };
-        lp();
-    }else{
-        $('scSt').textContent='Browser tidak support';
-        toast('Browser tidak mendukung barcode','err');
-    }
-}
-
-function onBarcode(txt){
-    scRunning=false;
-    $('scSt').textContent='✅ '+txt;
-    toast('Ditemukan: '+txt,'ok');
-    stopScan();
-    setTimeout(()=>{
-        try{new URL(txt);if(confirm('Buka URL?\n\n'+txt))window.open(txt,'_blank')}
-        catch{alert('Hasil scan:\n\n'+txt)}
-    },500);
-}
-
-function stopScan(){
-    scRunning=false; scActive=false;
-    if(codeReader){try{codeReader.reset()}catch(e){}codeReader=null}
-    if(scStream){scStream.getTracks().forEach(t=>t.stop());scStream=null}
-    $('scVid').srcObject=null;
-    $('scOff').classList.remove('hidden');
-    $('scOv').style.display='none';
-    $('scDot').classList.remove('on');
-    $('scSt').textContent='Kamera mati';
-    $('scTog').className='bb-btn c-off';
-    $('scTogTxt').textContent='Nyalakan';
-}
-
-function toggleScan(){
-    if(scActive){stopScan();toast('Kamera dimatikan','inf')}
-    else startScan();
-}
-
-function flipScan(){
-    scFacing=scFacing==='environment'?'user':'environment';
-    updateFacing('sc',scFacing);
-    toast(scFacing==='user'?'📸 Kamera Depan':'📷 Kamera Belakang','inf');
-    if(scActive){stopScan();setTimeout(()=>startScan(),300)}
-}
-
-// ===== GESTURE =====
-async function startGest(){
-    if(gsActive) return;
-    const vid=$('gsVid'), can=$('gsCan');
-    try{
-        $('gsSt').textContent='Memulai kamera...';
-        gsStream=await navigator.mediaDevices.getUserMedia({
-            video:{facingMode:{ideal:gsFacing},width:{ideal:1280},height:{ideal:720}}
-        });
-        vid.srcObject=gsStream; await vid.play();
-        can.width=vid.videoWidth||640; can.height=vid.videoHeight||480;
-        gsActive=true; gsRunning=true;
-        $('gsOff').classList.add('hidden');
-        $('fHud').style.display='block';
-        $('gsDot').classList.add('on');
-        $('gsSt').textContent='Mendeteksi tangan...';
-        $('gsTog').className='bb-btn c-on';
-        $('gsTogTxt').textContent='Matikan';
-        updateFacing('gs',gsFacing);
-
-        if(!handsInst){
-            handsInst=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
-            handsInst.setOptions({maxNumHands:1,modelComplexity:1,minDetectionConfidence:0.7,minTrackingConfidence:0.5});
-            handsInst.onResults(onHand);
+        if(!hands){
+            hands=new Hands({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`});
+            hands.setOptions({maxNumHands:1,modelComplexity:0,minDetectionConfidence:.6,minTrackingConfidence:.4});
+            hands.onResults(onRes);
         }
 
         const loop=async()=>{
-            if(!gsRunning) return;
-            if(vid.readyState>=2){
-                can.width=vid.videoWidth; can.height=vid.videoHeight;
-                try{await handsInst.send({image:vid})}catch(e){}
-            }
-            gsAF=requestAnimationFrame(loop);
-        };
-        loop();
-        toast('Kamera gesture aktif','ok');
-    }catch(e){
-        console.error(e);
-        $('gsSt').textContent='Gagal: '+e.message;
-        toast('Gagal akses kamera','err');
-    }
+            if(!running)return;
+            if(v.readyState>=2){try{await hands.send({image:v})}catch(e){}}
+            af=requestAnimationFrame(loop);
+        };loop();
+    }catch(e){toast('Gagal: '+e.message,'err')}
 }
 
-function onHand(res){
-    if(!gsRunning) return;
-    const can=$('gsCan'), cx=can.getContext('2d');
-    cx.save(); cx.clearRect(0,0,can.width,can.height);
+function onRes(r){
+    if(!running)return;
+    const c=$('can'),cx=c.getContext('2d');
+    cx.clearRect(0,0,c.width,c.height);
 
-    if(res.multiHandLandmarks&&res.multiHandLandmarks.length>0){
-        const lm=res.multiHandLandmarks[0];
-        drawConnectors(cx,lm,HAND_CONNECTIONS,{color:'rgba(240,147,251,.35)',lineWidth:2});
-        drawLandmarks(cx,lm,{color:'#667eea',lineWidth:1,radius:3});
+    if(r.multiHandLandmarks?.length){
+        const l=r.multiHandLandmarks[0];
 
-        const fc=countF(lm);
+        // Draw simple dots
+        cx.fillStyle='rgba(240,147,251,.6)';
+        for(const p of l){cx.beginPath();cx.arc(p.x*c.width,p.y*c.height,3,0,Math.PI*2);cx.fill()}
+
+        const fc=countF(l);
         $('fNum').textContent=fc;
-        $('gsDot').classList.add('on');
+        $('stTxt').textContent=fc===5?'✋ 5 jari!':fc+' jari';
 
-        if(fc===5){
-            $('gsSt').textContent='✋ 5 jari — tahan!';
-            $('hRing').classList.add('on');
-            $('hTxt').textContent='✋ Tahan...';
-            if(prevFC!==5&&!dlBusy){
-                $('hFg').classList.remove('go');
-                void $('hFg').offsetWidth;
-                $('hFg').classList.add('go');
-                holdTimer=setTimeout(()=>{
-                    if(gsRunning&&!dlBusy){$('hTxt').textContent='⬇️ Download!';onFiveHold()}
-                },1800);
-            }
-        }else{
-            $('gsSt').textContent=fc+' jari terdeteksi';
-            cancelHold();
+        // Langsung download saat 5 jari, tanpa tunggu
+        if(fc===5&&prevF!==5&&!busy){
+            busy=true;
+            stop();
+            toast('Download dimulai!');
+            dlAll();
         }
-        prevFC=fc;
+        prevF=fc;
     }else{
         $('fNum').textContent='0';
-        $('gsDot').classList.remove('on');
-        $('gsSt').textContent='Mendeteksi tangan...';
-        prevFC=0; cancelHold();
+        $('stTxt').textContent='Deteksi...';
+        prevF=0;
     }
-    cx.restore();
-}
-
-function cancelHold(){
-    if(holdTimer){clearTimeout(holdTimer);holdTimer=null}
-    $('hRing').classList.remove('on');
-    $('hFg').classList.remove('go');
 }
 
 function countF(l){
     let n=0;
-    const px=(l[0].x+l[5].x+l[17].x)/3;
-    if(Math.abs(l[4].x-px)>Math.abs(l[2].x-px)*1.15) n++;
-    if(l[8].y<l[6].y) n++;
-    if(l[12].y<l[10].y) n++;
-    if(l[16].y<l[14].y) n++;
-    if(l[20].y<l[18].y) n++;
+    const rx=l[5].x<l[17].x;
+    if(rx?l[4].x<l[3].x:l[4].x>l[3].x)n++;
+    if(l[8].y<l[6].y)n++;
+    if(l[12].y<l[10].y)n++;
+    if(l[16].y<l[14].y)n++;
+    if(l[20].y<l[18].y)n++;
     return n;
 }
 
-async function onFiveHold(){
-    if(dlBusy) return;
-    stopGest();
-    toast('5 jari terdeteksi! Download...','ok');
-    await dlFromSB();
+function stop(){
+    running=active=false;
+    if(af){cancelAnimationFrame(af);af=null}
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+    $('vid').srcObject=null;
+    $('can').getContext('2d').clearRect(0,0,$('can').width,$('can').height);
+    $('off').classList.remove('hide');
+    $('hud').style.display='none';
+    $('dot').classList.remove('on');
+    $('stTxt').textContent='Mati';
+    $('togTxt').textContent='Nyala';
 }
 
-function stopGest(){
-    gsRunning=false; gsActive=false; cancelHold();
-    if(gsAF){cancelAnimationFrame(gsAF);gsAF=null}
-    if(gsStream){gsStream.getTracks().forEach(t=>t.stop());gsStream=null}
-    $('gsVid').srcObject=null;
-    const cx=$('gsCan').getContext('2d'); cx.clearRect(0,0,$('gsCan').width,$('gsCan').height);
-    $('gsOff').classList.remove('hidden');
-    $('fHud').style.display='none';
-    $('gsDot').classList.remove('on');
-    $('gsSt').textContent='Kamera mati';
-    $('gsTog').className='bb-btn c-off';
-    $('gsTogTxt').textContent='Nyalakan';
-    $('hRing').classList.remove('on');
+function toggle(){active?stop():start()}
+function flip(){
+    facing=facing==='user'?'environment':'user';
+    $('faceTxt').textContent=facing==='user'?'Depan':'Belakang';
+    if(active){stop();setTimeout(start,200)}
 }
 
-function toggleGest(){
-    if(gsActive){stopGest();toast('Kamera dimatikan','inf')}
-    else startGest();
-}
+// === DOWNLOAD ===
+const hd=()=>({'apikey':SK,'Authorization':`Bearer ${SK}`,'Content-Type':'application/json'});
 
-function flipGest(){
-    gsFacing=gsFacing==='user'?'environment':'user';
-    updateFacing('gs',gsFacing);
-    toast(gsFacing==='user'?'📸 Kamera Depan':'📷 Kamera Belakang','inf');
-    if(gsActive){stopGest();setTimeout(()=>startGest(),300)}
-}
-
-// ===== FACING (NO MIRROR for front camera) =====
-function updateFacing(prefix, facing){
-    const badge=$(prefix+'Facing');
-    const txt=$(prefix+'FacingTxt');
-    const flip=$(prefix+'Flip');
-
-    if(facing==='user'){
-        badge.className='facing-badge front';
-        badge.querySelector('svg').innerHTML='<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>';
-        txt.textContent='Depan';
-        flip.classList.add('active');
-    }else{
-        badge.className='facing-badge back';
-        badge.querySelector('svg').innerHTML='<path d="M20 5h-3.17L15 3H9L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 14H4V7h4.05l1.83-2h4.24l1.83 2H20v12zM12 9c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>';
-        txt.textContent='Belakang';
-        flip.classList.remove('active');
-    }
-}
-
-// ===== SUPABASE DOWNLOAD =====
-async function dlFromSB(){
-    if(dlBusy) return;
-    dlBusy=true;
-
-    const mod=$('dMod'),ico=$('dIco'),tit=$('dTit'),sub=$('dSub');
-    const bar=$('pBar'),ptx=$('pTxt'),fl=$('fList'),cls=$('dCls');
-
-    mod.classList.add('on');
-    ico.className='di dling';
-    ico.innerHTML='<svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>';
-    tit.textContent='Mengambil Data...';
-    sub.textContent='Menghubungi Supabase';
-    bar.style.width='5%'; ptx.textContent='Connecting...';
-    fl.innerHTML=''; cls.style.display='none';
+async function dlAll(){
+    const bar=$('pBar'),pt=$('pTxt'),fl=$('fList'),cls=$('dCls');
+    $('dMod').classList.add('on');
+    $('dTit').textContent='Mengambil...';
+    $('dSub').textContent='';
+    bar.style.width='5%';pt.textContent='...';fl.innerHTML='';cls.style.display='none';
 
     try{
-        dbg('Fetching shared_files...');
-
-        // 1. Fetch from shared_files table
-        const r = await fetch(`${SB}/rest/v1/shared_files?select=*&order=shared_at.desc`,{
-            headers: sbH()
-        });
-
-        dbg(`Response status: ${r.status}`);
-
-        if(!r.ok){
-            const errText = await r.text();
-            dbg(`Error body: ${errText}`, 'error');
-            throw new Error(`HTTP ${r.status}: ${errText}`);
-        }
-
-        const files = await r.json();
-        dbg(`Found ${files.length} files`);
+        const r=await fetch(`${SB}/rest/v1/shared_files?select=*&order=shared_at.desc`,{headers:hd()});
+        if(!r.ok)throw new Error('HTTP '+r.status);
+        const files=await r.json();
         bar.style.width='15%';
-        ptx.textContent=files.length+' file';
 
-        if(files.length===0){
-            tit.textContent='Tidak Ada Media';
-            sub.textContent='Tidak ada file yang dibagikan';
-            bar.style.width='100%'; ptx.textContent='Selesai';
-            ico.className='di done';
-            ico.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/></svg>';
-            cls.style.display='inline-block';
-            dlBusy=false;
-            toast('Tidak ada file','inf');
-            return;
+        if(!files.length){
+            $('dTit').textContent='Kosong';$('dSub').textContent='Tidak ada file';
+            bar.style.width='100%';pt.textContent='—';cls.style.display='inline-block';
+            busy=false;return;
         }
 
-        tit.textContent=`Mengunduh ${files.length} File`;
-        sub.textContent='Mohon tunggu...';
-
-        // 2. Build file list
+        $('dTit').textContent=`Unduh ${files.length} file`;
         files.forEach(f=>{
-            const cat=fileCat(f.file_type);
-            dbg(`File: ${f.file_name} | URL: ${f.file_url} | Type: ${f.file_type}`);
-            fl.innerHTML+=`<div class="fi" id="fi-${f.id}">
-                <div class="fi-i ${cat}">${fileIco(cat)}</div>
-                <div class="fi-d"><div class="fi-n">${f.file_name}</div><div class="fi-s">${f.file_type||'—'}</div></div>
-                <span class="fi-st w" id="fs-${f.id}">⏳</span>
-            </div>`;
+            fl.innerHTML+=`<div class="fi"><span class="fi-n">${f.file_name}</span><span class="fi-s w" id="s${f.id}">⏳</span></div>`;
         });
 
-        // 3. Download each
-        let dn=0, errC=0;
+        let dn=0,err=0;
         for(const f of files){
-            const st=$(`fs-${f.id}`);
-            st.textContent='⬇️'; st.className='fi-st dl';
-
+            const s=$('s'+f.id);s.textContent='⬇️';s.className='fi-s dl';
             try{
-                dbg(`Downloading: ${f.file_name}...`);
-                await dlFile(f.file_url, f.file_name, f.file_type);
-                st.textContent='✅'; st.className='fi-st ok';
-                dbg(`✅ Downloaded: ${f.file_name}`);
-
-                // Cleanup: delete storage file & DB record
-                await delStorage(f.file_url);
-                await delRecord(f.id);
-                dbg(`🗑️ Cleaned: ${f.file_name}`);
-            }catch(e){
-                dbg(`❌ Failed ${f.file_name}: ${e.message}`, 'error');
-                st.textContent='❌'; st.className='fi-st er';
-                errC++;
-            }
-
-            dn++;
-            bar.style.width=(15+dn/files.length*85)+'%';
-            ptx.textContent=`${dn}/${files.length}`;
+                await dl(f.file_url,f.file_name);
+                s.textContent='✅';s.className='fi-s ok';
+                fetch(`${SB}/rest/v1/shared_files?id=eq.${f.id}`,{method:'DELETE',headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}}).catch(()=>{});
+                const p=exPath(f.file_url);if(p)fetch(`${SB}/storage/v1/object/${BK}/${p}`,{method:'DELETE',headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}}).catch(()=>{});
+            }catch(e){s.textContent='❌';s.className='fi-s er';err++}
+            dn++;bar.style.width=(15+dn/files.length*85)+'%';pt.textContent=`${dn}/${files.length}`;
         }
 
-        const ok=dn-errC;
-        tit.textContent=errC===0?'✅ Selesai!':'⚠️ Selesai';
-        sub.textContent=`${ok} berhasil${errC>0?', '+errC+' gagal':''}`;
-        bar.style.width='100%'; ptx.textContent='100%';
-        ico.className=errC===0?'di done':'di fail';
-        ico.innerHTML=errC===0
-            ?'<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>'
-            :'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+        $('dTit').textContent=err?'⚠️ Selesai':'✅ Selesai';
+        $('dSub').textContent=`${dn-err} berhasil${err?', '+err+' gagal':''}`;
+        bar.style.width='100%';pt.textContent='100%';
         cls.style.display='inline-block';
-        toast(ok+' file diunduh!',errC===0?'ok':'err',4000);
-
+        toast((dn-err)+' file diunduh!',err?'err':'ok');
     }catch(e){
-        dbg(`FATAL: ${e.message}`, 'error');
-        tit.textContent='❌ Gagal'; sub.textContent=e.message;
-        bar.style.width='100%';
-        ico.className='di fail';
-        ico.innerHTML='<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
-        cls.style.display='inline-block';
-        toast('Gagal: '+e.message,'err',5000);
+        $('dTit').textContent='❌ Gagal';$('dSub').textContent=e.message;
+        bar.style.width='100%';cls.style.display='inline-block';
+        toast('Gagal','err');
     }
-    dlBusy=false;
+    busy=false;
 }
 
-// ===== DOWNLOAD FILE — with multiple fallback methods =====
-async function dlFile(url, name, mimeType){
-    dbg(`Method 1: Direct fetch ${url}`);
-
-    // Method 1: Direct fetch with no-cors fallback
+async function dl(url,name){
+    // Try direct
+    try{const r=await fetch(url);if(r.ok){save(await r.blob(),name);return}}catch(e){}
+    // Try signed
     try{
-        const r = await fetch(url, {mode:'cors'});
-        if(r.ok){
-            const b = await r.blob();
-            triggerDownload(b, name);
-            dbg(`Method 1 success, size: ${b.size}`);
-            return;
+        const p=exPath(url);if(p){
+            const s=await fetch(`${SB}/storage/v1/object/sign/${BK}/${p}`,{method:'POST',headers:hd(),body:JSON.stringify({expiresIn:3600})});
+            if(s.ok){const d=await s.json();const r=await fetch(`${SB}/storage/v1${d.signedURL}`);if(r.ok){save(await r.blob(),name);return}}
         }
-        dbg(`Method 1 status: ${r.status}`, 'warn');
-    }catch(e){
-        dbg(`Method 1 failed: ${e.message}`, 'warn');
-    }
-
-    // Method 2: Via Supabase Storage API authenticated download
-    try{
-        dbg('Method 2: Supabase Storage API');
-        const storagePath = extractStoragePath(url);
-        if(storagePath){
-            const apiUrl = `${SB}/storage/v1/object/authenticated/${BUCKET}/${storagePath}`;
-            dbg(`API URL: ${apiUrl}`);
-            const r = await fetch(apiUrl, {
-                headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}
-            });
-            if(r.ok){
-                const b = await r.blob();
-                triggerDownload(b, name);
-                dbg(`Method 2 success, size: ${b.size}`);
-                return;
-            }
-            dbg(`Method 2 status: ${r.status}`, 'warn');
-        }
-    }catch(e){
-        dbg(`Method 2 failed: ${e.message}`, 'warn');
-    }
-
-    // Method 3: Create signed URL then download
-    try{
-        dbg('Method 3: Signed URL');
-        const storagePath = extractStoragePath(url);
-        if(storagePath){
-            const signRes = await fetch(`${SB}/storage/v1/object/sign/${BUCKET}/${storagePath}`,{
-                method:'POST',
-                headers:{...sbH()},
-                body: JSON.stringify({expiresIn: 3600})
-            });
-            if(signRes.ok){
-                const signData = await signRes.json();
-                const signedUrl = `${SB}/storage/v1${signData.signedURL}`;
-                dbg(`Signed URL: ${signedUrl}`);
-                const r = await fetch(signedUrl);
-                if(r.ok){
-                    const b = await r.blob();
-                    triggerDownload(b, name);
-                    dbg(`Method 3 success, size: ${b.size}`);
-                    return;
-                }
-            }
-            dbg(`Method 3 sign status: ${signRes.status}`, 'warn');
-        }
-    }catch(e){
-        dbg(`Method 3 failed: ${e.message}`, 'warn');
-    }
-
-    // Method 4: Direct link open (last resort)
-    dbg('Method 4: window.open fallback');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    await new Promise(r=>setTimeout(r,1000));
-    dbg('Method 4 triggered');
+    }catch(e){}
+    // Fallback
+    const a=document.createElement('a');a.href=url;a.download=name;a.target='_blank';document.body.appendChild(a);a.click();a.remove();
+    await new Promise(r=>setTimeout(r,500));
 }
 
-function triggerDownload(blob, name){
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+function save(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}
+
+function exPath(u){
+    const m=`/storage/v1/object/public/${BK}/`;
+    let i=u.indexOf(m);if(i!==-1)return decodeURIComponent(u.substring(i+m.length));
+    const p=u.split(`${BK}/`);return p.length>1?decodeURIComponent(p.slice(1).join(`${BK}/`)):null;
 }
 
-// Extract storage path from public URL
-// URL: https://xxx.supabase.co/storage/v1/object/public/media-files/folder/file.ext
-// Returns: folder/file.ext
-function extractStoragePath(url){
-    try{
-        const marker = `/storage/v1/object/public/${BUCKET}/`;
-        let idx = url.indexOf(marker);
-        if(idx !== -1){
-            return decodeURIComponent(url.substring(idx + marker.length));
-        }
-        // Try without /public/
-        const marker2 = `/${BUCKET}/`;
-        idx = url.lastIndexOf(marker2);
-        if(idx !== -1){
-            return decodeURIComponent(url.substring(idx + marker2.length));
-        }
-        // Just get everything after last /media-files/
-        const parts = url.split(`${BUCKET}/`);
-        if(parts.length > 1) return decodeURIComponent(parts.slice(1).join(`${BUCKET}/`));
-    }catch(e){
-        dbg(`extractStoragePath error: ${e.message}`, 'error');
-    }
-    return null;
-}
-
-// Delete file from storage
-async function delStorage(fileUrl){
-    try{
-        const path = extractStoragePath(fileUrl);
-        if(!path){
-            dbg('Cannot extract path for deletion', 'warn');
-            return;
-        }
-        dbg(`Deleting storage: ${BUCKET}/${path}`);
-
-        const r = await fetch(`${SB}/storage/v1/object/${BUCKET}`,{
-            method:'DELETE',
-            headers:{...sbH()},
-            body: JSON.stringify({prefixes:[path]})
-        });
-
-        // Supabase uses DELETE with body for batch delete
-        if(!r.ok){
-            // Try single file delete
-            const r2 = await fetch(`${SB}/storage/v1/object/${BUCKET}/${path}`,{
-                method:'DELETE',
-                headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}
-            });
-            dbg(`Storage delete alt: ${r2.status}`);
-        }else{
-            dbg(`Storage delete: ${r.status}`);
-        }
-    }catch(e){
-        dbg(`Storage delete error: ${e.message}`, 'warn');
-    }
-}
-
-// Delete record from shared_files
-async function delRecord(id){
-    try{
-        const r = await fetch(`${SB}/rest/v1/shared_files?id=eq.${id}`,{
-            method:'DELETE',
-            headers:{'apikey':SK,'Authorization':`Bearer ${SK}`}
-        });
-        dbg(`Record delete ${id}: ${r.status}`);
-    }catch(e){
-        dbg(`Record delete error: ${e.message}`, 'warn');
-    }
-}
-
-function closeDl(){$('dMod').classList.remove('on')}
-
-// ===== CLEANUP =====
-window.addEventListener('beforeunload',()=>{stopScan();stopGest()});
-
-dbg('MediaScan initialized');
-dbg(`Supabase: ${SB}`);
-dbg(`Bucket: ${BUCKET}`);
+window.addEventListener('beforeunload',stop);
 </script>
 </body>
 </html>
